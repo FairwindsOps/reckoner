@@ -35,9 +35,15 @@ class AutoHelm(object):
     def __init__(self, file=None):
 
         self._home = os.environ.get('HELM_HOME', os.environ.get('HOME') + "/.helm")
+        logging.warn("$HELM_HOME not set. Using ~/.helm")
+
         self._archive = self._home + '/cache/archive'
         if not os.path.isdir(self._archive):
             logging.error("{} does not exist. Have you run `helm init`?".format(self._archive))
+            sys.exit()
+
+        if not self.tiller_present:
+            logging.error("Tiller not present in cluster. Have you run `helm init`?")
             sys.exit()
 
         plan = yaml.load(file)
@@ -64,9 +70,19 @@ class AutoHelm(object):
             self._installed_repositories = [line.split()[0] for line in subprocess.check_output(args).split('\n')[1:-1]]
             return self._installed_repositories
 
+    @property
+    def tiller_present(self):
+        """Detects if tiller is present in the currently configured cluster"""
+        try:
+            FNULL = open(os.devnull, 'w')
+            subprocess.check_call(['helm', 'list'], stdout=FNULL, stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError, e:
+            return False
+        return True
+
     def _intall_repository(self, name, url):
         args = ['helm', 'repo', 'add', name, url]
-        print " ".join(args)
+        logging.debug(" ".join(args))
         subprocess.call(args)
 
     def _fetch_git_chart(self, name, git_repo, branch, path):
