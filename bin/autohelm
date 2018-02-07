@@ -24,10 +24,12 @@ import os
 import sys
 import re
 import shutil
-import autohelm
+import autohelm.autohelm as autohelm
+from autohelm.meta import __version__
 
 
 @click.group(invoke_without_command=True)
+@click.version_option(__version__)
 @click.option("--log-level", default="INFO", help="Log Level. [INFO | DEBUG | WARN | ERROR]. (default=INFO)")
 @click.pass_context
 def cli(ctx, log_level, *args, **kwargs):

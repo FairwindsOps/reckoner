@@ -17,8 +17,10 @@
 
 import os
 import sys
-import autohelm
+
 from setuptools import setup, find_packages
+
+from autohelm.meta import __version__, __author__
 
 try:
     from setuptools import setup, find_packages
@@ -29,10 +31,10 @@ except ImportError:
 
 
 setup(name='autohelm',
-      version=autohelm.__version__,
+      version=__version__,
       scripts=['bin/autohelm'],
       description='Wrapper for 1password command line',
-      author=autohelm.__author__,
+      author=__author__,
       author_email='reactive@reactiveops.com',
       url='http://reactiveops.com/',
       license='Apache2.0',
@@ -42,6 +44,7 @@ setup(name='autohelm',
       install_requires=[
         "click==6.7",
         "PyYAML==3.12",
-        "commandwrapper==0.7"
+        "commandwrapper==0.7",
+        "GitPython==2.1.3"
       ]
       )
