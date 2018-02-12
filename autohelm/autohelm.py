@@ -33,8 +33,10 @@ class AutoHelm(object):
 
     def __init__(self, file=None):
 
-        self._home = os.environ.get('HELM_HOME', os.environ.get('HOME') + "/.helm")
-        logging.warn("$HELM_HOME not set. Using ~/.helm")
+        self._home = os.environ.get('HELM_HOME')
+        if self._home is None:
+            self._home = os.environ.get('HOME') + "/.helm"
+            logging.warn("$HELM_HOME not set. Using ~/.helm")
 
         self._archive = self._home + '/cache/archive'
         if not os.path.isdir(self._archive):
