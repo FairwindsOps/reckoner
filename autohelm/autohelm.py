@@ -81,6 +81,11 @@ class AutoHelm(object):
             return False
         return True
 
+    def _update_repositories(self):
+        args = ['helm', 'repo', 'update']
+        logging.debug(" ".join(args))
+        subprocess.call(args)
+
     def _intall_repository(self, name, url):
         args = ['helm', 'repo', 'add', name, url]
         logging.debug(" ".join(args))
@@ -114,6 +119,7 @@ class AutoHelm(object):
         repo.git.checkout(branch)
 
     def install(self):
+        self._update_repositories()
         for chart in self._charts:
             self.install_chart(chart, self._charts[chart])
 
