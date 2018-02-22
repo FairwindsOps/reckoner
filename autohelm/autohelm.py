@@ -123,8 +123,8 @@ class AutoHelm(object):
         for chart in self._charts:
             self.install_chart(chart, self._charts[chart])
 
-    def install_chart(self, chart_name, chart):
-
+    def install_chart(self, release_name, chart):
+        chart_name = chart.get('chart', release_name)
         repository_name = self._default_repository
 
         if chart.get('repository'):
@@ -150,7 +150,7 @@ class AutoHelm(object):
                 logging.warn('Chart "{}" cannot be fetched unless repository "{}" is installed'.format(chart_name, repository_url))
                 return
 
-        args = ['helm', 'upgrade', '--install', '{}'.format(chart_name), '{}/{}'.format(repository_name, chart_name)]
+        args = ['helm', 'upgrade', '--install', '{}'.format(release_name), '{}/{}'.format(repository_name, chart_name)]
 
         if chart.get('version'):
             args.append('--version={}'.format(chart.get('version')))

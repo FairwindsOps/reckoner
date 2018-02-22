@@ -6,5 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [.1.3] - 2018-2-22
+
+### Added
+- Ability to name releases something other than just the chart name
+
 ## [0.1.0] - 2018-1-26
 Initial open-source commit

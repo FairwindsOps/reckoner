@@ -6,7 +6,8 @@ repositories:
   stable:
     url: https://kubernetes-charts.storage.googleapis.com
 charts: # list of charts
-# chart_name: # chart name must match 
+# release_name: 
+#   chart: Optional, name of chart. defaults to release_name if not present. 
 #   version: version to install, defaults to latest. If a git repository is used, this is a branch/tag/ref.
 #   repository: repository to download chart from, overrides above value
 #     name: Optional, name of repository. If 'git' is used, must match the 
@@ -44,3 +45,15 @@ charts: # list of charts
       git: https://github.com/kubernetes/charts.git
       path: stable
     version: aaaf98b
+  dev_secrets:
+    chart: vault
+    repository: incubator
+    namespace: infra
+    values:
+      vault.dev: "false"
+      replicaCount: 1
+      vault.config.storage.consul.address: "consul-consul.infra.svc:8500"
+      service.type: LoadBalancer
+      service.annotations:
+        service\.beta\.kubernetes\.io\/aws-load-balancer-internal: "0.0.0.0/0"
+
