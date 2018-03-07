@@ -162,5 +162,5 @@ class AutoHelm(object):
         args.append('--namespace={}'.format(chart.get('namespace', self._namespace)))
 
         logging.debug(' '.join(args))
-
+        args = map(os.path.expandvars, args)
         subprocess.call(args)
