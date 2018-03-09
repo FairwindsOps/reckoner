@@ -145,10 +145,6 @@ class AutoHelm(object):
                 repository_name = repo_path = '{}/{}/{}'.format(self._archive, re.sub(r'\:\/\/|\/|\.', '_', repository_git), repository_path)
             elif repository_name not in self.installed_repositories and repository_url:
                 self._intall_repository(repository_name, repository_url)
-            elif repository_name not in self.installed_repositories and repository_url is None:
-                logging.warn('Repository "{}" is not installed and cannot be installed unless a url is provided'.format(repository_name))
-                logging.warn('Chart "{}" cannot be fetched unless repository "{}" is installed'.format(chart_name, repository_url))
-                return
 
         args = ['helm', 'upgrade', '--install', '{}'.format(release_name), '{}/{}'.format(repository_name, chart_name)]
 
