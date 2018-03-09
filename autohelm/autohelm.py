@@ -14,8 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import yaml
-from collections import OrderedDict
+import oyaml as yaml
 import subprocess
 import logging
 import click
@@ -25,18 +24,6 @@ import sys
 import re
 
 from meta import *
-
-# From https://stackoverflow.com/a/21912744/540766
-def ordered_load(stream, Loader=yaml.Loader, object_pairs_hook=OrderedDict):
-    class OrderedLoader(Loader):
-        pass
-    def construct_mapping(loader, node):
-        loader.flatten_mapping(node)
-        return object_pairs_hook(loader.construct_pairs(node))
-    OrderedLoader.add_constructor(
-        yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
-        construct_mapping)
-    return yaml.load(stream, OrderedLoader)
 
 
 class AutoHelm(object):
@@ -60,7 +47,7 @@ class AutoHelm(object):
             logging.error("Tiller not present in cluster. Have you run `helm init`?")
             sys.exit()
 
-        plan = ordered_load(file, yaml.SafeLoader)
+        plan = yaml.load(file)
 
         self._charts = plan.get('charts')
 

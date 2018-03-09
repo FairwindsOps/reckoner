@@ -45,6 +45,7 @@ setup(name='autohelm',
         "click==6.7",
         "PyYAML==3.12",
         "commandwrapper==0.7",
-        "GitPython==2.1.3"
+        "GitPython==2.1.3",
+        "oyaml==0.2"
       ]
       )

@@ -1,1 +1,2 @@
 pycodestyle==2.3.1
+oyaml==0.2
