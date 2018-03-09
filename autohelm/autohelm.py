@@ -155,6 +155,10 @@ class AutoHelm(object):
         if chart.get('version'):
             args.append('--version={}'.format(chart.get('version')))
 
+        if chart.get('files'):
+            for file in chart['files']:
+                args.append("-f={}".format(file))
+
         if chart.get('values'):
             for key in chart['values']:
                 args.append("--set={}={}".format(key, chart['values'][key]))

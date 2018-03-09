@@ -27,6 +27,8 @@ charts: # list of charts
       autoscalingGroups[0].minSize: 1
   heapster:
     version: "0.2.1"
+    files:
+      - /path/to/values/file.yml
   datadog:
     version: "0.8.2"
     repository: stable

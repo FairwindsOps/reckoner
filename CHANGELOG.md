@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+- `files` to the course.yml to use yml files
+
 ## [.1.3] - 2018-2-22
 
 ### Added
