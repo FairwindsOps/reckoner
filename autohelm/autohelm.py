@@ -17,13 +17,10 @@
 import oyaml as yaml
 import subprocess
 import logging
-import click
 import git
 import os
 import sys
 import re
-
-from meta import *
 
 
 class AutoHelm(object):
@@ -77,7 +74,7 @@ class AutoHelm(object):
         try:
             FNULL = open(os.devnull, 'w')
             subprocess.check_call(['helm', 'list'], stdout=FNULL, stderr=subprocess.STDOUT)
-        except subprocess.CalledProcessError, e:
+        except subprocess.CalledProcessError:
             return False
         return True
 
@@ -142,7 +139,7 @@ class AutoHelm(object):
 
             if repository_git:
                 self._fetch_git_chart(chart_name, repository_git, chart.get('version', "master"),  repository_path)
-                repository_name = repo_path = '{}/{}/{}'.format(self._archive, re.sub(r'\:\/\/|\/|\.', '_', repository_git), repository_path)
+                repository_name = '{}/{}/{}'.format(self._archive, re.sub(r'\:\/\/|\/|\.', '_', repository_git), repository_path)
             elif repository_name not in self.installed_repositories and repository_url:
                 self._intall_repository(repository_name, repository_url)
 
