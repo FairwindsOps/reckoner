@@ -117,8 +117,14 @@ class AutoHelm(object):
 
     def install(self):
         self._update_repositories()
+        failed_charts = []
         for chart in self._charts:
-            self.install_chart(chart, self._charts[chart])
+            if not self.install_chart(chart, self._charts[chart]):
+                failed_charts.append(chart)
+        if failed_charts:
+            logging.error("ERROR: Some charts failed to install.")
+            for chart in failed_charts:
+                logging.error(chart)
 
     def install_chart(self, release_name, chart):
         chart_name = chart.get('chart', release_name)
@@ -160,4 +166,4 @@ class AutoHelm(object):
 
         logging.debug(' '.join(args))
         args = map(os.path.expandvars, args)
-        subprocess.call(args)
+        return not bool(subprocess.call(args))
