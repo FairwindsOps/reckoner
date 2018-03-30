@@ -116,7 +116,7 @@ class AutoHelm(object):
             origin = repo.create_remote('origin', (git_repo))
 
         origin.fetch()
-        repo.git.checkout(branch)
+        repo.git.checkout("origin/{}".format(branch))
 
     def install(self):
         self._update_repositories()
