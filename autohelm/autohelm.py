@@ -23,6 +23,8 @@ import sys
 import re
 
 from git import GitCommandError
+from string import Template
+
 
 class AutoHelm(object):
 
@@ -197,5 +199,8 @@ class AutoHelm(object):
         args.append('--namespace={}'.format(chart.get('namespace', self._namespace)))
 
         logging.debug(' '.join(args))
-        args = map(os.path.expandvars, args)
+        try:
+            args = [Template(arg).substitute(os.environ) for arg in args]
+        except KeyError, e:
+            raise Exception("Missing requirement environment variable: {}".format(e.args[0]))
         return not bool(subprocess.call(args))
