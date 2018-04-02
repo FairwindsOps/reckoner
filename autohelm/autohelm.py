@@ -17,13 +17,10 @@
 import oyaml as yaml
 import subprocess
 import logging
-import click
 import git
 import os
 import sys
 import re
-
-from meta import *
 
 
 class AutoHelm(object):
@@ -77,7 +74,7 @@ class AutoHelm(object):
         try:
             FNULL = open(os.devnull, 'w')
             subprocess.check_call(['helm', 'list'], stdout=FNULL, stderr=subprocess.STDOUT)
-        except subprocess.CalledProcessError, e:
+        except subprocess.CalledProcessError:
             return False
         return True
 
@@ -120,8 +117,27 @@ class AutoHelm(object):
 
     def install(self):
         self._update_repositories()
+        failed_charts = []
         for chart in self._charts:
-            self.install_chart(chart, self._charts[chart])
+            if not self.install_chart(chart, self._charts[chart]):
+                logging.error('Helm upgrade failed on {}. Rolling back...'.format(chart))
+                self.rollback_chart(chart)
+                failed_charts.append(chart)
+        if failed_charts:
+            logging.error("ERROR: Some charts failed to install and were rolled back")
+            for chart in failed_charts:
+                logging.error(" - {}".format(chart))
+
+    def rollback_chart(self, release_name):
+        list_output = subprocess.check_output(['helm', 'list', '--deployed', release_name])
+        if not list_output:
+            # Chart has nothing to roll back to
+            return
+        logging.debug(list_output)
+        revision = int(list_output.splitlines()[-1].split('\t')[1].strip())
+        args = ['helm', 'rollback', release_name, str(revision)]
+        logging.debug(args)
+        subprocess.call(args)
 
     def install_chart(self, release_name, chart):
         chart_name = chart.get('chart', release_name)
@@ -142,7 +158,7 @@ class AutoHelm(object):
 
             if repository_git:
                 self._fetch_git_chart(chart_name, repository_git, chart.get('version', "master"),  repository_path)
-                repository_name = repo_path = '{}/{}/{}'.format(self._archive, re.sub(r'\:\/\/|\/|\.', '_', repository_git), repository_path)
+                repository_name = '{}/{}/{}'.format(self._archive, re.sub(r'\:\/\/|\/|\.', '_', repository_git), repository_path)
             elif repository_name not in self.installed_repositories and repository_url:
                 self._intall_repository(repository_name, repository_url)
 
@@ -163,4 +179,4 @@ class AutoHelm(object):
 
         logging.debug(' '.join(args))
         args = map(os.path.expandvars, args)
-        subprocess.call(args)
+        return not bool(subprocess.call(args))
