@@ -56,7 +56,7 @@ charts: # list of charts
 #     name: Optional, name of repository. If 'git' is used, must match the
 #     url: Optional if repository is listed above. Url of repository to add if not already included in above repositories section
 #     git: Git url where chart exists. Supercedes url argument
-#     path: Path where chart is in git repository
+#     path: Path where chart is in git repository. If the chart is at the root, leave blank
 #   namespace: namespace to install chart in, overrides above value
 #   values: # key-value pairs to pass in using the helm --set argument. Inspect individual charts to determine which keys are available and should be set
 #     key: value

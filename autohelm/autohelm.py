@@ -22,6 +22,7 @@ import os
 import sys
 import re
 
+from git import GitCommandError
 
 class AutoHelm(object):
 
@@ -106,6 +107,9 @@ class AutoHelm(object):
             with open(sparse_checkout_file_path, "ab+") as scf:
                 if path not in scf.readlines():
                     scf.write("{}/{}\n".format(path, name))
+            logging.debug("Configuring sparse checkout for path: {}".format(path))
+        else:
+            path = ""
 
         if 'origin' in [remote.name for remote in repo.remotes]:
             origin = repo.remotes['origin']
@@ -114,6 +118,21 @@ class AutoHelm(object):
 
         origin.fetch()
         repo.git.checkout("origin/{}".format(branch))
+
+        try:
+            origin.fetch()
+            repo.git.checkout(branch)
+        except GitCommandError, e:
+            logging.error(e)
+            if 'Sparse checkout leaves no entry on working directory' in str(e):
+                logging.error("Cannot sparse checkout path {} from the chart repository. Remove path when chart exists at the directory root".format(path))
+            sys.exit(1)
+        except Exception, e:
+            raise e
+        finally:
+            # Remove sparse-checkout to prevent path issues from poisoning the cache
+            if os.path.isfile(sparse_checkout_file_path):
+                os.remove(sparse_checkout_file_path)
 
     def install(self):
         self._update_repositories()
