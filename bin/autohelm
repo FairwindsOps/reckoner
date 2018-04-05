@@ -15,14 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import yaml
-import subprocess
 import logging
 import click
-import git
-import os
-import sys
-import re
 import shutil
 import autohelm
 from autohelm.autohelm import AutoHelm
@@ -41,16 +35,18 @@ def cli(ctx, log_level, *args, **kwargs):
 @cli.command()
 @click.pass_context
 @click.argument('file', type=click.File('rb'))
-def plot(ctx, *args, **kwargs):
+@click.option("--dry-run", is_flag=True, help="Pass --dry-run to helm so no action is taken")
+@click.option("--debug", is_flag=True, help="Pass --debug to helm")
+def plot(ctx, file=None, dry_run=False, debug=False):
     """ Install charts with given arguments as listed in yaml file argument """
-    h = AutoHelm(kwargs.get('file'))
+    h = AutoHelm(file=file, dryrun=dry_run, debug=debug)
     h.install()
 
 
 @cli.command()
 @click.pass_context
 def generate(ctx):
-    """ Takes no arguements, outputs and example plan """
+    """ Takes no arguements, outputs an example plan """
     logging.info('Generating exampl course as course.yml')
     src = autohelm.__path__[0] + '/example-course.yml'
     logging.debug(src)
@@ -60,7 +56,7 @@ def generate(ctx):
 @cli.command()
 @click.pass_context
 def version(ctx):
-    """ Takes no arguements, outputs and example plan """
+    """ Takes no arguements, outputs version info"""
     print(autohelm.__version__)
 
 

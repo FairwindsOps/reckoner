@@ -31,9 +31,11 @@ class AutoHelm(object):
     _default_namespace = 'kube-system'
     _default_repository = 'stable'
 
-    def __init__(self, file=None):
+    def __init__(self, file=None, dryrun=False, debug=False):
 
         self._home = os.environ.get('HELM_HOME')
+        self._dryrun = dryrun
+        self._debug = debug
         if self._home is None:
             self._home = os.environ.get('HOME') + "/.helm"
             logging.warn("$HELM_HOME not set. Using ~/.helm")
@@ -160,6 +162,13 @@ class AutoHelm(object):
         logging.debug(args)
         subprocess.call(args)
 
+    def debug_args(self):
+        if self._debug:
+            return ['--debug']
+        if self._dryrun:
+            return ['--dry-run', '--debug']
+        return []
+
     def install_chart(self, release_name, chart):
         chart_name = chart.get('chart', release_name)
         repository_name = self._default_repository
@@ -184,17 +193,18 @@ class AutoHelm(object):
                 self._intall_repository(repository_name, repository_url)
 
         args = ['helm', 'upgrade', '--install', '{}'.format(release_name), '{}/{}'.format(repository_name, chart_name)]
+        args.extend(self.debug_args())
 
         if chart.get('version'):
             args.append('--version={}'.format(chart.get('version')))
 
-        if chart.get('files'):
-            for file in chart['files']:
-                args.append("-f={}".format(file))
+        for file in chart.get('files', []):
+            args.append("-f={}".format(file))
 
-        if chart.get('values'):
-            for key in chart['values']:
-                args.append("--set={}={}".format(key, chart['values'][key]))
+        for key, value in chart.get('values', {}).iteritems():
+            args.append("--set={}={}".format(key, value))
+        for key, value in chart.get('values-strings', {}).iteritems():
+            args.append("--set-string={}={}".format(key, value))
 
         args.append('--namespace={}'.format(chart.get('namespace', self._namespace)))
 

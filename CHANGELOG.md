@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.3.0]
+### Added
+- Support for `--set-string` option in helm 2.9.0+. Any keys under `values-string` in your course.yml will be passed to helm using `--set-string`
+- `--dry-run` and `--debug` options for `autohelm plot` that pass identical options to helm
+
 ## [0.2.2]
 ### Fixed
 - Missing environment variables are now treated as an error
