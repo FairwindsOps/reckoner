@@ -22,11 +22,13 @@ This utility adds to the functionality of [Helm](https://github.com/kubernetes/h
 ### As standalone shell command
 - Usage: autohelm [OPTIONS] COMMAND [ARGS]...
 - Options:
-    --help  Show this message and exit.
+    * `--help`  Show this message and exit.
+    * `--log-level=TEXT` Set the log level for autohelm (defaults to `INFO`. Set to `DEBUG` for more details including helm commands)
 - Commands:
-  * `plot`: Runs helm based on yaml file descriptors
-  * Argument:
-    - file: YAML file with description of charts to load
+  * `plot FILE`: Runs helm based on specified yaml file (see configuration example below)
+    * Options:
+      * `--debug`: Pass --debug to helm
+      * `--dry-run`: Pass --dry-run to helm so no action is taken. Also includes `--debug`
   * `generate`: Generates example file `course.yml` with extensive descriptions
   * `version`: Output autohelm version
 ### As helm plugin
@@ -70,6 +72,8 @@ charts: # list of charts
       autoscalingGroups[0].minSize: 1
   my-local-chart:
     repository: .
+    values-strings:
+      must-be-a-string: "1"
   heapster:
     version: "0.2.1"
   datadog:
