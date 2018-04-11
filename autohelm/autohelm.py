@@ -169,28 +169,32 @@ class AutoHelm(object):
             return ['--dry-run', '--debug']
         return []
 
-    def install_chart(self, release_name, chart):
-        chart_name = chart.get('chart', release_name)
+    def ensure_repository(self, release_name, chart_name, repository, version):
         repository_name = self._default_repository
+        if repository:
+            logging.debug("Repository for {} is {}".format(chart_name, repository))
 
-        if chart.get('repository'):
-            logging.debug("Repository for {} is {}".format(chart_name, chart.get('repository')))
-
-            if type(chart['repository']) is str:
-                repository_name = chart['repository']
+            if type(repository) is str:
+                repository_name = repository
                 repository_url = None
                 repository_git = None
             else:
-                repository_name = chart['repository'].get('name')
-                repository_url = chart['repository'].get('url')
-                repository_git = chart['repository'].get('git')
-                repository_path = chart['repository'].get('path', '')
+                repository_name = repository.get('name')
+                repository_url = repository.get('url')
+                repository_git = repository.get('git')
+                repository_path = repository.get('path', '')
 
             if repository_git:
-                self._fetch_git_chart(chart_name, repository_git, chart.get('version', "master"),  repository_path)
+                self._fetch_git_chart(chart_name, repository_git, version,  repository_path)
                 repository_name = '{}/{}/{}'.format(self._archive, re.sub(r'\:\/\/|\/|\.', '_', repository_git), repository_path)
             elif repository_name not in self.installed_repositories and repository_url:
                 self._intall_repository(repository_name, repository_url)
+        return repository_name
+
+    def install_chart(self, release_name, chart):
+        chart_name = chart.get('chart', release_name)
+
+        repository_name = self.ensure_repository(release_name, chart_name, chart.get('repository'), chart.get('version', "master"))
 
         args = ['helm', 'upgrade', '--install', '{}'.format(release_name), '{}/{}'.format(repository_name, chart_name)]
         args.extend(self.debug_args())
