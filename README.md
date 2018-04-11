@@ -29,6 +29,7 @@ This utility adds to the functionality of [Helm](https://github.com/kubernetes/h
     * Options:
       * `--debug`: Pass --debug to helm
       * `--dry-run`: Pass --dry-run to helm so no action is taken. Also includes `--debug`
+      * `--heading <chart>`: Run only the specified chart out of the course.yml
   * `generate`: Generates example file `course.yml` with extensive descriptions
   * `version`: Output autohelm version
 ### As helm plugin

@@ -31,11 +31,12 @@ class AutoHelm(object):
     _default_namespace = 'kube-system'
     _default_repository = 'stable'
 
-    def __init__(self, file=None, dryrun=False, debug=False):
+    def __init__(self, file=None, dryrun=False, debug=False, charts=None):
 
         self._home = os.environ.get('HELM_HOME')
         self._dryrun = dryrun
         self._debug = debug
+
         if self._home is None:
             self._home = os.environ.get('HOME') + "/.helm"
             logging.warn("$HELM_HOME not set. Using ~/.helm")
@@ -51,7 +52,8 @@ class AutoHelm(object):
 
         plan = yaml.load(file)
 
-        self._charts = plan.get('charts')
+        selected_charts = charts or plan.get('charts').iterkeys()
+        self._charts = {name: chart for name, chart in plan.get('charts').iteritems() if name in selected_charts}
 
         self._namespace = plan.get('namespace', self._default_namespace)
         self._repository = plan.get('repository', self._default_repository)
