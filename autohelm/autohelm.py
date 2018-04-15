@@ -68,6 +68,7 @@ class AutoHelm(object):
 
     @property
     def installed_repositories(self):
+        """ Returns list of installed reposotories """
         if self._installed_repositories:
             return self._installed_repositories
         else:
@@ -86,17 +87,19 @@ class AutoHelm(object):
         return True
 
     def _update_repositories(self):
+        """ Update repositories """
         args = ['helm', 'repo', 'update']
         logging.debug(" ".join(args))
         subprocess.call(args)
 
     def _intall_repository(self, name, url):
+        """ Install Helm repository """
         args = ['helm', 'repo', 'add', name, url]
         logging.debug(" ".join(args))
         subprocess.call(args)
 
     def _fetch_git_chart(self, name, git_repo, branch, path):
-
+        """ Does a sparse checkout for a git repository git_repo@branch and retrieves the chart at the path """
         repo_path = '{}/{}'.format(self._archive, re.sub(r'\:\/\/|\/|\.', '_', git_repo))
         if not os.path.isdir(repo_path):
             os.mkdir(repo_path)
@@ -140,14 +143,30 @@ class AutoHelm(object):
             if os.path.isfile(sparse_checkout_file_path):
                 os.remove(sparse_checkout_file_path)
 
+    def run_hook(self, coms):
+        """ Expects a list of shell commands. Runs the commands defined by the hook """
+        for com in coms:
+            args = [Template(arg).substitute(os.environ) for arg in com.split()]
+            logging.debug("Running Hook {}".format(com))
+            ret = subprocess.call(args)
+            if ret != 0:
+                logging.error("Hook command `{}` returne non-zero exit code".format(com))
+                sys.exit(1)
+
+
     def install(self):
         self._update_repositories()
         failed_charts = []
         for chart in self._charts:
+            logging.debug("Installing {}".format(chart))
             if not self.install_chart(chart, self._charts[chart]):
                 logging.error('Helm upgrade failed on {}. Rolling back...'.format(chart))
                 self.rollback_chart(chart)
                 failed_charts.append(chart)
+            post_install_hook = self._charts[chart].get('hooks').get('post_install')
+            if post_install_hook:
+                logging.debug("Running post_install hook:")
+                self.run_hook(post_install_hook)
         if failed_charts:
             logging.error("ERROR: Some charts failed to install and were rolled back")
             for chart in failed_charts:
@@ -215,6 +234,12 @@ class AutoHelm(object):
         args.append('--namespace={}'.format(chart.get('namespace', self._namespace)))
 
         logging.debug(' '.join(args))
+
+        pre_install_hook = chart.get("hooks").get('pre_install')
+        if pre_install_hook:
+            logging.debug("Running pre_install hook:")
+            self.run_hook(pre_install_hook)
+
         try:
             args = [Template(arg).substitute(os.environ) for arg in args]
         except KeyError, e:

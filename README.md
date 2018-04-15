@@ -65,6 +65,13 @@ charts: # list of charts
 #     key: value
   kubernetes-dashboard:
     version: "0.4.1"
+    hooks: # Hooks are run locally, currently limited to single executable with no pipes or redirects. For more complex hooks, use an external script or Runner task.
+      pre_install: # List of single commands to run before installing the chart
+        - ls
+        - env
+      post_install: # List of single commands to run after installing the chart
+        - rm testfile
+        - cp file1 file2
   cluster-autoscaler:
     version: "0.2.1"
     values:
