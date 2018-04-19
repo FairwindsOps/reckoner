@@ -127,7 +127,7 @@ class AutoHelm(object):
 
         try:
             origin.fetch()
-            repo.git.checkout(branch)
+            repo.git.checkout("origin/{}".format(branch))
         except GitCommandError, e:
             logging.error(e)
             if 'Sparse checkout leaves no entry on working directory' in str(e):
