@@ -37,6 +37,7 @@ class AutoHelm(object):
         self._dryrun = dryrun
         self._debug = debug
 
+        logging.debug("Checking for local Helm directories.")
         if self._home is None:
             self._home = os.environ.get('HOME') + "/.helm"
             logging.warn("$HELM_HOME not set. Using ~/.helm")
@@ -46,6 +47,7 @@ class AutoHelm(object):
             logging.error("{} does not exist. Have you run `helm init`?".format(self._archive))
             sys.exit()
 
+        logging.debug("Checking for Tiller")
         if not self.tiller_present:
             logging.error("Tiller not present in cluster. Have you run `helm init`?")
             sys.exit()
@@ -145,10 +147,12 @@ class AutoHelm(object):
 
     def run_hook(self, coms):
         """ Expects a list of shell commands. Runs the commands defined by the hook """
+        if type(coms) == str:
+            coms = [coms]
+
         for com in coms:
-            args = [Template(arg).substitute(os.environ) for arg in com.split()]
             logging.debug("Running Hook {}".format(com))
-            ret = subprocess.call(args)
+            ret = subprocess.call(com, shell=True, executable="/bin/bash")
             if ret != 0:
                 logging.error("Hook command `{}` returne non-zero exit code".format(com))
                 sys.exit(1)
@@ -163,7 +167,7 @@ class AutoHelm(object):
                 logging.error('Helm upgrade failed on {}. Rolling back...'.format(chart))
                 self.rollback_chart(chart)
                 failed_charts.append(chart)
-            post_install_hook = self._charts[chart].get('hooks').get('post_install')
+            post_install_hook = self._charts[chart].get('hooks', {}).get('post_install')
             if post_install_hook:
                 logging.debug("Running post_install hook:")
                 self.run_hook(post_install_hook)
@@ -235,7 +239,7 @@ class AutoHelm(object):
 
         logging.debug(' '.join(args))
 
-        pre_install_hook = chart.get("hooks").get('pre_install')
+        pre_install_hook = chart.get("hooks", {}).get('pre_install')
         if pre_install_hook:
             logging.debug("Running pre_install hook:")
             self.run_hook(pre_install_hook)
