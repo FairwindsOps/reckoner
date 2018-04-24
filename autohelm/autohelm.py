@@ -22,6 +22,7 @@ import os
 import sys
 import re
 
+from collections import OrderedDict
 from git import GitCommandError
 from string import Template
 
@@ -194,6 +195,19 @@ class AutoHelm(object):
             return ['--dry-run', '--debug']
         return []
 
+    def _format_set(self, key, value):
+        """Allows nested yaml to be set on the command line of helm. 
+        Accepts key and value, if value is an ordered dict, recussively
+        formats the string properly """
+        logging.debug("Key: {}".format(key))
+        logging.debug("Value: {}".format(value))
+
+        if type(value) == OrderedDict:            
+            for new_key, new_value in value.iteritems():
+                return self._format_set("{}.{}".format(key, new_key), new_value)
+        else:
+            return key, value
+
     def ensure_repository(self, release_name, chart_name, repository, version):
         repository_name = self._default_repository
         if repository:
@@ -231,9 +245,11 @@ class AutoHelm(object):
             args.append("-f={}".format(file))
 
         for key, value in chart.get('values', {}).iteritems():
-            args.append("--set={}={}".format(key, value))
+            k, v = self._format_set(key, value)
+            args.append("--set={}={}".format(k, v))
         for key, value in chart.get('values-strings', {}).iteritems():
-            args.append("--set-string={}={}".format(key, value))
+            k, v = self._format_set(key, value)
+            args.append("--set-string={}={}".format(k, v))
 
         args.append('--namespace={}'.format(chart.get('namespace', self._namespace)))
 

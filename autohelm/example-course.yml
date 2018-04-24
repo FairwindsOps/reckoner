@@ -52,6 +52,10 @@ charts: # list of charts
       git: https://github.com/kubernetes/charts.git
       path: stable
     version: aaaf98b
+    values:
+      nested:
+        values:
+          are: supported
   dev_secrets:
     chart: vault
     repository: incubator
