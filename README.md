@@ -101,6 +101,10 @@ charts: # list of charts
     repository:
       git: https://github.com/kubernetes/charts.git
       path: stable
+    values:
+      nested:
+        values:
+          are: supported
     version: aaaf98b
 
 ```

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [0.5.0]
 ### Added 
 - pre_install and post_install hooks. Hooks are run at a per chart level
+- `--heading` option to run a single chart from course.yaml
+
+### Updated
+- allow `values` block in course.yml to accept nested values
 
 ## [0.3.0]
 ### Added
