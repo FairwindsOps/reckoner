@@ -17,6 +17,11 @@ charts: # list of charts
 #   namespace: namespace to install chart in, overrides above value
 #   values: # key-value pairs to pass in using the helm --set argument. Inspect individual charts to determine which keys are available and should be set
 #     key: value 
+#   hooks: # Hooks maybe be strings or lists and can include redirects or pipes. Assumes Bash.
+#     pre_install: echo test000 | grep test > testfile
+#     post_install:
+#     - echo test again >> testfile
+#     - echo stuff >> testfile; cat testfile
   kubernetes-dashboard:
     version: "0.4.1"
   cluster-autoscaler:
@@ -47,6 +52,10 @@ charts: # list of charts
       git: https://github.com/kubernetes/charts.git
       path: stable
     version: aaaf98b
+    values:
+      nested:
+        values:
+          are: supported
   dev_secrets:
     chart: vault
     repository: incubator

@@ -29,6 +29,7 @@ This utility adds to the functionality of [Helm](https://github.com/kubernetes/h
     * Options:
       * `--debug`: Pass --debug to helm
       * `--dry-run`: Pass --dry-run to helm so no action is taken. Also includes `--debug`
+      * `--heading <chart>`: Run only the specified chart out of the course.yml
   * `generate`: Generates example file `course.yml` with extensive descriptions
   * `version`: Output autohelm version
 ### As helm plugin
@@ -64,6 +65,13 @@ charts: # list of charts
 #     key: value
   kubernetes-dashboard:
     version: "0.4.1"
+    hooks: # Hooks are run locally, currently limited to single executable with no pipes or redirects. For more complex hooks, use an external script or Runner task.
+      pre_install: # List of single commands to run before installing the chart
+        - ls
+        - env
+      post_install: # List of single commands to run after installing the chart
+        - rm testfile
+        - cp file1 file2
   cluster-autoscaler:
     version: "0.2.1"
     values:
@@ -93,6 +101,10 @@ charts: # list of charts
     repository:
       git: https://github.com/kubernetes/charts.git
       path: stable
+    values:
+      nested:
+        values:
+          are: supported
     version: aaaf98b
 
 ```
