@@ -32,11 +32,14 @@ class AutoHelm(object):
     _default_namespace = 'kube-system'
     _default_repository = 'stable'
 
-    def __init__(self, file=None, dryrun=False, debug=False, charts=None):
+    def __init__(self, file=None, dryrun=False, debug=False, charts=None, local_development=False ):
 
         self._home = os.environ.get('HELM_HOME')
         self._dryrun = dryrun
         self._debug = debug
+        self._local_development = local_development
+        if self._local_development:
+            logging.info("Local Development is ON")
 
         logging.debug("Checking for local Helm directories.")
         if self._home is None:
@@ -49,7 +52,7 @@ class AutoHelm(object):
             sys.exit()
 
         logging.debug("Checking for Tiller")
-        if not self.tiller_present:
+        if not self._local_development and not self.tiller_present:
             logging.error("Tiller not present in cluster. Have you run `helm init`?")
             sys.exit()
 
@@ -63,7 +66,7 @@ class AutoHelm(object):
         self._installed_repositories = None
 
         self._repositories = plan.get('repositories')
-        if self._repositories:
+        if self._repositories and not self._local_development:
             for repo in self._repositories:
                 if repo not in self.installed_repositories:
                     url = self._repositories[repo].get('url')
@@ -239,7 +242,7 @@ class AutoHelm(object):
                 repository_git = repository.get('git')
                 repository_path = repository.get('path', '')
 
-            if repository_git:
+            if repository_git and not self._local_development:
                 self._fetch_git_chart(chart_name, repository_git, version,  repository_path)
                 repository_name = '{}/{}/{}'.format(self._archive, re.sub(r'\:\/\/|\/|\.', '_', repository_git), repository_path)
             elif repository_name not in self.installed_repositories and repository_url:
@@ -248,7 +251,6 @@ class AutoHelm(object):
 
     def install_chart(self, release_name, chart):
         chart_name = chart.get('chart', release_name)
-
         repository_name = self.ensure_repository(release_name, chart_name, chart.get('repository'), chart.get('version', "master"))
 
         args = ['helm', 'upgrade', '--install', '{}'.format(release_name), '{}/{}'.format(repository_name, chart_name)]
@@ -280,4 +282,7 @@ class AutoHelm(object):
             args = [Template(arg).substitute(os.environ) for arg in args]
         except KeyError, e:
             raise Exception("Missing requirement environment variable: {}".format(e.args[0]))
-        return not bool(subprocess.call(args))
+        if not self._local_development:
+            return not bool(subprocess.call(args))
+        
+        return True
