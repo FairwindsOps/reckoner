@@ -21,11 +21,16 @@ import git
 import os
 import sys
 import re
+import semver
+import json
 
 from collections import OrderedDict
 from git import GitCommandError
 from string import Template
+from meta import __version__ as autohelm_meta_version
 
+class AutohelmException(Exception):
+    pass
 
 class AutoHelm(object):
 
@@ -60,7 +65,7 @@ class AutoHelm(object):
 
         selected_charts = charts or plan.get('charts').iterkeys()
         self._charts = {name: chart for name, chart in plan.get('charts').iteritems() if name in selected_charts}
-
+        self._minimum_versions = plan.get('minimum_versions', None)
         self._namespace = plan.get('namespace', self._default_namespace)
         self._repository = plan.get('repository', self._default_repository)
         self._installed_repositories = None
@@ -81,6 +86,14 @@ class AutoHelm(object):
             args = ['helm', 'repo', 'list']
             self._installed_repositories = [line.split()[0] for line in subprocess.check_output(args).split('\n')[1:-1]]
             return self._installed_repositories
+
+    @property
+    def helm_version(self):
+        """ return version of installed helm binary """
+        args = ['helm', 'version', '--client']
+        resp = subprocess.check_output(args)
+        _helm_version = resp.replace('Client: &version.Version','').split(',')[0].split(':')[1].replace('v','').replace('"','')
+        return _helm_version
 
     @property
     def tiller_present(self):
@@ -163,6 +176,7 @@ class AutoHelm(object):
 
 
     def install(self):
+        self._compare_required_versions()
         self._update_repositories()
         failed_charts = []
         for chart in self._charts:
@@ -227,6 +241,30 @@ class AutoHelm(object):
         else:
             yield key, value
 
+    def _compare_required_versions(self):
+        """ Compare installed versions of helm and autohelm to the minimum versions required by the course.yml """
+        if self._minimum_versions is None:
+            return True
+        helm_mv = self._minimum_versions.get('helm','0.0.0')
+        autohelm_mv = self._minimum_versions.get('autohelm','0.0.0')
+
+        logging.debug("Helm Minimum Version is: {}".format(helm_mv))
+        helm_version = self.helm_version
+        logging.debug("Helm Installed Version is {}".format(helm_version))
+
+        logging.debug("Autohelm Minimum Version is {}".format(autohelm_mv))
+        autohelm_version = autohelm_meta_version
+        logging.debug("Autohelm Installed Version is {}".format(autohelm_version))
+
+        r1 = semver.compare(autohelm_version, autohelm_mv)
+        if r1 < 0:
+            raise AutohelmException("autohelm Minimum Version {} not met.".format(autohelm_mv))
+        r2 = semver.compare(helm_version, helm_mv)
+        if r2 < 0:
+            raise AutohelmException("helm Minimum Version {} not met.".format(helm_mv))
+
+        return True
+        
     def ensure_repository(self, release_name, chart_name, repository, version):
         repository_name = self._default_repository
         if repository:
