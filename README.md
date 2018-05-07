@@ -30,6 +30,7 @@ This utility adds to the functionality of [Helm](https://github.com/kubernetes/h
       * `--debug`: Pass --debug to helm
       * `--dry-run`: Pass --dry-run to helm so no action is taken. Also includes `--debug`
       * `--heading <chart>`: Run only the specified chart out of the course.yml
+      * `--local-development`: Run `autohelm` in local-development mode where Tiller is not required and no helm commands are run. Useful for rapid or offline development.
   * `generate`: Generates example file `course.yml` with extensive descriptions
   * `version`: Output autohelm version
 ### As helm plugin
