@@ -6,9 +6,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Added
 - minimum_version block to course.yml to define the mininum versions of `helm` and `autohelm` required by the course.yml
-
-## [Unreleased]
-### Added
 - --local-development flag
 
 ## [0.5.1]
