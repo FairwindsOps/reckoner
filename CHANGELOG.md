@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.5.1]
+### Added
+- support for yaml lists in the course.yml
+
+### Fixed
+- parsing of yaml dictionaries where it would only set the first value from the dictionary
+
 ## [0.5.0]
 ### Added 
 - pre_install and post_install hooks. Hooks are run at a per chart level

@@ -39,6 +39,11 @@ charts: # list of charts
     repository: stable
     values:
       datadog.apiKey: notthekey
+      list_of_values:
+        - value1
+        - value2
+        - value3
+        - value4
   spotify-docker-gc:
     version: "0.1.0"
   external-dns:
@@ -67,4 +72,5 @@ charts: # list of charts
       service.type: LoadBalancer
       service.annotations:
         service\.beta\.kubernetes\.io\/aws-load-balancer-internal: "0.0.0.0/0"
+        # '.' Characters must be escape or they are swallowed by helm --set
 

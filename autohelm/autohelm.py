@@ -199,14 +199,30 @@ class AutoHelm(object):
         """Allows nested yaml to be set on the command line of helm. 
         Accepts key and value, if value is an ordered dict, recussively
         formats the string properly """
+
+        if type(value) == OrderedDict:
+            for new_key, new_value in value.iteritems():
+                for k, v in self._format_set("{}.{}".format(key, new_key), new_value):
+                    for a, b in self._format_set_list(k, v):
+                        yield a, b
+        else:
+            for a, b in self._format_set_list(key, value):
+                yield a, b
+
+    def _format_set_list(self, key, value):
+        """ given a list and a key, format it properly for the helm set list indexing """
         logging.debug("Key: {}".format(key))
         logging.debug("Value: {}".format(value))
-
-        if type(value) == OrderedDict:            
-            for new_key, new_value in value.iteritems():
-                return self._format_set("{}.{}".format(key, new_key), new_value)
+        if type(value) == list:
+            for index, item in enumerate(value):
+                if type(item) == OrderedDict:
+                    logging.debug("Item: {}".format(item))
+                    for k, v in self._format_set("{}[{}]".format(key, index), item):
+                        yield k, v
+                else:
+                    yield "{}[{}]".format(key, index), item
         else:
-            return key, value
+            yield key, value
 
     def ensure_repository(self, release_name, chart_name, repository, version):
         repository_name = self._default_repository
@@ -245,11 +261,11 @@ class AutoHelm(object):
             args.append("-f={}".format(file))
 
         for key, value in chart.get('values', {}).iteritems():
-            k, v = self._format_set(key, value)
-            args.append("--set={}={}".format(k, v))
+            for k, v in self._format_set(key, value):
+                args.append("--set={}={}".format(k, v))
         for key, value in chart.get('values-strings', {}).iteritems():
-            k, v = self._format_set(key, value)
-            args.append("--set-string={}={}".format(k, v))
+            for k, v in self._format_set(key, value):
+                args.append("--set-string={}={}".format(k, v))
 
         args.append('--namespace={}'.format(chart.get('namespace', self._namespace)))
 
