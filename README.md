@@ -45,67 +45,118 @@ This utility adds to the functionality of [Helm](https://github.com/kubernetes/h
   * `version`: Output autohelm version
 
 ## Example configuration file:
+
+There is an example file in autohelm/example-course.yml
+
+Further customization is documented below.
+
+## Global Options
+
+### namespace
+
+The default namespace to deploy into.  Defaults to kube-system
+
+### repository
+
+Repository to download chart from, defaults to 'stable'
+
+### repositories
+
+Where to get charts from.  We recommend at least the stable and incubator charts.
+
 ```
-namespace: kube-system #namespace to install the chart in, defaults to 'kube-system'
-repository: stable #repository to download chart from, defaults to 'stable'
 repositories:
   incubator:
     url: https://kubernetes-charts-incubator.storage.googleapis.com
   stable:
     url: https://kubernetes-charts.storage.googleapis.com
-charts: # list of charts
-# chart_name: # chart name must match
-#   version: version to install, defaults to latest. If a git repository is used, this is a branch/tag/ref.
-#   repository: repository to download chart from, overrides above value
-#     name: Optional, name of repository. If 'git' is used, must match the
-#     url: Optional if repository is listed above. Url of repository to add if not already included in above repositories section
-#     git: Git url where chart exists. Supercedes url argument
-#     path: Path where chart is in git repository. If the chart is at the root, leave blank
-#   namespace: namespace to install chart in, overrides above value
-#   values: # key-value pairs to pass in using the helm --set argument. Inspect individual charts to determine which keys are available and should be set
-#     key: value
-  kubernetes-dashboard:
-    version: "0.4.1"
-    hooks: # Hooks are run locally, currently limited to single executable with no pipes or redirects. For more complex hooks, use an external script or Runner task.
+```
+
+## Options for Charts
+
+### values
+
+In-line values overrides for this chart. By default these are set using `--set`.  This introduces some interesting behavior.  Make sure to read the #Caveats
+
+### files
+
+Use a values file(s) rather than leaving them in-line:
+
+```
+charts:
+  chart_name:
+    files:
+      - /path/to/values/file.yml
+```
+
+### namespace
+
+Override the default namespace.
+
+### hooks
+
+Hooks are run locally, currently limited to single executable with no pipes or redirects. For more complex hooks, use an external script or Runner task.
+
+```
+charts:
+  chart_name:
       pre_install: # List of single commands to run before installing the chart
         - ls
         - env
       post_install: # List of single commands to run after installing the chart
         - rm testfile
         - cp file1 file2
-  cluster-autoscaler:
-    version: "0.2.1"
-    values:
-      autoscalingGroups[0].name: nodes
-      autoscalingGroups[0].maxSize: 10
-      autoscalingGroups[0].minSize: 1
-  my-local-chart:
-    repository: .
-    values-strings:
-      must-be-a-string: "1"
-  heapster:
-    version: "0.2.1"
-  datadog:
-    version: "0.8.2"
-    repository: stable
-    values:
-      datadog.apiKey: notthekey
-  spotify-docker-gc:
-    version: "0.1.0"
-  external-dns:
-    version: "0.3.0"
-  fluentd-cloudwatch:
-    repository:
-      name: incubator
-    version: "0.1.1"
-  centrifugo:
-    repository:
-      git: https://github.com/kubernetes/charts.git
-      path: stable
-    values:
-      nested:
-        values:
-          are: supported
-    version: aaaf98b
+```
+
+### version
+
+The version of the chart to use
+
+## Repository Options
+
+### name
+
+Optional, name of repository. If 'git' is used, must match.
+
+### url
+
+Optional if repository is listed above. Url of repository to add if not already included in above repositories section.
+
+### git
+
+Git url where chart exists. Supercedes url argument
+
+### path
+
+Path where chart is in the git repository.  NOTE: If the chart folder is in the root, leave this blank.
 
 ```
+charts:
+  chart_name: # chart name must match
+    repository: repository to download chart from, overrides global value
+      name: Optional, name of repository. If 'git' is used, must match the
+      url: Optional if repository is listed above. Url of repository to add if not already included in above repositories section
+      git: Git url where chart exists. Supercedes url argument
+      path: Path where chart is in git repository. If the chart is at the root, leave blank
+    namespace: namespace to install chart in, overrides above value
+```
+
+## Caveats
+
+### Escaping
+
+Keys and Values that have dots in the name need to be escaped.  Have a look at the [helm docs](https://github.com/kubernetes/helm/blob/master/docs/using_helm.md#the-format-and-limitations-of---set) on escaping complicated values.
+
+Example:
+
+```
+charts:
+  grafana:
+    namespace: grafana
+    values:
+      datasources:
+        datasources\.yaml:
+          apiVersion: 1
+```
+
+The alternative is to use the files method described above
