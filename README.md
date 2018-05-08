@@ -50,6 +50,8 @@ There is an example file in autohelm/example-course.yml
 
 Further customization is documented below.
 
+# Options
+
 ## Global Options
 
 ### namespace
