@@ -76,7 +76,7 @@ repositories:
 
 ### values
 
-In-line values overrides for this chart. By default these are set using `--set`.  This introduces some interesting behavior.  Make sure to read the #Caveats
+In-line values overrides for this chart. By default these are set using `--set`.  This introduces some interesting behavior.  Make sure to read the [Caveats](#Caveats)
 
 ### files
 
