@@ -124,7 +124,7 @@ Optional, name of repository.
 
 Optional if repository is listed above. Url of repository to add if not already included in above repositories section.
 
-###
+### git
 
 Git url where chart exists. Supercedes url argument
 
