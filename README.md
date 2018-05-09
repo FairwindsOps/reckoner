@@ -97,15 +97,15 @@ Override the default namespace.
 
 ### hooks
 
-Hooks are run locally, currently limited to single executable with no pipes or redirects. For more complex hooks, use an external script or Runner task.
+Hooks are run locally. For complex hooks, use an external script or Runner task.
 
 ```
 charts:
   chart_name:
-      pre_install: # List of single commands to run before installing the chart
+      pre_install:
         - ls
         - env
-      post_install: # List of single commands to run after installing the chart
+      post_install:
         - rm testfile
         - cp file1 file2
 ```
