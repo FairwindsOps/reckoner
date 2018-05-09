@@ -118,13 +118,13 @@ The version of the chart to use
 
 ### name
 
-Optional, name of repository. If 'git' is used, must match.
+Optional, name of repository.
 
 ### url
 
 Optional if repository is listed above. Url of repository to add if not already included in above repositories section.
 
-### git
+###
 
 Git url where chart exists. Supercedes url argument
 
@@ -134,9 +134,9 @@ Path where chart is in the git repository.  NOTE: If the chart folder is in the 
 
 ```
 charts:
-  chart_name: # chart name must match
+  chart_name:
     repository: repository to download chart from, overrides global value
-      name: Optional, name of repository. If 'git' is used, must match the
+      name: Optional, name of repository.
       url: Optional if repository is listed above. Url of repository to add if not already included in above repositories section
       git: Git url where chart exists. Supercedes url argument
       path: Path where chart is in git repository. If the chart is at the root, leave blank
