@@ -5,6 +5,9 @@ repositories:
     url: https://kubernetes-charts-incubator.storage.googleapis.com
   stable:
     url: https://kubernetes-charts.storage.googleapis.com
+minimum_versions: #set minimum version requirements here
+  helm: 2.8.2
+  autohelm: 0.5.0
 charts: # list of charts
 # release_name: 
 #   chart: Optional, name of chart. defaults to release_name if not present. 
@@ -73,4 +76,3 @@ charts: # list of charts
       service.annotations:
         service\.beta\.kubernetes\.io\/aws-load-balancer-internal: "0.0.0.0/0"
         # '.' Characters must be escape or they are swallowed by helm --set
-
