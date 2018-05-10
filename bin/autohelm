@@ -16,6 +16,7 @@
 # limitations under the License.
 
 import logging
+import coloredlogs
 import click
 import shutil
 import autohelm
@@ -28,7 +29,7 @@ from autohelm.meta import __version__
 @click.option("--log-level", default="INFO", help="Log Level. [INFO | DEBUG | WARN | ERROR]. (default=INFO)")
 @click.pass_context
 def cli(ctx, log_level, *args, **kwargs):
-    logging.basicConfig(level=log_level)
+    coloredlogs.install(level=log_level)
     pass
 
 
