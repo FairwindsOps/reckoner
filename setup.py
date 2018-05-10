@@ -46,6 +46,6 @@ setup(name='autohelm',
         "PyYAML==3.12",
         "commandwrapper==0.7",
         "GitPython==2.1.3",
-        "oyaml==0.2"
+        "oyaml>=0.4"
       ]
       )
