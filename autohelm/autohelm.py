@@ -106,6 +106,7 @@ class AutoHelm(object):
 
     def _fetch_git_chart(self, name, git_repo, branch, path):
         """ Does a sparse checkout for a git repository git_repo@branch and retrieves the chart at the path """
+
         repo_path = '{}/{}'.format(self._archive, re.sub(r'\:\/\/|\/|\.', '_', git_repo))
         if not os.path.isdir(repo_path):
             os.mkdir(repo_path)
@@ -115,39 +116,35 @@ class AutoHelm(object):
         else:
             repo = git.Repo(repo_path)
 
-        repo.git.config('core.sparseCheckout', 'true')
-
         sparse_checkout_file_path = "{}/.git/info/sparse-checkout".format(repo_path)
-        if path:
-            with open(sparse_checkout_file_path, "ab+") as scf:
-                if path not in scf.readlines():
-                    scf.write("{}/{}\n".format(path, name))
-            logging.debug("Configuring sparse checkout for path: {}".format(path))
-        else:
-            path = ""
+        if path is not '':
+            repo.git.config('core.sparseCheckout', 'true')
+            if path:
+                with open(sparse_checkout_file_path, "ab+") as scf:
+                    if path not in scf.readlines():
+                        scf.write("{}/{}\n".format(path, name))
+                logging.debug("Configuring sparse checkout for path: {}".format(path))
 
         if 'origin' in [remote.name for remote in repo.remotes]:
             origin = repo.remotes['origin']
         else:
             origin = repo.create_remote('origin', (git_repo))
-
-        origin.fetch()
-        repo.git.checkout("origin/{}".format(branch))
-
+       
         try:
             origin.fetch()
             repo.git.checkout("origin/{}".format(branch))
         except GitCommandError, e:
-            logging.error(e)
             if 'Sparse checkout leaves no entry on working directory' in str(e):
-                logging.error("Cannot sparse checkout path {} from the chart repository. Remove path when chart exists at the directory root".format(path))
-            sys.exit(1)
+                logging.warn("Ignoring path argument \"{}\"! Remove path when chart exists at the repository root".format(path))
         except Exception, e:
+            logging.error(e)
             raise e
         finally:
             # Remove sparse-checkout to prevent path issues from poisoning the cache
+            logging.debug("Removing sparse checkout config")
             if os.path.isfile(sparse_checkout_file_path):
                 os.remove(sparse_checkout_file_path)
+            repo.git.config('core.sparseCheckout', 'false')
 
     def run_hook(self, coms):
         """ Expects a list of shell commands. Runs the commands defined by the hook """
@@ -252,6 +249,11 @@ class AutoHelm(object):
     def install_chart(self, release_name, chart):
         chart_name = chart.get('chart', release_name)
         repository_name = self.ensure_repository(release_name, chart_name, chart.get('repository'), chart.get('version', "master"))
+        
+        # If the chart_name is in the repo path and appears to be redundant pb
+        if repository_name.endswith(chart_name) and os.path.isdir(repository_name) and not os.path.isdir('{}/{}'.format(repository_name, chart_name)):
+            logging.warn("Chart name {} in {}. Removing to try and prevent errros.".format(chart_name,repository_name)) 
+            repository_name = repository_name[:-len(chart_name)-1]
 
         args = ['helm', 'upgrade', '--install', '{}'.format(release_name), '{}/{}'.format(repository_name, chart_name)]
         args.extend(self.debug_args())
