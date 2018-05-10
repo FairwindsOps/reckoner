@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - --local-development flag
 
+### Fixed
+- improve logic for git sparse check out and chart path
+
 ## [0.5.1]
 ### Added
 - support for yaml lists in the course.yml
