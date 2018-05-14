@@ -74,7 +74,6 @@ class AutoHelm(object):
         self._namespace = plan.get('namespace', self._default_namespace)
         self._repository = plan.get('repository', self._default_repository)
         self._installed_repositories = None
-        
         self._repositories = plan.get('repositories')
         if self._repositories and not self._local_development:
             for repo in self._repositories:
