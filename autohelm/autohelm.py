@@ -46,6 +46,13 @@ class AutoHelm(object):
         if self._local_development:
             logging.info("Local Development is ON")
 
+        plan = yaml.load(file)
+
+        logging.debug("Checking for correct cluster context")
+        self._current_context = None
+        self._context = plan.get('context', self.current_context)
+        self._update_context()
+
         logging.debug("Checking for local Helm directories.")
         if self._home is None:
             self._home = os.environ.get('HOME') + "/.helm"
@@ -61,21 +68,27 @@ class AutoHelm(object):
             logging.error("Tiller not present in cluster. Have you run `helm init`?")
             sys.exit()
 
-        plan = yaml.load(file)
-
         selected_charts = charts or plan.get('charts').iterkeys()
         self._charts = {name: chart for name, chart in plan.get('charts').iteritems() if name in selected_charts}
         self._minimum_versions = plan.get('minimum_versions', None)
         self._namespace = plan.get('namespace', self._default_namespace)
         self._repository = plan.get('repository', self._default_repository)
         self._installed_repositories = None
-
+        
         self._repositories = plan.get('repositories')
         if self._repositories and not self._local_development:
             for repo in self._repositories:
                 if repo not in self.installed_repositories:
                     url = self._repositories[repo].get('url')
                     self._intall_repository(repo, url)
+
+    @property
+    def current_context(self):
+        """ Returns the current cluster context """
+        args = ['kubectl', 'config', 'current-context']
+        resp = subprocess.check_output(args)
+        self._current_context = resp.strip()
+        return self._current_context
 
     @property
     def installed_repositories(self):
@@ -114,6 +127,12 @@ class AutoHelm(object):
     def _intall_repository(self, name, url):
         """ Install Helm repository """
         args = ['helm', 'repo', 'add', name, url]
+        logging.debug(" ".join(args))
+        subprocess.call(args)
+
+    def _set_context(self, context):
+        """ Set the cluster context """
+        args = ['kubectl', 'config', 'use-context', context]
         logging.debug(" ".join(args))
         subprocess.call(args)
 
@@ -237,6 +256,18 @@ class AutoHelm(object):
                     yield "{}[{}]".format(key, index), item
         else:
             yield key, value
+
+    def _update_context(self):
+        """ Update the current context to the desired context """
+        logging.debug("Current cluster context is: {}".format(self.current_context))
+        if self.current_context != self._context:
+            logging.debug("Updating cluster context to {}".format(self._context))
+            self._set_context(self._context)
+
+        if self.current_context == self._context:
+            return True
+        else:
+            raise AutohelmException("Unable to set cluster context to: {}".format(self._context))
 
     def _compare_required_versions(self):
         """ Compare installed versions of helm and autohelm to the minimum versions required by the course.yml """

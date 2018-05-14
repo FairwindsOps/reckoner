@@ -1,5 +1,6 @@
 namespace: kube-system #namespace to install the chart in, defaults to 'kube-system'
 repository: stable #repository to download chart from, defaults to 'stable'
+context: minikube #kubectl cluster context to use for installing, defaults to current context
 repositories:
   incubator:
     url: https://kubernetes-charts-incubator.storage.googleapis.com
