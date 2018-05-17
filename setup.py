@@ -47,6 +47,7 @@ setup(name='autohelm',
         "commandwrapper==0.7",
         "GitPython==2.1.3",
         "oyaml>=0.4",
-        "coloredlogs==9.0"
+        "coloredlogs==9.0",
+        "semver==2.8.0"
       ]
       )

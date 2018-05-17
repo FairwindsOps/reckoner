@@ -160,7 +160,7 @@ class AutoHelm(object):
             origin = repo.remotes['origin']
         else:
             origin = repo.create_remote('origin', (git_repo))
-       
+
         try:
             origin.fetch()
             repo.git.checkout("origin/{}".format(branch))
@@ -228,7 +228,7 @@ class AutoHelm(object):
         return []
 
     def _format_set(self, key, value):
-        """Allows nested yaml to be set on the command line of helm. 
+        """Allows nested yaml to be set on the command line of helm.
         Accepts key and value, if value is an ordered dict, recussively
         formats the string properly """
 
@@ -291,7 +291,7 @@ class AutoHelm(object):
             raise AutohelmException("helm Minimum Version {} not met.".format(helm_mv))
 
         return True
-        
+
     def ensure_repository(self, release_name, chart_name, repository, version):
         repository_name = self._default_repository
         if repository:
@@ -317,10 +317,10 @@ class AutoHelm(object):
     def install_chart(self, release_name, chart):
         chart_name = chart.get('chart', release_name)
         repository_name = self.ensure_repository(release_name, chart_name, chart.get('repository'), chart.get('version', "master"))
-        
+
         # If the chart_name is in the repo path and appears to be redundant pb
         if repository_name.endswith(chart_name) and os.path.isdir(repository_name) and not os.path.isdir('{}/{}'.format(repository_name, chart_name)):
-            logging.warn("Chart name {} in {}. Removing to try and prevent errros.".format(chart_name,repository_name)) 
+            logging.warn("Chart name {} in {}. Removing to try and prevent errros.".format(chart_name,repository_name))
             repository_name = repository_name[:-len(chart_name)-1]
 
         args = ['helm', 'upgrade', '--install', '{}'.format(release_name), '{}/{}'.format(repository_name, chart_name)]
@@ -354,5 +354,5 @@ class AutoHelm(object):
             raise Exception("Missing requirement environment variable: {}".format(e.args[0]))
         if not self._local_development:
             return not bool(subprocess.call(args))
-        
+
         return True
