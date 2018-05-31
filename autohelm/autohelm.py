@@ -138,18 +138,24 @@ class AutoHelm(object):
     def _fetch_git_chart(self, name, git_repo, branch, path):
         """ Does a sparse checkout for a git repository git_repo@branch and retrieves the chart at the path """
 
+        def fetch_pull(ref):
+            """ Do the fetch, checkout pull for the git ref """
+            origin.fetch(tags=True)
+            repo.git.checkout("{}".format(ref))
+            repo.git.pull("origin", "{}".format(ref))
+
         repo_path = '{}/{}'.format(self._archive, re.sub(r'\:\/\/|\/|\.', '_', git_repo))
         if not os.path.isdir(repo_path):
             os.mkdir(repo_path)
 
         if not os.path.isdir("{}/.git".format(repo_path)):
-            self.repo = git.Repo.init(repo_path)
+            repo = git.Repo.init(repo_path)
         else:
-            self.repo = git.Repo(repo_path)
+            repo = git.Repo(repo_path)
 
         sparse_checkout_file_path = "{}/.git/info/sparse-checkout".format(repo_path)
         if path not in ['', '/', './']:
-            self.repo.git.config('core.sparseCheckout', 'true')
+            repo.git.config('core.sparseCheckout', 'true')
             if path:
                 with open(sparse_checkout_file_path, "ab+") as scf:
                     if path not in scf.readlines():
@@ -158,13 +164,13 @@ class AutoHelm(object):
         else:
             logging.warn("Ignoring path argument \"{}\"! Remove path when chart exists at the repository root".format(path))
 
-        if 'origin' in [remote.name for remote in self.repo.remotes]:
-            self.origin = self.repo.remotes['origin']
+        if 'origin' in [remote.name for remote in repo.remotes]:
+            origin = repo.remotes['origin']
         else:
-            self.origin = self.repo.create_remote('origin', (git_repo))
+            origin = repo.create_remote('origin', (git_repo))
 
         try:
-            self.fetch_pull(branch)
+            fetch_pull(branch)
         except GitCommandError, e:
             if 'Sparse checkout leaves no entry on working directory' in str(e):
                 logging.warn("Error with path \"{}\"! Remove path when chart exists at the repository root".format(path))
@@ -185,13 +191,9 @@ class AutoHelm(object):
             logging.debug("Removing sparse checkout config")
             if os.path.isfile(sparse_checkout_file_path):
                 os.remove(sparse_checkout_file_path)
-            self.repo.git.config('core.sparseCheckout', 'false')
+            repo.git.config('core.sparseCheckout', 'false')
 
-    def fetch_pull(self, ref):
-        """ Do the fetch, checkout pull for the git ref """
-        self.origin.fetch(tags=True)
-        self.repo.git.checkout("{}".format(ref))
-        self.repo.git.pull("origin", "{}".format(ref))
+
 
     def run_hook(self, coms):
         """ Expects a list of shell commands. Runs the commands defined by the hook """
