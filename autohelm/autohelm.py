@@ -143,30 +143,40 @@ class AutoHelm(object):
             os.mkdir(repo_path)
 
         if not os.path.isdir("{}/.git".format(repo_path)):
-            repo = git.Repo.init(repo_path)
+            self.repo = git.Repo.init(repo_path)
         else:
-            repo = git.Repo(repo_path)
+            self.repo = git.Repo(repo_path)
 
         sparse_checkout_file_path = "{}/.git/info/sparse-checkout".format(repo_path)
-        if path is not '':
-            repo.git.config('core.sparseCheckout', 'true')
+        if path not in ['', '/', './']:
+            self.repo.git.config('core.sparseCheckout', 'true')
             if path:
                 with open(sparse_checkout_file_path, "ab+") as scf:
                     if path not in scf.readlines():
                         scf.write("{}/{}\n".format(path, name))
                 logging.debug("Configuring sparse checkout for path: {}".format(path))
-
-        if 'origin' in [remote.name for remote in repo.remotes]:
-            origin = repo.remotes['origin']
         else:
-            origin = repo.create_remote('origin', (git_repo))
+            logging.warn("Ignoring path argument \"{}\"! Remove path when chart exists at the repository root".format(path))
+
+        if 'origin' in [remote.name for remote in self.repo.remotes]:
+            self.origin = self.repo.remotes['origin']
+        else:
+            self.origin = self.repo.create_remote('origin', (git_repo))
 
         try:
-            origin.fetch()
-            repo.git.checkout("origin/{}".format(branch))
+            self.fetch_pull(branch)
         except GitCommandError, e:
             if 'Sparse checkout leaves no entry on working directory' in str(e):
-                logging.warn("Ignoring path argument \"{}\"! Remove path when chart exists at the repository root".format(path))
+                logging.warn("Error with path \"{}\"! Remove path when chart exists at the repository root".format(path))
+                logging.warn("Skipping chart {}".format(name))
+                return False
+            elif 'did not match any file(s) known to git.' in str(e):
+                logging.warn("Branch/tag \"{}\" does not seem to exist!".format(branch))
+                logging.warn("Skipping chart {}".format(name))
+                return False
+            else:
+                logging.error(e)
+                raise e
         except Exception, e:
             logging.error(e)
             raise e
@@ -175,7 +185,13 @@ class AutoHelm(object):
             logging.debug("Removing sparse checkout config")
             if os.path.isfile(sparse_checkout_file_path):
                 os.remove(sparse_checkout_file_path)
-            repo.git.config('core.sparseCheckout', 'false')
+            self.repo.git.config('core.sparseCheckout', 'false')
+
+    def fetch_pull(self, ref):
+        """ Do the fetch, checkout pull for the git ref """
+        self.origin.fetch(tags=True)
+        self.repo.git.checkout("{}".format(ref))
+        self.repo.git.pull("origin", "{}".format(ref))
 
     def run_hook(self, coms):
         """ Expects a list of shell commands. Runs the commands defined by the hook """
@@ -188,7 +204,6 @@ class AutoHelm(object):
             if ret != 0:
                 logging.error("Hook command `{}` returne non-zero exit code".format(com))
                 sys.exit(1)
-
 
     def install(self):
         self._compare_required_versions()
@@ -272,8 +287,8 @@ class AutoHelm(object):
         """ Compare installed versions of helm and autohelm to the minimum versions required by the course.yml """
         if self._minimum_versions is None:
             return True
-        helm_mv = self._minimum_versions.get('helm','0.0.0')
-        autohelm_mv = self._minimum_versions.get('autohelm','0.0.0')
+        helm_mv = self._minimum_versions.get('helm', '0.0.0')
+        autohelm_mv = self._minimum_versions.get('autohelm', '0.0.0')
 
         logging.debug("Helm Minimum Version is: {}".format(helm_mv))
         helm_version = self.helm_version
@@ -308,15 +323,19 @@ class AutoHelm(object):
                 repository_path = repository.get('path', '')
 
             if repository_git and not self._local_development:
-                self._fetch_git_chart(chart_name, repository_git, version,  repository_path)
                 repository_name = '{}/{}/{}'.format(self._archive, re.sub(r'\:\/\/|\/|\.', '_', repository_git), repository_path)
+                if self._fetch_git_chart(chart_name, repository_git, version,  repository_path) is False:
+                    return False
             elif repository_name not in self.installed_repositories and repository_url:
                 self._intall_repository(repository_name, repository_url)
         return repository_name
 
     def install_chart(self, release_name, chart):
         chart_name = chart.get('chart', release_name)
-        repository_name = self.ensure_repository(release_name, chart_name, chart.get('repository'), chart.get('version', "master"))
+        repository_name = self.ensure_repository(release_name, chart_name, chart.get('repository'), chart.get('version', "master"))        
+        if repository_name is False:
+            logging.error("Unable to install chart: {}".format(chart_name))
+            return False
 
         # If the chart_name is in the repo path and appears to be redundant pb
         if repository_name.endswith(chart_name) and os.path.isdir(repository_name) and not os.path.isdir('{}/{}'.format(repository_name, chart_name)):
