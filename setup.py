@@ -33,7 +33,7 @@ except ImportError:
 setup(name='autohelm',
       version=__version__,
       scripts=['bin/autohelm'],
-      description='Wrapper for 1password command line',
+      description='Declarative Helm configuration with Git capability',
       author=__author__,
       author_email='reactive@reactiveops.com',
       url='http://reactiveops.com/',
