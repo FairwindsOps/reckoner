@@ -187,7 +187,7 @@ To do http TLS termination on the ELB add
 ## Istio
 
 ```
-  istio:
+istio:
     version: "0.8.0"
     repository:
       git: git@github.com:istio/istio.git
@@ -214,6 +214,7 @@ To do http TLS termination on the ELB add
         service:
           type: ClusterIP
       ingress:
+        service.type: NodePort
         autoscaleMin: 1
         autoscaleMax: 3
         resources:
@@ -224,6 +225,7 @@ To do http TLS termination on the ELB add
            cpu: 10m
            memory: 32Mi
       ingressgateway:
+        service.type: NodePort
         autoscaleMin: 1
         autoscaleMax: 6
         resources:
