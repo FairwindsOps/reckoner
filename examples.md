@@ -49,8 +49,7 @@
 
 ```
   heapster:
-    version: "0.2.1"
-    image.tag: v1.2.0
+    version: "0.2.10"
     values:
       rbac.create: "true"
       resources.requests.cpu: 100m
@@ -183,4 +182,65 @@ To do http TLS termination on the ELB add
       cluster: "prod.example.com"
       licenseKey: $NEWRELIC_LICENSE_KEY
       rbac.create: true
+```
+
+## Istio
+
+```
+  istio:
+    version: "0.8.0"
+    repository:
+      git: git@github.com:istio/istio.git
+      path: install/kubernetes/helm
+    namespace: istio-system
+    values:
+      global:
+        nodePort: true
+        hub: docker.io/istio
+        tag: 0.8.0
+        namespace: istio-system
+        mtls:
+          enabled: true
+      ingressgateway.service.type: LoadBalancer
+      ingress.service.type: LoadBalancer
+      prometheus.enabled: true
+      grafana.enabled: true
+      tracing:
+        enabled: false
+        jaeger:
+          enabled: true
+        ingress:
+          enabled: false
+        service:
+          type: ClusterIP
+      ingress:
+        autoscaleMin: 1
+        autoscaleMax: 3
+        resources:
+          limits:
+           cpu: 50m
+           memory: 64Mi
+          requests:
+           cpu: 10m
+           memory: 32Mi
+      ingressgateway:
+        autoscaleMin: 1
+        autoscaleMax: 6
+        resources:
+          limits:
+           cpu: 50m
+           memory: 64Mi
+          requests:
+           cpu: 10m
+           memory: 32Mi
+      egressgateway:
+        autoscaleMin: 1
+        autoscaleMax: 3
+        resources:
+          limits:
+           cpu: 50m
+           memory: 64Mi
+          requests:
+           cpu: 10m
+           memory: 32Mi
 ```
