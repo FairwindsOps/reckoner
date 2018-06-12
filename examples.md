@@ -201,8 +201,6 @@ istio:
         namespace: istio-system
         mtls:
           enabled: true
-      ingressgateway.service.type: LoadBalancer
-      ingress.service.type: LoadBalancer
       prometheus.enabled: true
       grafana.enabled: true
       tracing:
