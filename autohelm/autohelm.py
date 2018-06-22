@@ -170,7 +170,12 @@ class AutoHelm(object):
             origin = repo.create_remote('origin', (git_repo))
 
         try:
+            chart_path = "{}/{}/{}".format(repo_path, path, name)
             fetch_pull(branch)
+            args = ['helm', 'dependency', 'update', chart_path]
+            logging.debug("Updating chart dependencies: {}".format(chart_path))
+            logging.debug(" ".join(args))
+            subprocess.call(args)
         except GitCommandError, e:
             if 'Sparse checkout leaves no entry on working directory' in str(e):
                 logging.warn("Error with path \"{}\"! Remove path when chart exists at the repository root".format(path))
