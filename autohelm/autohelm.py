@@ -34,9 +34,6 @@ class AutohelmException(Exception):
 
 class AutoHelm(object):
 
-    _default_namespace = 'kube-system'
-    _default_repository = 'stable'
-
     def __init__(self, file=None, dryrun=False, debug=False, charts=None, local_development=False ):
 
         self._home = os.environ.get('HELM_HOME')
@@ -68,6 +65,12 @@ class AutoHelm(object):
             logging.error("Tiller not present in cluster. Have you run `helm init`?")
             sys.exit()
 
+        self._default_namespace = plan.get('namespace', 'kube-system')
+        logging.debug("Default namespace: {}".format(self._default_namespace))
+
+        self._default_repository = plan.get('repository', 'stable')
+        logging.debug("Default repository: {}".format(self._default_repository))
+            
         selected_charts = charts or plan.get('charts').iterkeys()
         self._charts = {name: chart for name, chart in plan.get('charts').iteritems() if name in selected_charts}
         self._minimum_versions = plan.get('minimum_versions', None)
