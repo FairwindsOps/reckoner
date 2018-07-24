@@ -42,6 +42,7 @@
       extraArgs.balance-similar-node-groups: ""
       extraArgs.skip-nodes-with-system-pods\=false: ""
       extraArgs.scan-interval: "30s"
+      extraArgs.expander: "most-pods"
 ```
 
 ## Heapster
