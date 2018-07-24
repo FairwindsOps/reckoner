@@ -15,7 +15,7 @@
 ```
   cluster-autoscaler:
     repository: stable
-    version: "0.6.4"
+    version: "0.7.0"
     values:
       cloudProvider: aws
       replicaCount: 2
@@ -40,7 +40,6 @@
       extraArgs.v: "2"
       extraArgs.logtostderr: ""
       extraArgs.balance-similar-node-groups: ""
-      extraArgs.skip-nodes-with-local-storage\=false: ""
       extraArgs.skip-nodes-with-system-pods\=false: ""
       extraArgs.scan-interval: "30s"
 ```
