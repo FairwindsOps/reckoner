@@ -98,8 +98,6 @@
       domainFilters[0]: "example.com"
       rbac.create: "true"
       provider: aws
-      rbac.create: "true"
-      registry: "noop"
 ```
 
 ## rbac-manager
