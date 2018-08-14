@@ -40,6 +40,7 @@
       extraArgs.v: "2"
       extraArgs.logtostderr: ""
       extraArgs.balance-similar-node-groups: ""
+      extraArgs.skip-nodes-with-local-storage\=false: ""
       extraArgs.skip-nodes-with-system-pods\=false: ""
       extraArgs.scan-interval: "30s"
       extraArgs.expander: "most-pods"
