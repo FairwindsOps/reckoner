@@ -80,6 +80,19 @@ repositories:
 
 In-line values overrides for this chart. By default these are set using `--set`.  This introduces some interesting behavior.  Make sure to read the [Caveats](#caveats)
 
+### values-strings
+
+This is a wrapper around the helm functionality `--set-string`.  Allows the specification of variables that would normally be interpreted as boolean or int as strings.
+
+```
+charts:
+  chartname:
+    values:
+      some.value: test
+    values-strings:
+      some.value.that.you.need.to.be.a.string: '1'
+```
+
 ### files
 
 Use a values file(s) rather than leaving them in-line:
