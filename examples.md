@@ -221,3 +221,10 @@ To do http TLS termination on the ELB add
       tracing.enabled: true
       servicegraph.enabled: true
 ```
+
+## Metrics Server
+
+```
+  metrics-server:
+    version: "1.1.0"
+```
