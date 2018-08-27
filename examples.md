@@ -99,6 +99,16 @@ charts:
       datadog.leaderElection: "true"
 ```
 
+Enable Statsd Collection in Datadog.  This will create a deployment with a service on port 8125/UDP that you can send statsd metrics to.
+
+```
+      image:
+        repository: datadog/dogstatsd
+      deployment:
+        enabled: true
+        replicas: 1
+```
+
 ## spotify-docker-gc
 
 ```
