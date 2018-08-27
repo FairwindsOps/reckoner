@@ -205,60 +205,19 @@ To do http TLS termination on the ELB add
 ## Istio
 
 ```
-istio:
-    version: "0.8.0"
+  istio:
+    version: "1.0.1"
     repository:
       git: git@github.com:istio/istio.git
       path: install/kubernetes/helm
     namespace: istio-system
     values:
-      global:
-        nodePort: true
-        hub: docker.io/istio
-        tag: 0.8.0
-        namespace: istio-system
-        mtls:
+      grafana:
+        enabled: true
+        security:
           enabled: true
-      prometheus.enabled: true
-      grafana.enabled: true
-      tracing:
-        enabled: false
-        jaeger:
-          enabled: true
-        ingress:
-          enabled: false
-        service:
-          type: ClusterIP
-      ingress:
-        service.type: NodePort
-        autoscaleMin: 1
-        autoscaleMax: 3
-        resources:
-          limits:
-           cpu: 50m
-           memory: 64Mi
-          requests:
-           cpu: 10m
-           memory: 32Mi
-      ingressgateway:
-        service.type: NodePort
-        autoscaleMin: 1
-        autoscaleMax: 6
-        resources:
-          limits:
-           cpu: 50m
-           memory: 64Mi
-          requests:
-           cpu: 10m
-           memory: 32Mi
-      egressgateway:
-        autoscaleMin: 1
-        autoscaleMax: 3
-        resources:
-          limits:
-           cpu: 50m
-           memory: 64Mi
-          requests:
-           cpu: 10m
-           memory: 32Mi
+          adminUser: admin
+          adminPassword: "${GRAFANA_ADMIN_PASS}"
+      tracing.enabled: true
+      servicegraph.enabled: true
 ```
