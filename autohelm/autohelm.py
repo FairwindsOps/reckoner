@@ -82,7 +82,7 @@ class AutoHelm(object):
             for repo in self._repositories:
                 if repo not in self.installed_repositories:
                     url = self._repositories[repo].get('url')
-                    self._intall_repository(repo, url)
+                    self._install_repository(repo, url)
 
     @property
     def current_context(self):
@@ -126,7 +126,7 @@ class AutoHelm(object):
         logging.debug(" ".join(args))
         subprocess.call(args)
 
-    def _intall_repository(self, name, url):
+    def _install_repository(self, name, url):
         """ Install Helm repository """
         args = ['helm', 'repo', 'add', name, url]
         logging.debug(" ".join(args))
@@ -338,7 +338,7 @@ class AutoHelm(object):
                 if self._fetch_git_chart(chart_name, repository_git, version,  repository_path) is False:
                     return False
             elif repository_name not in self.installed_repositories and repository_url:
-                self._intall_repository(repository_name, repository_url)
+                self._install_repository(repository_name, repository_url)
         return repository_name
 
     def install_chart(self, release_name, chart):
