@@ -81,22 +81,27 @@ charts:
 ## Datadog
 
 ```
-  datadog:
-    version: "0.11.3"
-    repository: stable
-    values:
-      datadog.apiKey: "${DATADOG_API_KEY}"
-      daemonset.updateStrategy: RollingUpdate
-      daemonset.tolerations[0].key: node-role.kubernetes.io/master
-      daemonset.tolerations[0].effect: NoSchedule
-      resources.requests.cpu: 100m
-      resources.requests.memory: 250Mi
-      resources.limits.cpu: 200m
-      resources.limits.memory: 500Mi
-      kube-state-metrics.rbac.create: "true"
-      rbac.create: "true"
-      kubeStateMetrics.enabled: "true"
-      datadog.leaderElection: "true"
+datadog:
+  version: 1.0.1
+  repository: stable
+  values:
+    rbac.create: "true"
+    daemonset.updateStrategy: RollingUpdate
+    daemonset.tolerations[0].key: node-role.kubernetes.io/master
+    daemonset.tolerations[0].effect: NoSchedule
+    kube-state-metrics.rbac.create: "true"
+    kubeStateMetrics.enabled: "true"
+    datadog:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: 200m
+          memory: 512Mi
+      apiKey: "${DATADOG_API_KEY}"
+      leaderElection: "true"
+      collectEvents: "true"
 ```
 
 Enable Statsd Collection in Datadog.  This will create a deployment with a service on port 8125/UDP that you can send statsd metrics to.
@@ -164,6 +169,8 @@ rbac-manager:
       controller.ingressClass: "nginx-ingress-public"
       controller.service.externalTrafficPolicy: "Local"
       controller.publishService.enabled: "true"
+      controller.metrics.enabled: true
+      controller.stats.enabled: true
       controller.resources:
         requests.cpu: 100m
         requests.memory: 200Mi
@@ -175,6 +182,20 @@ rbac-manager:
       controller.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].labelSelector.matchExpressions[0].operator: In
       controller.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].labelSelector.matchExpressions[0].values[0]: nginx-ingress-public
       controller.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].topologyKey: "kubernetes.io/hostname"
+    values-strings:
+      controller.podAnnotations:
+        ad\.datadoghq\.com/nginx-ingress-controller\.check_names: |
+          ["prometheus"]
+        ad\.datadoghq\.com/nginx-ingress-controller\.init_configs: |
+          [{}]
+        ad\.datadoghq\.com/nginx-ingress-controller\.instances: |
+          [
+            {
+              "prometheus_url": "http://%%host%%:10254/metrics"\,
+              "namespace": "ingress"\,
+              "metrics": ["nginx*"\, "ingress*"]
+            }
+          ]
 ```
 
 To do http TLS termination on the ELB add
