@@ -175,10 +175,6 @@ class AutoHelm(object):
         try:
             chart_path = "{}/{}/{}".format(repo_path, path, name)
             fetch_pull(branch)
-            args = ['helm', 'dependency', 'update', chart_path]
-            logging.debug("Updating chart dependencies: {}".format(chart_path))
-            logging.debug(" ".join(args))
-            subprocess.call(args)
         except GitCommandError, e:
             if 'Sparse checkout leaves no entry on working directory' in str(e):
                 logging.warn("Error with path \"{}\"! Remove path when chart exists at the repository root".format(path))
@@ -244,7 +240,8 @@ class AutoHelm(object):
         revision = int(list_output.splitlines()[-1].split('\t')[1].strip())
         args = ['helm', 'rollback', release_name, str(revision)]
         logging.debug(args)
-        subprocess.call(args)
+        if not self._dryrun:
+            subprocess.call(args)
 
     def debug_args(self):
         if self._debug:
@@ -353,7 +350,13 @@ class AutoHelm(object):
             logging.warn("Chart name {} in {}. Removing to try and prevent errros.".format(chart_name,repository_name))
             repository_name = repository_name[:-len(chart_name)-1]
 
-        args = ['helm', 'upgrade', '--install', '{}'.format(release_name), '{}/{}'.format(repository_name, chart_name)]
+        chart_path = '{}/{}'.format(repository_name, chart_name)
+        args = ['helm', 'dependency', 'update', chart_path]
+        logging.debug("Updating chart dependencies: {}".format(chart_path))
+        logging.debug(" ".join(args))
+        subprocess.call(args)
+
+        args = ['helm', 'upgrade', '--install', '{}'.format(release_name), chart_path]
         args.extend(self.debug_args())
 
         if chart.get('version'):

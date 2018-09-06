@@ -3,10 +3,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
-## [Unreleased]
 
+##[0.6.3]
 ### Fixed
-- issue where chart dependencies/requirements were not being updated with the chart is pulled from a git repository 
+- issue where chart dependencies/requirements were not being updated
+- issue where helm release would be rolled back even when using --dry-run
 
 ##[0.6.2]
 ### Fixed
