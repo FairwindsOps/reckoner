@@ -156,7 +156,7 @@ Enable Statsd Collection in Datadog.  This will create a deployment with a servi
     repository:
       git: https://github.com/reactiveops/rbac-manager.git
     chart: chart
-    version: master
+    version: 0.4.1
     namespace: rbac-manager
     values:
       rbacDefinition:
