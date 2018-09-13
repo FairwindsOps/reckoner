@@ -66,7 +66,6 @@ charts:
 See here for details on how to tag your nodes for this to work. [Autoscaler Docs](https://github.com/helm/charts/tree/master/stable/cluster-autoscaler#auto-discovery)
 
 ```
-charts:
   cluster-autoscaler:
     version: "0.7.0"
     values:
@@ -153,21 +152,21 @@ Enable Statsd Collection in Datadog.  This will create a deployment with a servi
 ## rbac-manager
 
 ```
-rbac-manager:
-  repository:
-    git: https://github.com/reactiveops/rbac-manager.git
-  chart: chart
-  version: master
-  namespace: rbac-manager
-  values:
-    rbacDefinition:
-      enabled: true
-      content:
-        rbacUsers:
-        - user: user@example.com
-          kind: ServiceAccount
-          clusterRoleBindings:
-            - clusterRole: cluster-admin
+  rbac-manager:
+    repository:
+      git: https://github.com/reactiveops/rbac-manager.git
+    chart: chart
+    version: master
+    namespace: rbac-manager
+    values:
+      rbacDefinition:
+        enabled: true
+        content:
+          rbacUsers:
+          - user: user@example.com
+            kind: ServiceAccount
+            clusterRoleBindings:
+              - clusterRole: cluster-admin
 ```
 
 ## nginx-ingress (TLS termination in nginx)
