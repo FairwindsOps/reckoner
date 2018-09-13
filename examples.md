@@ -1,3 +1,18 @@
+## course.yml config section
+```
+namespace: kube-system
+repository: stable
+repositories:
+  incubator:
+    url: https://kubernetes-charts-incubator.storage.googleapis.com
+  stable:
+    url: https://kubernetes-charts.storage.googleapis.com
+minimum_versions: #set minimum version requirements here
+  helm: 2.10.0
+  autohelm: 0.6.3
+charts:
+```
+
 ## Kubernetes Dashboard
 
 ```
