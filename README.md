@@ -62,6 +62,10 @@ The default namespace to deploy into.  Defaults to kube-system
 
 Repository to download chart from, defaults to 'stable'
 
+### context
+
+Optional.  The kubectl cluster context to use for installing, defaults to the current context.
+
 ### repositories
 
 Where to get charts from.  We recommend at least the stable and incubator charts.
