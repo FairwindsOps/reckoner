@@ -1,5 +1,5 @@
 
-# autohelm
+# autohelm [![CircleCI](https://circleci.com/gh/reactiveops/autohelm.svg?style=svg)](https://circleci.com/gh/reactiveops/autohelm)
 
 Command line helper for helm.
 This utility adds to the functionality of [Helm](https://github.com/kubernetes/helm) in multiple ways:

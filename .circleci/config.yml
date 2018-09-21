@@ -1,0 +1,83 @@
+#Copyright 2017 Reactive Ops Inc.
+#
+#Licensed under the Apache License, Version 2.0 (the “License”);
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an “AS IS” BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+version: 2
+
+jobs:
+  build:
+    docker:
+      - image: circleci/python:2
+    environment: ~
+    working_directory: ~/autohelm
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build Docker Image
+          command: |
+            docker build -t autohelm .
+      - run:
+          name: Test Installation
+          command: |
+            docker run --rm autohelm --version
+
+  release:
+    docker:
+      - image: circleci/python:2
+    environment:
+      PYPI_USERNAME: ReactiveOps
+      GITHUB_ORGANIZATION: $CIRCLE_PROJECT_USERNAME
+      GITHUB_REPOSITORY: $CIRCLE_PROJECT_REPONAME
+    working_directory: ~/pentagon
+    steps:
+      - checkout
+      - run:
+          name: init .pypirc
+          command: |
+            echo -e "[pypi]" >> ~/.pypirc
+            echo -e "username = $PYPI_USERNAME" >> ~/.pypirc
+            echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
+      - run:
+          name: create release
+          command: |
+            git fetch --tags
+            curl -O https://raw.githubusercontent.com/reactiveops/release.sh/v0.0.2/release
+            /bin/bash release
+      - run:
+          name: package and upload
+          command: |
+            sudo pip install twine
+            python setup.py sdist bdist_wheel
+            twine upload dist/*
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              only: /.*/
+      - release:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
+
+
