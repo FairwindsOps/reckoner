@@ -20,8 +20,8 @@ import coloredlogs
 import click
 import shutil
 import autohelm
-from autohelm.autohelm import AutoHelm
-from autohelm.meta import __version__
+from autohelm import AutoHelm
+from meta import __version__
 
 
 @click.group(invoke_without_command=True)
@@ -62,7 +62,3 @@ def generate(ctx):
 def version(ctx):
     """ Takes no arguements, outputs version info"""
     print(autohelm.__version__)
-
-
-if __name__ == '__main__':
-    cli()

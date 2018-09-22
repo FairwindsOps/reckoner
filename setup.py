@@ -32,7 +32,6 @@ except ImportError:
 
 setup(name='autohelm',
       version=__version__,
-      scripts=['bin/autohelm'],
       description='Declarative Helm configuration with Git capability',
       author=__author__,
       author_email='service@reactiveops.com',
@@ -49,5 +48,9 @@ setup(name='autohelm',
         "oyaml>=0.4",
         "coloredlogs==9.0",
         "semver==2.8.0"
-      ]
+      ],
+      entry_points=''' #for click integration
+          [console_scripts]
+          autohelm=autohelm.cli:cli
+      '''
       )
