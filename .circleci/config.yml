@@ -39,7 +39,7 @@ jobs:
       PYPI_USERNAME: ReactiveOps
       GITHUB_ORGANIZATION: $CIRCLE_PROJECT_USERNAME
       GITHUB_REPOSITORY: $CIRCLE_PROJECT_REPONAME
-    working_directory: ~/pentagon
+    working_directory: ~/autohelm
     steps:
       - checkout
       - run:
