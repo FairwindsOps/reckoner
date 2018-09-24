@@ -58,19 +58,19 @@ class AutoHelm(object):
         self._archive = self._home + '/cache/archive'
         if not os.path.isdir(self._archive):
             logging.error("{} does not exist. Have you run `helm init`?".format(self._archive))
-            sys.exit()
+            sys.exit(1)
 
         logging.debug("Checking for Tiller")
         if not self._local_development and not self.tiller_present:
             logging.error("Tiller not present in cluster. Have you run `helm init`?")
-            sys.exit()
+            sys.exit(1)
 
         self._default_namespace = plan.get('namespace', 'kube-system')
         logging.debug("Default namespace: {}".format(self._default_namespace))
 
         self._default_repository = plan.get('repository', 'stable')
         logging.debug("Default repository: {}".format(self._default_repository))
-            
+
         selected_charts = charts or plan.get('charts').iterkeys()
         self._charts = {name: chart for name, chart in plan.get('charts').iteritems() if name in selected_charts}
         self._minimum_versions = plan.get('minimum_versions', None)
@@ -82,7 +82,7 @@ class AutoHelm(object):
             for repo in self._repositories:
                 if repo not in self.installed_repositories:
                     url = self._repositories[repo].get('url')
-                    self._intall_repository(repo, url)
+                    self._install_repository(repo, url)
 
     @property
     def current_context(self):
@@ -126,7 +126,7 @@ class AutoHelm(object):
         logging.debug(" ".join(args))
         subprocess.call(args)
 
-    def _intall_repository(self, name, url):
+    def _install_repository(self, name, url):
         """ Install Helm repository """
         args = ['helm', 'repo', 'add', name, url]
         logging.debug(" ".join(args))
@@ -175,10 +175,6 @@ class AutoHelm(object):
         try:
             chart_path = "{}/{}/{}".format(repo_path, path, name)
             fetch_pull(branch)
-            args = ['helm', 'dependency', 'update', chart_path]
-            logging.debug("Updating chart dependencies: {}".format(chart_path))
-            logging.debug(" ".join(args))
-            subprocess.call(args)
         except GitCommandError, e:
             if 'Sparse checkout leaves no entry on working directory' in str(e):
                 logging.warn("Error with path \"{}\"! Remove path when chart exists at the repository root".format(path))
@@ -233,6 +229,7 @@ class AutoHelm(object):
             logging.error("ERROR: Some charts failed to install and were rolled back")
             for chart in failed_charts:
                 logging.error(" - {}".format(chart))
+            sys.exit(1)
 
     def rollback_chart(self, release_name):
         list_output = subprocess.check_output(['helm', 'list', '--deployed', release_name])
@@ -243,7 +240,8 @@ class AutoHelm(object):
         revision = int(list_output.splitlines()[-1].split('\t')[1].strip())
         args = ['helm', 'rollback', release_name, str(revision)]
         logging.debug(args)
-        subprocess.call(args)
+        if not self._dryrun:
+            subprocess.call(args)
 
     def debug_args(self):
         if self._debug:
@@ -337,12 +335,12 @@ class AutoHelm(object):
                 if self._fetch_git_chart(chart_name, repository_git, version,  repository_path) is False:
                     return False
             elif repository_name not in self.installed_repositories and repository_url:
-                self._intall_repository(repository_name, repository_url)
+                self._install_repository(repository_name, repository_url)
         return repository_name
 
     def install_chart(self, release_name, chart):
         chart_name = chart.get('chart', release_name)
-        repository_name = self.ensure_repository(release_name, chart_name, chart.get('repository'), chart.get('version', "master"))        
+        repository_name = self.ensure_repository(release_name, chart_name, chart.get('repository'), chart.get('version', "master"))
         if repository_name is False:
             logging.error("Unable to install chart: {}".format(chart_name))
             return False
@@ -352,7 +350,13 @@ class AutoHelm(object):
             logging.warn("Chart name {} in {}. Removing to try and prevent errros.".format(chart_name,repository_name))
             repository_name = repository_name[:-len(chart_name)-1]
 
-        args = ['helm', 'upgrade', '--install', '{}'.format(release_name), '{}/{}'.format(repository_name, chart_name)]
+        chart_path = '{}/{}'.format(repository_name, chart_name)
+        args = ['helm', 'dependency', 'update', chart_path]
+        logging.debug("Updating chart dependencies: {}".format(chart_path))
+        logging.debug(" ".join(args))
+        subprocess.call(args)
+
+        args = ['helm', 'upgrade', '--install', '{}'.format(release_name), chart_path]
         args.extend(self.debug_args())
 
         if chart.get('version'):

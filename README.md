@@ -62,6 +62,10 @@ The default namespace to deploy into.  Defaults to kube-system
 
 Repository to download chart from, defaults to 'stable'
 
+### context
+
+Optional.  The kubectl cluster context to use for installing, defaults to the current context.
+
 ### repositories
 
 Where to get charts from.  We recommend at least the stable and incubator charts.
@@ -79,6 +83,19 @@ repositories:
 ### values
 
 In-line values overrides for this chart. By default these are set using `--set`.  This introduces some interesting behavior.  Make sure to read the [Caveats](#caveats)
+
+### values-strings
+
+This is a wrapper around the helm functionality `--set-string`.  Allows the specification of variables that would normally be interpreted as boolean or int as strings.
+
+```
+charts:
+  chartname:
+    values:
+      some.value: test
+    values-strings:
+      some.value.that.you.need.to.be.a.string: '1'
+```
 
 ### files
 

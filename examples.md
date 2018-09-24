@@ -1,3 +1,18 @@
+## course.yml config section
+```
+namespace: kube-system
+repository: stable
+repositories:
+  incubator:
+    url: https://kubernetes-charts-incubator.storage.googleapis.com
+  stable:
+    url: https://kubernetes-charts.storage.googleapis.com
+minimum_versions: #set minimum version requirements here
+  helm: 2.10.0
+  autohelm: 0.6.3
+charts:
+```
+
 ## Kubernetes Dashboard
 
 ```
@@ -51,7 +66,6 @@
 See here for details on how to tag your nodes for this to work. [Autoscaler Docs](https://github.com/helm/charts/tree/master/stable/cluster-autoscaler#auto-discovery)
 
 ```
-charts:
   cluster-autoscaler:
     version: "0.7.0"
     values:
@@ -81,22 +95,37 @@ charts:
 ## Datadog
 
 ```
-  datadog:
-    version: "0.11.3"
-    repository: stable
-    values:
-      datadog.apiKey: "${DATADOG_API_KEY}"
-      daemonset.updateStrategy: RollingUpdate
-      daemonset.tolerations[0].key: node-role.kubernetes.io/master
-      daemonset.tolerations[0].effect: NoSchedule
-      resources.requests.cpu: 100m
-      resources.requests.memory: 250Mi
-      resources.limits.cpu: 200m
-      resources.limits.memory: 500Mi
-      kube-state-metrics.rbac.create: "true"
-      rbac.create: "true"
-      kubeStateMetrics.enabled: "true"
-      datadog.leaderElection: "true"
+datadog:
+  version: 1.0.1
+  repository: stable
+  values:
+    rbac.create: "true"
+    daemonset.updateStrategy: RollingUpdate
+    daemonset.tolerations[0].key: node-role.kubernetes.io/master
+    daemonset.tolerations[0].effect: NoSchedule
+    kube-state-metrics.rbac.create: "true"
+    kubeStateMetrics.enabled: "true"
+    datadog:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: 200m
+          memory: 512Mi
+      apiKey: "${DATADOG_API_KEY}"
+      leaderElection: "true"
+      collectEvents: "true"
+```
+
+Enable Statsd Collection in Datadog.  This will create a deployment with a service on port 8125/UDP that you can send statsd metrics to.
+
+```
+      image:
+        repository: datadog/dogstatsd
+      deployment:
+        enabled: true
+        replicas: 1
 ```
 
 ## spotify-docker-gc
@@ -123,21 +152,21 @@ charts:
 ## rbac-manager
 
 ```
-rbac-manager:
-  repository:
-    git: https://github.com/reactiveops/rbac-manager.git
-  chart: chart
-  version: master
-  namespace: rbac-manager
-  values:
-    rbacDefinition:
-      enabled: true
-      content:
-        rbacUsers:
-        - user: user@example.com
-          kind: ServiceAccount
-          clusterRoleBindings:
-            - clusterRole: cluster-admin
+  rbac-manager:
+    repository:
+      git: https://github.com/reactiveops/rbac-manager.git
+    chart: chart
+    version: 0.4.1
+    namespace: rbac-manager
+    values:
+      rbacDefinition:
+        enabled: true
+        content:
+          rbacUsers:
+          - user: user@example.com
+            kind: ServiceAccount
+            clusterRoleBindings:
+              - clusterRole: cluster-admin
 ```
 
 ## nginx-ingress (TLS termination in nginx)
@@ -154,6 +183,8 @@ rbac-manager:
       controller.ingressClass: "nginx-ingress-public"
       controller.service.externalTrafficPolicy: "Local"
       controller.publishService.enabled: "true"
+      controller.metrics.enabled: true
+      controller.stats.enabled: true
       controller.resources:
         requests.cpu: 100m
         requests.memory: 200Mi
@@ -165,6 +196,20 @@ rbac-manager:
       controller.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].labelSelector.matchExpressions[0].operator: In
       controller.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].labelSelector.matchExpressions[0].values[0]: nginx-ingress-public
       controller.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].topologyKey: "kubernetes.io/hostname"
+    values-strings:
+      controller.podAnnotations:
+        ad\.datadoghq\.com/nginx-ingress-controller\.check_names: |
+          ["prometheus"]
+        ad\.datadoghq\.com/nginx-ingress-controller\.init_configs: |
+          [{}]
+        ad\.datadoghq\.com/nginx-ingress-controller\.instances: |
+          [
+            {
+              "prometheus_url": "http://%%host%%:10254/metrics"\,
+              "namespace": "ingress"\,
+              "metrics": ["nginx*"\, "ingress*"]
+            }
+          ]
 ```
 
 To do http TLS termination on the ELB add
@@ -205,60 +250,26 @@ To do http TLS termination on the ELB add
 ## Istio
 
 ```
-istio:
-    version: "0.8.0"
+  istio:
+    version: "1.0.1"
     repository:
       git: git@github.com:istio/istio.git
       path: install/kubernetes/helm
     namespace: istio-system
     values:
-      global:
-        nodePort: true
-        hub: docker.io/istio
-        tag: 0.8.0
-        namespace: istio-system
-        mtls:
+      grafana:
+        enabled: true
+        security:
           enabled: true
-      prometheus.enabled: true
-      grafana.enabled: true
-      tracing:
-        enabled: false
-        jaeger:
-          enabled: true
-        ingress:
-          enabled: false
-        service:
-          type: ClusterIP
-      ingress:
-        service.type: NodePort
-        autoscaleMin: 1
-        autoscaleMax: 3
-        resources:
-          limits:
-           cpu: 50m
-           memory: 64Mi
-          requests:
-           cpu: 10m
-           memory: 32Mi
-      ingressgateway:
-        service.type: NodePort
-        autoscaleMin: 1
-        autoscaleMax: 6
-        resources:
-          limits:
-           cpu: 50m
-           memory: 64Mi
-          requests:
-           cpu: 10m
-           memory: 32Mi
-      egressgateway:
-        autoscaleMin: 1
-        autoscaleMax: 3
-        resources:
-          limits:
-           cpu: 50m
-           memory: 64Mi
-          requests:
-           cpu: 10m
-           memory: 32Mi
+          adminUser: admin
+          adminPassword: "${GRAFANA_ADMIN_PASS}"
+      tracing.enabled: true
+      servicegraph.enabled: true
+```
+
+## Metrics Server
+
+```
+  metrics-server:
+    version: "1.1.0"
 ```
