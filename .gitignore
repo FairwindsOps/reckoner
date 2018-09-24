@@ -3,3 +3,4 @@
 *.pyc
 venvbuild
 dist
+venv
