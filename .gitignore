@@ -1,4 +1,5 @@
 
 *egg-info
 *.pyc
-venv
+venvbuild
+dist
