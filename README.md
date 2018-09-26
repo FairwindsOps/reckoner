@@ -107,6 +107,8 @@ charts:
     files:
       - /path/to/values/file.yml
 ```
+Note: The file paths will be interpreted as relative to the working directory of
+the shell calling autohelm.
 
 ### namespace
 
