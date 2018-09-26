@@ -244,10 +244,10 @@ class AutoHelm(object):
             subprocess.call(args)
 
     def debug_args(self):
-        if self._debug:
-            return ['--debug']
         if self._dryrun:
             return ['--dry-run', '--debug']
+        if self._debug:
+            return ['--debug']
         return []
 
     def _format_set(self, key, value):
