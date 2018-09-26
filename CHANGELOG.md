@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
+### Updated
+- swapped the order of evaluation of the --debug and --dryrun flags to prevent --dryrun from getting lost if both flags are set
+
 
 ##[0.6.4]
 ### Added
