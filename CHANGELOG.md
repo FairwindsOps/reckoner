@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 ### Updated
+- add --helm-args flag to pass flags and params on to helm
 - swapped the order of evaluation of the --debug and --dryrun flags to prevent --dryrun from getting lost if both flags are set
 
 
