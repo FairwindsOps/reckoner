@@ -30,6 +30,9 @@ This utility adds to the functionality of [Helm](https://github.com/kubernetes/h
       * `--debug`: Pass --debug to helm
       * `--dry-run`: Pass --dry-run to helm so no action is taken. Also includes `--debug`
       * `--heading <chart>`: Run only the specified chart out of the course.yml
+      * `--helm-args <helm-arg>`: Pass arbitrary flags and parameters onto helm
+        such as `--helm-args --set=foo=toast`, or `--helm-args --recreate-pods`.
+        Multiples are supported but only one parameter per `--helm-args` is supported.
       * `--local-development`: Run `autohelm` in local-development mode where Tiller is not required and no helm commands are run. Useful for rapid or offline development.
   * `generate`: Generates example file `course.yml` with extensive descriptions
   * `version`: Output autohelm version
