@@ -32,23 +32,19 @@ from meta import __version__ as autohelm_meta_version
 
 # from . import AutoHelmSubprocess as subprocess
 
+<<<<<<< HEAD
 class AutohelmException(Exception):
+=======
+default_namespace = "kube_system"
+default_repository = {'name': 'stable', 'url': 'https://kubernetes-charts.storage.googleapis.com'}
+
+
+class AutoHelmException(Exception):
+>>>>>>> futzing with repositories and default repositories
     pass
 
 class Core(object):
     _installed_repositories = []
-    _home = None
-
-    def __init__(self):
-        logging.debug("Checking for local Helm directories.")
-        if self._home is None:
-            self._home = os.environ.get('HOME') + "/.helm"
-            logging.warn("$HELM_HOME not set. Using ~/.helm")
-
-        self._archive = self._home + '/cache/archive'
-        if not os.path.isdir(self._archive):
-            logging.critical("{} does not exist. Have you run `helm init`?".format(self._archive))
-            sys.exit(1)
 
     @property
     def installed_repositories(self):
@@ -101,13 +97,14 @@ class Repository(Core):
 
 class Chart(Core):
 
-    def __init__(self, chart, namespace="kube_system", repository="stable"):
+    def __init__(self, chart, namespace, archive):
         super(Chart, self).__init__()
         logging.debug(chart)
         self._release_name = chart.keys()[0]
         self._chart = chart[self._release_name]
         self._namespace = self.namespace or namespace
-        self._repository = Repository(self._chart.get('repository', repository))
+        self._repository = Repository(self._chart.get('repository', default_repository))
+        self._archive = archive
 
     @property
     def name(self):
@@ -321,6 +318,7 @@ class Course(Core):
     def __init__(self, file):
         super(Course, self).__init__()
         self._dict = yaml.load(file)
+        logging.debug(self._dict)
         self._repositories = []
         for name, repository in self._dict.get('repositories', {}).iteritems():
             repository['name'] = name
@@ -342,6 +340,15 @@ class AutoHelm(Core):
     def __init__(self, file=None, dryrun=False, debug=False, charts=None, helm_args=None, local_development=False):
 
         super(AutoHelm, self).__init__()
+
+        logging.debug("Checking for local Helm directories.")
+        self._home = os.environ.get('HOME') + "/.helm"
+        logging.warn("$HELM_HOME not set. Using ~/.helm")
+
+        self._archive = self._home + '/cache/archive'
+        if not os.path.isdir(self._archive):
+            logging.critical("{} does not exist. Have you run `helm init`?".format(self._archive))
+            sys.exit(1)
 
         self._dryrun = dryrun
         self._debug = debug
@@ -370,7 +377,8 @@ class AutoHelm(Core):
     def _load_charts(self):
         _charts = []
         defaults = {
-            "namespace": self._course.namespace,
+            'namespace': self._course.namespace,
+            'archive': self._archive
         }
 
         for name, chart in self._course.charts.iteritems():
