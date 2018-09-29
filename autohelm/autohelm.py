@@ -17,7 +17,7 @@
 import oyaml as yaml
 
 import logging
-#import subprocess
+import subprocess
 import git
 import os
 import sys
@@ -30,36 +30,84 @@ from git import GitCommandError
 from string import Template
 from meta import __version__ as autohelm_meta_version
 
-from . import AutoHelmSubprocess as subprocess
+# from . import AutoHelmSubprocess as subprocess
 
 class AutohelmException(Exception):
     pass
 
 class Core(object):
     _installed_repositories = []
-    __been_checked = False
+    _home = None
+
+    def __init__(self):
+        logging.debug("Checking for local Helm directories.")
+        if self._home is None:
+            self._home = os.environ.get('HOME') + "/.helm"
+            logging.warn("$HELM_HOME not set. Using ~/.helm")
+
+        self._archive = self._home + '/cache/archive'
+        if not os.path.isdir(self._archive):
+            logging.critical("{} does not exist. Have you run `helm init`?".format(self._archive))
+            sys.exit(1)
 
     @property
     def installed_repositories(self):
 
-        if len(self._installed_repositories) is not 0:
+        if self._installed_repositories != []:
             return self._installed_repositories
 
         args = ['helm', 'repo', 'list']
-        for repo in  [line.split()[0] for line in subprocess.check_output(args).split('\n')[1:-1]]:
-            self._installed_repositories.append(repo)
+
+        for repo in [line.split() for line in subprocess.check_output(args).split('\n')[1:-1]]:
+            self._installed_repositories.append({'name': repo[0], 'url': repo[1]})
         logging.debug("Getting installed repositories: {}".format(self._installed_repositories))
         return self._installed_repositories
+
+
+class Repository(Core):
+
+    def __init__(self, repository):
+        super(Repository, self).__init__()
+        logging.debug("Repository: {}".format(repository))
+        self._repository = {}
+        if type(repository) is str:
+            self._repository['name'] = repository
+        else:
+            self._repository['name'] = repository.get('name')
+            self._repository['url'] = repository.get('url')
+
+            if repository.get('git'):
+                self._repository['git'] = repository.get('git')
+            if repository.get('path'):
+                self._repository['path'] = repository.get('path', '')
+
+    def __getattr__(self, key):
+        return self._repository.get(key)
+
+    def __str__(self):
+        return str(self._repository)
+
+    def install(self):
+        """ Install Helm repository """
+        logging.debug("Installing Chart Repository: {}".format(self.name))
+        if self.git is None:
+            if self._repository not in self.installed_repositories:
+                args = ['helm', 'repo', 'add', self.name, self.url]
+                logging.debug(" ".join(args))
+                subprocess.call(args)
+            else:
+                logging.debug("Chart repository {} already installed".format(self.name))
 
 
 class Chart(Core):
 
     def __init__(self, chart, namespace="kube_system", repository="stable"):
+        super(Chart, self).__init__()
         logging.debug(chart)
-        self._chart = chart
         self._release_name = chart.keys()[0]
-        self._namespace = chart.get('namespace', namespace)
-        self._repository = chart.get('repository', repository)
+        self._chart = chart[self._release_name]
+        self._namespace = self.namespace or namespace
+        self._repository = Repository(self._chart.get('repository', repository))
 
     @property
     def name(self):
@@ -67,15 +115,15 @@ class Chart(Core):
 
     @property
     def values(self):
-        return self._chart.get('values', {})
+        return dict(self._chart.get('values', {}))
 
     @property
     def values_strings(self):
-        return self._chart.get('values-strings', {})
+        return dict(self._chart.get('values-strings', {}))
 
     @property
     def files(self):
-        return self._chart.get('files', [])
+        return dict(self._chart.get('files', []))
 
     @property
     def namespace(self):
@@ -88,64 +136,8 @@ class Chart(Core):
     def __getattr__(self, key):
         return self._chart.get(key)
 
-    def _fetch_git_chart(self, name, git_repo, branch, path):
-        """ Does a sparse checkout for a git repository git_repo@branch and retrieves the chart at the path """
-
-        def fetch_pull(ref):
-            """ Do the fetch, checkout pull for the git ref """
-            origin.fetch(tags=True)
-            repo.git.checkout("{}".format(ref))
-            repo.git.pull("origin", "{}".format(ref))
-
-        repo_path = '{}/{}'.format(self._archive, re.sub(r'\:\/\/|\/|\.', '_', git_repo))
-        if not os.path.isdir(repo_path):
-            os.mkdir(repo_path)
-
-        if not os.path.isdir("{}/.git".format(repo_path)):
-            repo = git.Repo.init(repo_path)
-        else:
-            repo = git.Repo(repo_path)
-
-        sparse_checkout_file_path = "{}/.git/info/sparse-checkout".format(repo_path)
-        if path not in ['', '/', './']:
-            repo.git.config('core.sparseCheckout', 'true')
-            if path:
-                with open(sparse_checkout_file_path, "ab+") as scf:
-                    if path not in scf.readlines():
-                        scf.write("{}/{}\n".format(path, name))
-                logging.debug("Configuring sparse checkout for path: {}".format(path))
-        else:
-            logging.warn("Ignoring path argument \"{}\"! Remove path when chart exists at the repository root".format(path))
-
-        if 'origin' in [remote.name for remote in repo.remotes]:
-            origin = repo.remotes['origin']
-        else:
-            origin = repo.create_remote('origin', (git_repo))
-
-        try:
-            chart_path = "{}/{}/{}".format(repo_path, path, name)
-            fetch_pull(branch)
-        except GitCommandError, e:
-            if 'Sparse checkout leaves no entry on working directory' in str(e):
-                logging.warn("Error with path \"{}\"! Remove path when chart exists at the repository root".format(path))
-                logging.warn("Skipping chart {}".format(name))
-                return False
-            elif 'did not match any file(s) known to git.' in str(e):
-                logging.warn("Branch/tag \"{}\" does not seem to exist!".format(branch))
-                logging.warn("Skipping chart {}".format(name))
-                return False
-            else:
-                logging.error(e)
-                raise e
-        except Exception, e:
-            logging.error(e)
-            raise e
-        finally:
-            # Remove sparse-checkout to prevent path issues from poisoning the cache
-            logging.debug("Removing sparse checkout config")
-            if os.path.isfile(sparse_checkout_file_path):
-                os.remove(sparse_checkout_file_path)
-            repo.git.config('core.sparseCheckout', 'false')
+    def __str__(self):
+        return str(dict(self._chart))
 
     def run_hook(self, coms):
         """ Expects a list of shell commands. Runs the commands defined by the hook """
@@ -156,7 +148,7 @@ class Chart(Core):
             logging.debug("Running Hook {}".format(com))
             ret = subprocess.call(com, shell=True, executable="/bin/bash")
             if ret != 0:
-                logging.error("Hook command `{}` returne non-zero exit code".format(com))
+                logging.error("Hook command `{}` returned non-zero exit code".format(com))
                 sys.exit(1)
 
     def rollback(self):
@@ -171,19 +163,17 @@ class Chart(Core):
         if not self._dryrun:
             subprocess.call(args)
 
-    def install(self):
+    def install(self, debug=False, dryrun=False):
+        self._debug = debug
+        self._dryrun = dryrun
 
-        repository_name = self.ensure_repository()
-        if repository_name is False:
-            logging.error("Unable to install chart: {}".format(chart_name))
-            return False
+        if self.repository.git:
+            self.repository.name = '{}/{}/{}'.format(self._archive, re.sub(r'\:\/\/|\/|\.', '_', self.repository.git), self.repository.path)
+            self._fetch_from_git_repository(self.repository.name, self.repository.git, self.version, self.repository.path)
+        else:
+            self.repository.install()
 
-        # If the chart_name is in the repo path and appears to be redundant pb
-        if repository_name.endswith(self.name) and os.path.isdir(self.repository) and not os.path.isdir('{}/{}'.format(repository_name, self.name)):
-            logging.warn("Chart name {} in {}. Removing to try and prevent errros.".format(chart_name, repository_name))
-            repository_name = repository_name[:-len(chart_name) - 1]
-
-        chart_path = '{}/{}'.format(repository_name, self.name)
+        chart_path = '{}/{}'.format(self.repository.name, self.name)
         args = ['helm', 'dependency', 'update', chart_path]
         logging.debug("Updating chart dependencies: {}".format(chart_path))
         logging.debug(" ".join(args))
@@ -193,7 +183,7 @@ class Chart(Core):
         args.extend(self.debug_args())
 
         if self.version:
-            args.append('--version={}'.format(chart.get('version')))
+            args.append('--version={}'.format(self.version))
 
         for file in self.files:
             args.append("-f={}".format(file))
@@ -225,26 +215,69 @@ class Chart(Core):
             self.run_hook(post_install_hook)
         return True
 
-    def ensure_repository(self):
-        repository_name = self.repository
-        logging.debug("Repository for {} is {}".format(self.name, self.repository))
-        if type(self.repository) is str:
-            repository_name = self.repository
-            repository_url = None
-            repository_git = None
-        else:
-            repository_name = self.repository.get('name')
-            repository_url = self.repository.get('url')
-            repository_git = self.repository.get('git')
-            repository_path = self.repository.get('path', '')
+    # # If the chart_name is in the repo path and appears to be redundant pb
+    # if self.name.endswith(self.name) and os.path.isdir(self.repository) and not os.path.isdir('{}/{}'.format(repository_name, self.name)):
+    #     logging.warn("Chart name {} in {}. Removing to try and prevent errros.".format(chart_name, repository_name))
+    #     repository_name = repository_name[:-len(chart_name) - 1]
 
-        if repository_git and not self._local_development:
-            repository_name = '{}/{}/{}'.format(self._archive, re.sub(r'\:\/\/|\/|\.', '_', repository_git), repository_path)
-            if self._fetch_git_chart(self.name, repository_git, self.version,  repository_path) is False:
+    def _fetch_from_git_repository(self, name, git_repo, branch, path):
+        """ Does a sparse checkout for a git repository git_repo@branch and retrieves the chart at the path """
+
+        def fetch_pull(ref):
+            """ Do the fetch, checkout pull for the git ref """
+            origin.fetch(tags=True)
+            repo.git.checkout("{}".format(ref))
+            repo.git.pull("origin", "{}".format(ref))
+
+        repo_path = '{}/{}'.format(self._archive, re.sub(r'\:\/\/|\/|\.', '_', self.repository.git))
+        if not os.path.isdir(repo_path):
+            os.mkdir(repo_path)
+
+        if not os.path.isdir("{}/.git".format(repo_path)):
+            repo = git.Repo.init(repo_path)
+        else:
+            repo = git.Repo(repo_path)
+
+        sparse_checkout_file_path = "{}/.git/info/sparse-checkout".format(repo_path)
+        if self.path not in ['', '/', './']:
+            repo.git.config('core.sparseCheckout', 'true')
+            if self.path:
+                with open(sparse_checkout_file_path, "ab+") as scf:
+                    if path not in scf.readlines():
+                        scf.write("{}/{}\n".format(self.path, self.name))
+                logging.debug("Configuring sparse checkout for path: {}".format(self.path))
+        else:
+            logging.warn("Ignoring path argument \"{}\"! Remove path when chart exists at the repository root".format(path))
+
+        if 'origin' in [remote.name for remote in repo.remotes]:
+            origin = repo.remotes['origin']
+        else:
+            origin = repo.create_remote('origin', (self.git))
+
+        try:
+            chart_path = "{}/{}/{}".format(repo_path, self.path, self._chart_name)
+            fetch_pull(self.version)
+        except GitCommandError, e:
+            if 'Sparse checkout leaves no entry on working directory' in str(e):
+                logging.warn("Error with path \"{}\"! Remove path when chart exists at the repository root".format(path))
+                logging.warn("Skipping chart {}".format(self._chart_name))
                 return False
-        elif repository_name not in self.installed_repositories and repository_url:
-            self._install_repository(repository_name, repository_url)
-        return repository_name
+            elif 'did not match any file(s) known to git.' in str(e):
+                logging.warn("Branch/tag \"{}\" does not seem to exist!".format(self.version))
+                logging.warn("Skipping chart {}".format(self._chart_name))
+                return False
+            else:
+                logging.error(e)
+                raise e
+        except Exception, e:
+            logging.error(e)
+            raise e
+        finally:
+            # Remove sparse-checkout to prevent path issues from poisoning the cache
+            logging.debug("Removing sparse checkout config")
+            if os.path.isfile(sparse_checkout_file_path):
+                os.remove(sparse_checkout_file_path)
+            repo.git.config('core.sparseCheckout', 'false')
 
     def debug_args(self):
         if self._dryrun:
@@ -253,12 +286,63 @@ class Chart(Core):
             return ['--debug']
         return []
 
+    def _format_set(self, key, value):
+        """Allows nested yaml to be set on the command line of helm.
+        Accepts key and value, if value is an ordered dict, recussively
+        formats the string properly """
+
+        if type(value) == OrderedDict:
+            for new_key, new_value in value.iteritems():
+                for k, v in self._format_set("{}.{}".format(key, new_key), new_value):
+                    for a, b in self._format_set_list(k, v):
+                        yield a, b
+        else:
+            for a, b in self._format_set_list(key, value):
+                yield a, b
+
+    def _format_set_list(self, key, value):
+        """ given a list and a key, format it properly for the helm set list indexing """
+        logging.debug("Key: {}".format(key))
+        logging.debug("Value: {}".format(value))
+        if type(value) == list:
+            for index, item in enumerate(value):
+                if type(item) == OrderedDict:
+                    logging.debug("Item: {}".format(item))
+                    for k, v in self._format_set("{}[{}]".format(key, index), item):
+                        yield k, v
+                else:
+                    yield "{}[{}]".format(key, index), item
+        else:
+            yield key, value
+
+
+class Course(Core):
+
+    def __init__(self, file):
+        super(Course, self).__init__()
+        self._dict = yaml.load(file)
+        self._repositories = []
+        for name, repository in self._dict.get('repositories', {}).iteritems():
+            repository['name'] = name
+            self._repositories.append(Repository(repository))
+
+    def __str__(self):
+        return str(self._dict)
+
+    @property
+    def repositories(self):
+        return self._repositories
+
+    def __getattr__(self, key):
+        return self._dict.get(key)
+
 
 class AutoHelm(Core):
 
     def __init__(self, file=None, dryrun=False, debug=False, charts=None, helm_args=None, local_development=False):
 
-        self._home = os.environ.get('HELM_HOME')
+        super(AutoHelm, self).__init__()
+
         self._dryrun = dryrun
         self._debug = debug
         self._helm_args = helm_args
@@ -266,51 +350,30 @@ class AutoHelm(Core):
         if self._local_development:
             logging.info("Local Development is ON")
 
-        self._course = yaml.load(file)
-        self._course_minimum_versions = self._course.get('minimum_versions')
-        self._course_namespace = self._course.get('namespace')
-        self._course_repository = self._course.get('repository')
-        self._course_charts = self._course.get('charts')
-        self._selected_charts = charts or self._course_charts.iterkeys()
+        self._course = Course(file)
+        self._selected_charts = charts or self._course.charts.iterkeys()
         self._load_charts()
 
-        self._installed_repositories = None
         if not self._local_development:
             logging.debug("Checking for correct cluster context")
-            self._current_context = None
-            self._context = self._course.get('context', self.current_context)
+            self._context = self._course.context or self.current_context
             self._update_context()
-
-            logging.debug("Checking for local Helm directories.")
-            if self._home is None:
-                self._home = os.environ.get('HOME') + "/.helm"
-                logging.warn("$HELM_HOME not set. Using ~/.helm")
-
-            self._archive = self._home + '/cache/archive'
-            if not os.path.isdir(self._archive):
-                logging.error("{} does not exist. Have you run `helm init`?".format(self._archive))
-                sys.exit(1)
 
             logging.debug("Checking for Tiller")
             if not self.tiller_present:
                 logging.error("Tiller not present in cluster. Have you run `helm init`?")
                 sys.exit(1)
 
-            self._repositories = self.course.get('repositories')
-            if self._repositories:
-                for repo in self._repositories:
-                    if repo not in self.installed_repositories:
-                        url = self._repositories[repo].get('url')
-                        self._install_repository(repo, url)
+            for repo in self._course.repositories:
+                repo.install()
 
     def _load_charts(self):
         _charts = []
         defaults = {
-            "namespace": self._course_namespace,
-            "repository": self._course_repository,
+            "namespace": self._course.namespace,
         }
 
-        for name, chart in self._course_charts.iteritems():
+        for name, chart in self._course.charts.iteritems():
             if name in self._selected_charts:
                 _charts.append(Chart({name: chart}, **defaults))
 
@@ -323,7 +386,7 @@ class AutoHelm(Core):
         for chart in self._charts:
             logging.debug("Installing {}".format(chart.name))
 
-            if not chart.install():
+            if not chart.install(self._debug, self._dryrun):
                 logging.error('Helm upgrade failed on {}. Rolling back...'.format(chart))
                 chart.rollback
                 failed_charts.append(chart)
@@ -366,46 +429,11 @@ class AutoHelm(Core):
         logging.debug(" ".join(args))
         subprocess.call(args)
 
-    def _install_repository(self, name, url):
-        """ Install Helm repository """
-        args = ['helm', 'repo', 'add', name, url]
-        logging.debug(" ".join(args))
-        subprocess.call(args)
-
     def _set_context(self, context):
         """ Set the cluster context """
         args = ['kubectl', 'config', 'use-context', context]
         logging.debug(" ".join(args))
         subprocess.call(args)
-
-    def _format_set(self, key, value):
-        """Allows nested yaml to be set on the command line of helm.
-        Accepts key and value, if value is an ordered dict, recussively
-        formats the string properly """
-
-        if type(value) == OrderedDict:
-            for new_key, new_value in value.iteritems():
-                for k, v in self._format_set("{}.{}".format(key, new_key), new_value):
-                    for a, b in self._format_set_list(k, v):
-                        yield a, b
-        else:
-            for a, b in self._format_set_list(key, value):
-                yield a, b
-
-    def _format_set_list(self, key, value):
-        """ given a list and a key, format it properly for the helm set list indexing """
-        logging.debug("Key: {}".format(key))
-        logging.debug("Value: {}".format(value))
-        if type(value) == list:
-            for index, item in enumerate(value):
-                if type(item) == OrderedDict:
-                    logging.debug("Item: {}".format(item))
-                    for k, v in self._format_set("{}[{}]".format(key, index), item):
-                        yield k, v
-                else:
-                    yield "{}[{}]".format(key, index), item
-        else:
-            yield key, value
 
     def _update_context(self):
         """ Update the current context to the desired context """
@@ -417,14 +445,14 @@ class AutoHelm(Core):
         if self.current_context == self._context:
             return True
         else:
-            raise AutohelmException("Unable to set cluster context to: {}".format(self._context))
+            raise AutoHelmException("Unable to set cluster context to: {}".format(self._context))
 
     def _compare_required_versions(self):
         """ Compare installed versions of helm and autohelm to the minimum versions required by the course.yml """
-        if self._course_minimum_versions is None:
+        if self._course.minimum_versions is None:
             return True
-        helm_mv = self._course_minimum_versions.get('helm', '0.0.0')
-        autohelm_mv = self._course_minimum_versions.get('autohelm', '0.0.0')
+        helm_mv = self._course.minimum_versions.get('helm', '0.0.0')
+        autohelm_mv = self._course.minimum_versions.get('autohelm', '0.0.0')
 
         logging.debug("Helm Minimum Version is: {}".format(helm_mv))
         helm_version = self.helm_version
