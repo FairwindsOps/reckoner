@@ -28,42 +28,20 @@ import json
 from collections import OrderedDict
 from git import GitCommandError
 from string import Template
-from meta import __version__ as autohelm_meta_version
+from meta import __version__ as autohelm_version
 
 # from . import AutoHelmSubprocess as subprocess
 
-<<<<<<< HEAD
-class AutohelmException(Exception):
-=======
 default_namespace = "kube_system"
 default_repository = {'name': 'stable', 'url': 'https://kubernetes-charts.storage.googleapis.com'}
 
 
 class AutoHelmException(Exception):
->>>>>>> futzing with repositories and default repositories
     pass
 
-class Core(object):
-    _installed_repositories = []
-
-    @property
-    def installed_repositories(self):
-
-        if self._installed_repositories != []:
-            return self._installed_repositories
-
-        args = ['helm', 'repo', 'list']
-
-        for repo in [line.split() for line in subprocess.check_output(args).split('\n')[1:-1]]:
-            self._installed_repositories.append({'name': repo[0], 'url': repo[1]})
-        logging.debug("Getting installed repositories: {}".format(self._installed_repositories))
-        return self._installed_repositories
-
-
-class Repository(Core):
-
+class Repository(object):
     def __init__(self, repository):
-        super(Repository, self).__init__()
+        self.config = Config()
         logging.debug("Repository: {}".format(repository))
         self._repository = {}
         if type(repository) is str:
@@ -87,24 +65,29 @@ class Repository(Core):
         """ Install Helm repository """
         logging.debug("Installing Chart Repository: {}".format(self.name))
         if self.git is None:
-            if self._repository not in self.installed_repositories:
+            if self._repository not in self.config.installed_repositories:
                 args = ['helm', 'repo', 'add', self.name, self.url]
                 logging.debug(" ".join(args))
                 subprocess.call(args)
             else:
                 logging.debug("Chart repository {} already installed".format(self.name))
 
+    def update(self):
+        """ Update repositories """
+        args = ['helm', 'repo', 'update', self.name]
+        logging.debug(" ".join(args))
+        subprocess.call(args)
 
-class Chart(Core):
 
-    def __init__(self, chart, namespace, archive):
-        super(Chart, self).__init__()
+class Chart(object):
+
+    def __init__(self, chart):
+        self.config = Config()
         logging.debug(chart)
         self._release_name = chart.keys()[0]
         self._chart = chart[self._release_name]
-        self._namespace = self.namespace or namespace
         self._repository = Repository(self._chart.get('repository', default_repository))
-        self._archive = archive
+        self._archive = self.config.archive
 
     @property
     def name(self):
@@ -157,12 +140,12 @@ class Chart(Core):
         revision = int(list_output.splitlines()[-1].split('\t')[1].strip())
         args = ['helm', 'rollback', self._release_name, str(revision)]
         logging.debug(args)
-        if not self._dryrun:
+        if not self.config.dryrun:
             subprocess.call(args)
 
-    def install(self, debug=False, dryrun=False):
-        self._debug = debug
-        self._dryrun = dryrun
+    def install(self, namespace):
+
+        _namespace = self.namespace or namespace
 
         if self.repository.git:
             self.repository.name = '{}/{}/{}'.format(self._archive, re.sub(r'\:\/\/|\/|\.', '_', self.repository.git), self.repository.path)
@@ -192,7 +175,7 @@ class Chart(Core):
             for k, v in self._format_set(key, value):
                 args.append("--set-string={}={}".format(k, v))
 
-        args.append('--namespace={}'.format(self.namespace))
+        args.append('--namespace={}'.format(_namespace))
 
         logging.debug(' '.join(args))
 
@@ -204,7 +187,7 @@ class Chart(Core):
             args = [Template(arg).substitute(os.environ) for arg in args]
         except KeyError, e:
             raise Exception("Missing requirement environment variable: {}".format(e.args[0]))
-        if not self._local_development:
+        if not self.config.local_development:
             return not bool(subprocess.call(args))
 
         if self._post_install_hook:
@@ -277,9 +260,9 @@ class Chart(Core):
             repo.git.config('core.sparseCheckout', 'false')
 
     def debug_args(self):
-        if self._dryrun:
+        if self.config.dryrun:
             return ['--dry-run', '--debug']
-        if self._debug:
+        if self.config.debug:
             return ['--debug']
         return []
 
@@ -313,16 +296,24 @@ class Chart(Core):
             yield key, value
 
 
-class Course(Core):
+class Course(object):
 
     def __init__(self, file):
-        super(Course, self).__init__()
+        self.config = Config()
         self._dict = yaml.load(file)
         logging.debug(self._dict)
         self._repositories = []
         for name, repository in self._dict.get('repositories', {}).iteritems():
             repository['name'] = name
             self._repositories.append(Repository(repository))
+
+        for repo in self.repositories:
+            if not self.config.local_development:
+                repo.install()
+                repo.update()
+
+        self._compare_required_versions()
+        self._charts = []
 
     def __str__(self):
         return str(self._dict)
@@ -334,96 +325,143 @@ class Course(Core):
     def __getattr__(self, key):
         return self._dict.get(key)
 
+    def plot(self, charts_to_install):
+        """
+        Accepts charts_to_install, an interable of the names of the charts
+        to install. This method compares the charts in the argument to the 
+        charts in the course and calls Chart.install()
 
-class AutoHelm(Core):
+        """
+        _charts = []
+        _failed_charts = []
+        self._charts_to_install = []
 
+<<<<<<< HEAD
     def __init__(self, file=None, dryrun=False, debug=False, charts=None, helm_args=None, local_development=False):
+=======
+        try:
+            iter(charts_to_install)
+        except TypeError:
+            charts_to_install = (charts_to_install)
+>>>>>>> basicaly done refactor, time to add tests
 
-        super(AutoHelm, self).__init__()
+        for name, chart in self.charts.iteritems():
+            if name in charts_to_install:
+                self._charts_to_install.append(Chart({name: chart}))
 
-        logging.debug("Checking for local Helm directories.")
-        self._home = os.environ.get('HOME') + "/.helm"
-        logging.warn("$HELM_HOME not set. Using ~/.helm")
+        for chart in self._charts_to_install:
+            logging.debug("Installing {}".format(chart.name))
 
-        self._archive = self._home + '/cache/archive'
-        if not os.path.isdir(self._archive):
-            logging.critical("{} does not exist. Have you run `helm init`?".format(self._archive))
+            if not chart.install(self.namespace):
+                logging.error('Helm upgrade failed on {}. Rolling back...'.format(chart))
+                chart.rollback
+                failed_charts.append(chart)
+
+        if _failed_charts:
+            logging.error("ERROR: Some charts failed to install and were rolled back")
+            for chart in failed_charts:
+                logging.error(" - {}".format(chart))
             sys.exit(1)
 
+<<<<<<< HEAD
         self._dryrun = dryrun
         self._debug = debug
         self._helm_args = helm_args
         self._local_development = local_development
         if self._local_development:
             logging.info("Local Development is ON")
+=======
+    def _compare_required_versions(self):
+        """
+        Compare installed versions of helm and autohelm to the minimum versions
+        required by the course.yml
+        Accepts no arguments
+        """
+        if self.minimum_versions is None:
+            return True
+        helm_minimum_version = self.minimum_versions.get('helm', '0.0.0')
+        autohelm_minimum_version = self.minimum_versions.get('autohelm', '0.0.0')
+>>>>>>> basicaly done refactor, time to add tests
 
-        self._course = Course(file)
-        self._selected_charts = charts or self._course.charts.iterkeys()
-        self._load_charts()
+        logging.debug("Helm Minimum Version is: {}".format(helm_mv))
+        logging.debug("Helm Installed Version is {}".format(self.config.helm_version))
 
-        if not self._local_development:
-            logging.debug("Checking for correct cluster context")
-            self._context = self._course.context or self.current_context
-            self._update_context()
+        logging.debug("Autohelm Minimum Version is {}".format(autohelm_mv))
+        logging.debug("Autohelm Installed Version is {}".format(autohelm_version))
 
-            logging.debug("Checking for Tiller")
-            if not self.tiller_present:
-                logging.error("Tiller not present in cluster. Have you run `helm init`?")
-                sys.exit(1)
+        r1 = semver.compare(autohelm_version, autohelm_minimum_version)
+        if r1 < 0:
+            raise AutohelmException("autohelm Minimum Version {} not met.".format(autohelm_minimum_version))
+        r2 = semver.compare(helm_version, helm_minimum_version)
+        if r2 < 0:
+            raise AutohelmException("helm Minimum Version {} not met.".format(helm_minimum_version))
 
-            for repo in self._course.repositories:
-                repo.install()
+        return True
 
-    def _load_charts(self):
-        _charts = []
-        defaults = {
-            'namespace': self._course.namespace,
-            'archive': self._archive
-        }
 
-        for name, chart in self._course.charts.iteritems():
-            if name in self._selected_charts:
-                _charts.append(Chart({name: chart}, **defaults))
+class Config(object):
+    _config = {}
 
-        self._charts = _charts
+    def __init__(self):
+        self.__dict__ = self._config
+        self._installed_repositories = []
+        if 'home' not in self._config:
+            logging.debug("Checking for local Helm directories.")
+            self.home = os.environ.get('HOME') + "/.helm"
+            logging.warn("$HELM_HOME not set. Using ~/.helm")
 
-    def install(self):
-        self._compare_required_versions()
-        self._update_repositories()
-        failed_charts = []
-        for chart in self._charts:
-            logging.debug("Installing {}".format(chart.name))
-
-            if not chart.install(self._debug, self._dryrun):
-                logging.error('Helm upgrade failed on {}. Rolling back...'.format(chart))
-                chart.rollback
-                failed_charts.append(chart)
-
-        if failed_charts:
-            logging.error("ERROR: Some charts failed to install and were rolled back")
-            for chart in failed_charts:
-                logging.error(" - {}".format(chart))
+        self.archive = self.home + '/cache/archive'
+        if not os.path.isdir(self.archive):
+            logging.critical("{} does not exist. Have you run `helm init`?".format(self.archive))
             sys.exit(1)
+
+    def __setattr__(self, name, value):
+        object.__setattr__(self, name, value)
+        logging.debug("Config: {} is {}".format(name, value))
+
+    def __str__(self):
+        return str(self._config)
+
+    def __iter__(self):
+        return iter(self._config)
+
+    @property
+    def installed_repositories(self):
+        if self._installed_repositories != []:
+            return self._installed_repositories
+
+        args = ['helm', 'repo', 'list']
+
+        for repo in [line.split() for line in subprocess.check_output(args).split('\n')[1:-1]]:
+            self._installed_repositories.append({'name': repo[0], 'url': repo[1]})
+        logging.debug("Getting installed repositories: {}".format(self._installed_repositories))
+        return self.installed_repositories
 
     @property
     def current_context(self):
         """ Returns the current cluster context """
         args = ['kubectl', 'config', 'current-context']
         resp = subprocess.check_output(args)
-        self._current_context = resp.strip()
-        return self._current_context
+        return resp.strip()
 
     @property
     def helm_version(self):
         """ return version of installed helm binary """
         args = ['helm', 'version', '--client']
         resp = subprocess.check_output(args)
-        _helm_version = resp.replace('Client: &version.Version', '').split(',')[0].split(':')[1].replace('v', '').replace('"', '')
-        return _helm_version
+        return resp.replace('Client: &version.Version', '').split(',')[0].split(':')[1].replace('v', '').replace('"', '')
 
     @property
     def tiller_present(self):
-        """Detects if tiller is present in the currently configured cluster"""
+        """
+        Detects if tiller is present in the currently configured cluster
+        Accepts no arguments
+        """
+
+        logging.debug("Checking for Tiller")
+        if self.local_development:
+            return True
+
         try:
             FNULL = open(os.devnull, 'w')
             subprocess.check_call(['helm', 'list'], stdout=FNULL, stderr=subprocess.STDOUT)
@@ -431,52 +469,44 @@ class AutoHelm(Core):
             return False
         return True
 
-    def _update_repositories(self):
-        """ Update repositories """
-        args = ['helm', 'repo', 'update']
-        logging.debug(" ".join(args))
-        subprocess.call(args)
 
-    def _set_context(self, context):
-        """ Set the cluster context """
-        args = ['kubectl', 'config', 'use-context', context]
-        logging.debug(" ".join(args))
-        subprocess.call(args)
+class AutoHelm(object):
+
+    def __init__(self, file=None, dryrun=False, debug=False, local_development=False):
+
+        self.config = Config()
+        self.config.dryrun = dryrun
+        self.config.debug = debug
+        self.config.local_development = local_development
+
+        if not self.config.tiller_present:
+            logging.error("Tiller not present in cluster. Have you run `helm init`?")
+            sys.exit(1)
+
+        self.course = Course(file)
+
+    def install(self, charts=[]):
+        """
+        Calls plot on course instance. Accepts list or tuple that is the keys
+        of the charts dictionary. Only that list of charts will be installed or
+        if the argument is emmpty, All charts in the course will be installed
+        """
+        selected_charts = charts or list(self.course.charts.iterkeys())
+        self.course.plot(selected_charts)
 
     def _update_context(self):
-        """ Update the current context to the desired context """
-        logging.debug("Current cluster context is: {}".format(self.current_context))
-        if self.current_context != self._context:
-            logging.debug("Updating cluster context to {}".format(self._context))
-            self._set_context(self._context)
+        """
+        Update the current context in the kubeconfig to the desired context
+        Accepts no arguments
+        """
+        logging.debug("Checking for correct cluster context")
+        logging.debug("Current cluster context is: {}".format(self.config.current_context))
 
-        if self.current_context == self._context:
+        self.course.context or self.config.current_context
+        if self.config.local_development:
             return True
-        else:
-            raise AutoHelmException("Unable to set cluster context to: {}".format(self._context))
 
-    def _compare_required_versions(self):
-        """ Compare installed versions of helm and autohelm to the minimum versions required by the course.yml """
-        if self._course.minimum_versions is None:
-            return True
-        helm_mv = self._course.minimum_versions.get('helm', '0.0.0')
-        autohelm_mv = self._course.minimum_versions.get('autohelm', '0.0.0')
-
-        logging.debug("Helm Minimum Version is: {}".format(helm_mv))
-        helm_version = self.helm_version
-        logging.debug("Helm Installed Version is {}".format(helm_version))
-
-        logging.debug("Autohelm Minimum Version is {}".format(autohelm_mv))
-        autohelm_version = autohelm_meta_version
-        logging.debug("Autohelm Installed Version is {}".format(autohelm_version))
-
-        r1 = semver.compare(autohelm_version, autohelm_mv)
-        if r1 < 0:
-            raise AutohelmException("autohelm Minimum Version {} not met.".format(autohelm_mv))
-        r2 = semver.compare(helm_version, helm_mv)
-        if r2 < 0:
-            raise AutohelmException("helm Minimum Version {} not met.".format(helm_mv))
-
+<<<<<<< HEAD
         return True
 
     def ensure_repository(self, release_name, chart_name, repository, version):
@@ -556,3 +586,15 @@ class AutoHelm(Core):
             return not bool(subprocess.call(args))
 
         return True
+=======
+        if self.config.current_context != self._context:
+            logging.debug("Updating cluster context to {}".format(self._context))
+            args = ['kubectl', 'config', 'use-context', self._context]
+            logging.debug(" ".join(args))
+            subprocess.call(args)
+
+        if self.config.current_context == self._context:
+            return True
+        else:
+            raise AutoHelmException("Unable to set cluster context to: {}".format(self._context))
+>>>>>>> basicaly done refactor, time to add tests
