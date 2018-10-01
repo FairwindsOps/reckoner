@@ -28,6 +28,11 @@ jobs:
           command: |
             docker build -t autohelm .
       - run:
+          name: Unit Tests
+          command: |
+            pip install -r test/requirements.txt
+            nose2 tests.test_autohelm
+      - run:
           name: Test Installation
           command: |
             docker run --rm autohelm --version
