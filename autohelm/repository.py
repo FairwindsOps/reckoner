@@ -29,9 +29,10 @@ class Repository(object):
         if type(repository) is str:
             self._repository['name'] = repository
         else:
-            self._repository['name'] = repository.get('name')
-            self._repository['url'] = repository.get('url')
-
+            if repository.get('name'):
+                self._repository['name'] = repository.get('name')
+            if repository.get('url'):
+                self._repository['url'] = repository.get('url')
             if repository.get('git'):
                 self._repository['git'] = repository.get('git')
             if repository.get('path'):
@@ -49,7 +50,7 @@ class Repository(object):
         logging.debug("Installing Chart Repository: {}".format(self.name))
         if self.config.local_development:
             return True
-        
+
         if self.git is None:
             if self._repository not in self.config.installed_repositories:
                 args = ['helm', 'repo', 'add', self.name, self.url]
@@ -62,7 +63,7 @@ class Repository(object):
         """ Update repositories """
         if self.config.local_development:
             return True
-        
+
         args = ['helm', 'repo', 'update', self.name]
         logging.debug(" ".join(args))
         subprocess.call(args)

@@ -44,11 +44,27 @@ class Chart(object):
 
     @property
     def values(self):
-        return dict(self._chart.get('values', {}))
+        if self._values == None:
+            self._values = self.ordereddict_to_dict(self._chart.get('values', {}))
+
+        return self._values
+
+    def ordereddict_to_dict(self, value):
+        for k, v in value.items():
+            if type(v) == OrderedDict:
+                value[k] = self.ordereddict_to_dict(v)
+            if type(v) == list:
+                for item in v:
+                    if type(item) == OrderedDict:
+                        v.remove(item)
+                        v.append(self.ordereddict_to_dict(item))
+        return dict(value)
 
     @property
     def values_strings(self):
-        return dict(self._chart.get('values-strings', {}))
+        if self._values_strings is None:
+            self._values_strings = self.ordereddict_to_dict(self._chart.get('values-strings', {}))
+        return self._values_strings
 
     @property
     def files(self):
@@ -89,8 +105,17 @@ class Chart(object):
         revision = int(list_output.splitlines()[-1].split('\t')[1].strip())
         args = ['helm', 'rollback', self._release_name, str(revision)]
         logging.debug(args)
-        if not self.config.dryrun:
+        if not self.config.dryrun and not self.config.local_development:
             subprocess.call(args)
+
+    def update_dependencies(self):
+
+        if self.config.local_development or self.config.dryrun:
+            return True
+        args = ['helm', 'dependency', 'update', self.chart_path]
+        logging.debug("Updating chart dependencies: {}".format(self.chart_path))
+        logging.debug(" ".join(args))
+        subprocess.call(args)
 
     def install(self, namespace):
 
@@ -102,14 +127,12 @@ class Chart(object):
         else:
             self.repository.install()
 
-        chart_path = '{}/{}'.format(self.repository.name, self.name)
-        args = ['helm', 'dependency', 'update', chart_path]
-        logging.debug("Updating chart dependencies: {}".format(chart_path))
-        logging.debug(" ".join(args))
-        subprocess.call(args)
+        self.chart_path = '{}/{}'.format(self.repository.name, self.name)
 
-        args = ['helm', 'upgrade', '--install', '{}'.format(self._release_name), chart_path]
-        args.extend(self.debug_args())
+        self.update_dependencies()
+
+        args = ['helm', 'upgrade', '--install', '{}'.format(self._release_name), self.chart_path]
+        args.extend(self.debug_args)
 
         if self.version:
             args.append('--version={}'.format(self.version))
@@ -208,6 +231,7 @@ class Chart(object):
                 os.remove(sparse_checkout_file_path)
             repo.git.config('core.sparseCheckout', 'false')
 
+    @property
     def debug_args(self):
         if self.config.dryrun:
             return ['--dry-run', '--debug']
@@ -217,9 +241,8 @@ class Chart(object):
 
     def _format_set(self, key, value):
         """Allows nested yaml to be set on the command line of helm.
-        Accepts key and value, if value is an ordered dict, recussively
+        Accepts key and value, if value is an ordered dict, recursively
         formats the string properly """
-
         if type(value) == OrderedDict:
             for new_key, new_value in value.iteritems():
                 for k, v in self._format_set("{}.{}".format(key, new_key), new_value):
@@ -236,7 +259,7 @@ class Chart(object):
         if type(value) == list:
             for index, item in enumerate(value):
                 if type(item) == OrderedDict:
-                    logging.debug("Item: {}".format(item))
+                    logging.debug("Item: {}".format(dict(item)))
                     for k, v in self._format_set("{}[{}]".format(key, index), item):
                         yield k, v
                 else:

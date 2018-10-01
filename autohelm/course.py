@@ -61,7 +61,6 @@ class Course(object):
                 self._charts.append(Chart({name: chart}))
 
         return self._charts
-    
 
     def __getattr__(self, key):
         return self._dict.get(key)
@@ -88,9 +87,7 @@ class Course(object):
 
         for chart in self._charts_to_install:
             logging.debug("Installing {}".format(chart.name))
-            if self.config.local_development:
-                continue
-            
+
             if not chart.install(self.namespace):
                 logging.error('Helm upgrade failed on {}. Rolling back...'.format(chart))
                 chart.rollback
@@ -100,7 +97,10 @@ class Course(object):
             logging.error("ERROR: Some charts failed to install and were rolled back")
             for chart in failed_charts:
                 logging.error(" - {}".format(chart))
+            raise
             sys.exit(1)
+
+        return True
 
     def _compare_required_versions(self):
         """

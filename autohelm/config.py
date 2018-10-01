@@ -53,11 +53,12 @@ class Config(object):
             return self._installed_repositories
 
         args = ['helm', 'repo', 'list']
-
         for repo in [line.split() for line in subprocess.check_output(args).split('\n')[1:-1]]:
-            self._installed_repositories.append({'name': repo[0], 'url': repo[1]})
+            _repo = {'name': repo[0], 'url': repo[1]}
+            if _repo not in self._installed_repositories:
+                self._installed_repositories.append(_repo)
         logging.debug("Getting installed repositories: {}".format(self._installed_repositories))
-        return self.installed_repositories
+        return self._installed_repositories
 
     @property
     def current_context(self):
