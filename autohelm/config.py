@@ -79,6 +79,8 @@ class Config(object):
     @property
     def helm_version(self):
         """ return version of installed helm binary """
+        if self.local_development:
+            return True
         args = ['helm', 'version', '--client']
         resp = subprocess.check_output(args)
         return resp.replace('Client: &version.Version', '').split(',')[0].split(':')[1].replace('v', '').replace('"', '')

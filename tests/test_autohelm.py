@@ -6,8 +6,7 @@ import logging
 import os
 import git
 import subprocess
-
-import coverage
+import shutil
 
 from autohelm.autohelm import AutoHelm
 from autohelm.config import Config
@@ -71,30 +70,32 @@ test_nested_values = {
 test_values_strings_chart = "spotify-docker-gc"
 
 test_files_path = "test_files"
+test_helm_archive = "{}/.helm/cache/archive/".format(test_files_path)
 
 
 def setUpModule():
     coloredlogs.install(level="DEBUG")
     config = Config()
     config.local_development = True
-    
-    os.mkdir(test_files_path)
+
+    os.makedirs(test_helm_archive)
     os.environ['HELM_HOME'] = test_files_path
-    
-    args = ['helm','init','-c','--home', "{}/.helm".format(test_files_path)]
-    subprocess.check_output(args)
+
+    # This will eventually be need for integration testing
+    # args = ['helm','init','-c','--home', "{}/.helm".format(test_files_path)]
+    # subprocess.check_output(args)
+
 
 def tearDownModule():
-    import shutil
     shutil.rmtree(test_files_path)
-    
 
 
 class TestAutoHelm(unittest.TestCase):
     name = "test-pentagon-base"
 
     def setUp(self):
-        
+
+        # This will eventually be need for integration testing
         # repo = git.Repo.init(git_repo_path)
         # os.chdir(git_repo_path)
         # subprocess.call(["helm", "create", "chart"])

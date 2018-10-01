@@ -47,7 +47,8 @@ class Course(object):
                 repo.install()
                 repo.update()
 
-        self._compare_required_versions()
+        if not self.config.local_development:
+            self._compare_required_versions()
 
     def __str__(self):
         return str(self._dict)
@@ -120,8 +121,10 @@ class Course(object):
         r1 = semver.compare(autohelm_version, autohelm_minimum_version)
         if r1 < 0:
             raise MinimumVersionException("autohelm Minimum Version {} not met.".format(autohelm_minimum_version))
-        r2 = semver.compare(self.config.helm_version, helm_minimum_version)
-        if r2 < 0:
-            raise MinimumVersionException("helm Minimum Version {} not met.".format(helm_minimum_version))
+        
+        if not self.config.local_development:
+            r2 = semver.compare(self.config.helm_version, helm_minimum_version)
+            if r2 < 0:
+                raise MinimumVersionException("helm Minimum Version {} not met.".format(helm_minimum_version))
 
         return True
