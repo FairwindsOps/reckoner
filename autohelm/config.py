@@ -27,19 +27,24 @@ class Config(object):
     def __init__(self):
         self.__dict__ = self._config
         self._installed_repositories = []
-        
-        if self.local_develpment:
-            return True
-        
+
+    @property
+    def home(self):
         if 'home' not in self._config:
             logging.debug("Checking for local Helm directories.")
-            self.home = os.environ.get('HOME') + "/.helm"
+            self._config['home'] = os.environ.get('HELM_HOME') + "/.helm"
             logging.warn("$HELM_HOME not set. Using ~/.helm")
+        return self._config['home']
 
-        self.archive = self.home + '/cache/archive'
-        if not os.path.isdir(self.archive):
-            logging.critical("{} does not exist. Have you run `helm init`?".format(self.archive))
-            sys.exit(1)
+    @property
+    def archive(self):
+        if 'archive' not in self._config:
+            archive = self.home + '/cache/archive'
+            if not os.path.isdir(archive):
+                logging.warn("{} does not exist. Have you run `helm init`?".format(archive))
+            self._config['archive'] = archive
+
+        return self._config['archive']
 
     def __setattr__(self, name, value):
         object.__setattr__(self, name, value)

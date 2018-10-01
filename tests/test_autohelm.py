@@ -70,11 +70,25 @@ test_nested_values = {
 
 test_values_strings_chart = "spotify-docker-gc"
 
+test_files_path = "test_files"
+
 
 def setUpModule():
     coloredlogs.install(level="DEBUG")
     config = Config()
     config.local_development = True
+    
+    os.mkdir(test_files_path)
+    os.environ['HELM_HOME'] = test_files_path
+    
+    args = ['helm','init','-c','--home', "{}/.helm".format(test_files_path)]
+    subprocess.check_output(args)
+
+def tearDownModule():
+    import shutil
+    shutil.rmtree(test_files_path)
+    
+
 
 class TestAutoHelm(unittest.TestCase):
     name = "test-pentagon-base"
@@ -101,6 +115,8 @@ class TestAutoHelm(unittest.TestCase):
         self.assertIsInstance(self.a.config, Config)
 
     def test_install(self):
+        print self.a.course.repositories
+
         self.assertTrue(self.a.install())
 
 

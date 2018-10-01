@@ -33,11 +33,14 @@ class Course(object):
     def __init__(self, file):
         self.config = Config()
         self._dict = yaml.load(file)
-        logging.debug(self._dict)
         self._repositories = []
+        self._charts = []
         for name, repository in self._dict.get('repositories', {}).iteritems():
             repository['name'] = name
             self._repositories.append(Repository(repository))
+
+        for name, chart in self._dict.get('charts', {}).iteritems():
+            self._charts.append(Chart({name: chart}))
 
         for repo in self.repositories:
             if not self.config.local_development:
@@ -45,7 +48,6 @@ class Course(object):
                 repo.update()
 
         self._compare_required_versions()
-        self._charts = []
 
     def __str__(self):
         return str(self._dict)
@@ -54,16 +56,12 @@ class Course(object):
     def repositories(self):
         return self._repositories
 
-    @property
-    def charts(self):
-        if self._charts == []:
-            for name, chart in self._dict['charts'].iteritems():
-                self._charts.append(Chart({name: chart}))
-
-        return self._charts
-
     def __getattr__(self, key):
         return self._dict.get(key)
+
+    @property
+    def charts(self):
+        return self._charts
 
     def plot(self, charts_to_install):
         """

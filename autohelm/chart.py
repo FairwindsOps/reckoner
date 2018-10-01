@@ -36,7 +36,6 @@ class Chart(object):
         self._release_name = chart.keys()[0]
         self._chart = chart[self._release_name]
         self._repository = Repository(self._chart.get('repository', default_repository))
-        self._archive = self.config.archive
 
     @property
     def name(self):
@@ -122,7 +121,7 @@ class Chart(object):
         _namespace = self.namespace or namespace
 
         if self.repository.git:
-            self.repository.name = '{}/{}/{}'.format(self._archive, re.sub(r'\:\/\/|\/|\.', '_', self.repository.git), self.repository.path)
+            self.repository.name = '{}/{}/{}'.format(self.config.archive, re.sub(r'\:\/\/|\/|\.', '_', self.repository.git), self.repository.path)
             self._fetch_from_git_repository(self.repository.name, self.repository.git, self.version, self.repository.path)
         else:
             self.repository.install()
@@ -181,7 +180,7 @@ class Chart(object):
             repo.git.checkout("{}".format(ref))
             repo.git.pull("origin", "{}".format(ref))
 
-        repo_path = '{}/{}'.format(self._archive, re.sub(r'\:\/\/|\/|\.', '_', self.repository.git))
+        repo_path = '{}/{}'.format(self.config.archive, re.sub(r'\:\/\/|\/|\.', '_', self.repository.git))
         if not os.path.isdir(repo_path):
             os.mkdir(repo_path)
 
@@ -201,35 +200,36 @@ class Chart(object):
         else:
             logging.warn("Ignoring path argument \"{}\"! Remove path when chart exists at the repository root".format(path))
 
-        if 'origin' in [remote.name for remote in repo.remotes]:
-            origin = repo.remotes['origin']
-        else:
-            origin = repo.create_remote('origin', (self.git))
-
-        try:
-            chart_path = "{}/{}/{}".format(repo_path, self.path, self._chart_name)
-            fetch_pull(self.version)
-        except GitCommandError, e:
-            if 'Sparse checkout leaves no entry on working directory' in str(e):
-                logging.warn("Error with path \"{}\"! Remove path when chart exists at the repository root".format(path))
-                logging.warn("Skipping chart {}".format(self._chart_name))
-                return False
-            elif 'did not match any file(s) known to git.' in str(e):
-                logging.warn("Branch/tag \"{}\" does not seem to exist!".format(self.version))
-                logging.warn("Skipping chart {}".format(self._chart_name))
-                return False
+        if not self.config.local_development:
+            if 'origin' in [remote.name for remote in repo.remotes]:
+                origin = repo.remotes['origin']
             else:
+                origin = repo.create_remote('origin', (self.git))
+
+            try:
+                chart_path = "{}/{}/{}".format(repo_path, self.path, self._chart_name)
+                fetch_pull(self.version)
+            except GitCommandError, e:
+                if 'Sparse checkout leaves no entry on working directory' in str(e):
+                    logging.warn("Error with path \"{}\"! Remove path when chart exists at the repository root".format(path))
+                    logging.warn("Skipping chart {}".format(self._chart_name))
+                    return False
+                elif 'did not match any file(s) known to git.' in str(e):
+                    logging.warn("Branch/tag \"{}\" does not seem to exist!".format(self.version))
+                    logging.warn("Skipping chart {}".format(self._chart_name))
+                    return False
+                else:
+                    logging.error(e)
+                    raise e
+            except Exception, e:
                 logging.error(e)
                 raise e
-        except Exception, e:
-            logging.error(e)
-            raise e
-        finally:
-            # Remove sparse-checkout to prevent path issues from poisoning the cache
-            logging.debug("Removing sparse checkout config")
-            if os.path.isfile(sparse_checkout_file_path):
-                os.remove(sparse_checkout_file_path)
-            repo.git.config('core.sparseCheckout', 'false')
+            finally:
+                # Remove sparse-checkout to prevent path issues from poisoning the cache
+                logging.debug("Removing sparse checkout config")
+                if os.path.isfile(sparse_checkout_file_path):
+                    os.remove(sparse_checkout_file_path)
+                repo.git.config('core.sparseCheckout', 'false')
 
     @property
     def debug_args(self):
