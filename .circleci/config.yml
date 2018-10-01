@@ -22,21 +22,20 @@ jobs:
     working_directory: ~/autohelm
     steps:
       - checkout
+      - run:
+          name: Unit Tests
+          command: |
+            sudo pip install .
+            autohelm --version
+            sudo pip install -r tests/requirements.txt
+            nose2
       - setup_remote_docker
       - run:
           name: Build Docker Image
           command: |
             docker build -t autohelm .
-      - run:
-          name: Unit Tests
-          command: |
-            pip install -r test/requirements.txt
-            nose2 tests.test_autohelm
-      - run:
-          name: Test Installation
-          command: |
             docker run --rm autohelm --version
-
+            
   release:
     docker:
       - image: circleci/python:2

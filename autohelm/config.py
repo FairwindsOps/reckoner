@@ -27,6 +27,10 @@ class Config(object):
     def __init__(self):
         self.__dict__ = self._config
         self._installed_repositories = []
+        
+        if self.local_develpment:
+            return True
+        
         if 'home' not in self._config:
             logging.debug("Checking for local Helm directories.")
             self.home = os.environ.get('HOME') + "/.helm"
