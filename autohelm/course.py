@@ -15,11 +15,18 @@
 # limitations under the License.
 
 import logging
+import semver
+import autohelm
 
 import oyaml as yaml
 
 from config import Config
 from chart import Chart
+from repository import Repository
+from exception import MinimumVersionException
+
+from meta import __version__ as autohelm_version
+
 
 class Course(object):
 
@@ -47,6 +54,15 @@ class Course(object):
     def repositories(self):
         return self._repositories
 
+    @property
+    def charts(self):
+        if self._charts == []:
+            for name, chart in self._dict['charts'].iteritems():
+                self._charts.append(Chart({name: chart}))
+
+        return self._charts
+    
+
     def __getattr__(self, key):
         return self._dict.get(key)
 
@@ -66,13 +82,15 @@ class Course(object):
         except TypeError:
             charts_to_install = (charts_to_install)
 
-        for name, chart in self.charts.iteritems():
-            if name in charts_to_install:
-                self._charts_to_install.append(Chart({name: chart}))
+        for chart in self.charts:
+            if chart.name in charts_to_install:
+                self._charts_to_install.append(chart)
 
         for chart in self._charts_to_install:
             logging.debug("Installing {}".format(chart.name))
-
+            if self.config.local_development:
+                continue
+            
             if not chart.install(self.namespace):
                 logging.error('Helm upgrade failed on {}. Rolling back...'.format(chart))
                 chart.rollback
@@ -95,17 +113,17 @@ class Course(object):
         helm_minimum_version = self.minimum_versions.get('helm', '0.0.0')
         autohelm_minimum_version = self.minimum_versions.get('autohelm', '0.0.0')
 
-        logging.debug("Helm Minimum Version is: {}".format(helm_mv))
+        logging.debug("Helm Minimum Version is: {}".format(helm_minimum_version))
         logging.debug("Helm Installed Version is {}".format(self.config.helm_version))
 
-        logging.debug("Autohelm Minimum Version is {}".format(autohelm_mv))
+        logging.debug("Autohelm Minimum Version is {}".format(autohelm_minimum_version))
         logging.debug("Autohelm Installed Version is {}".format(autohelm_version))
 
         r1 = semver.compare(autohelm_version, autohelm_minimum_version)
         if r1 < 0:
-            raise AutohelmException("autohelm Minimum Version {} not met.".format(autohelm_minimum_version))
-        r2 = semver.compare(helm_version, helm_minimum_version)
+            raise MinimumVersionException("autohelm Minimum Version {} not met.".format(autohelm_minimum_version))
+        r2 = semver.compare(self.config.helm_version, helm_minimum_version)
         if r2 < 0:
-            raise AutohelmException("helm Minimum Version {} not met.".format(helm_minimum_version))
+            raise MinimumVersionException("helm Minimum Version {} not met.".format(helm_minimum_version))
 
         return True

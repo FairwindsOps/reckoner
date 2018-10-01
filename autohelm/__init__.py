@@ -15,12 +15,10 @@
 # limitations under the License.
 
 import subprocess
+import logging
 
 from config import Config
 from course import Course
-
-class AutoHelmException(Exception):
-    pass
 
 
 class AutoHelmSubprocess(object):

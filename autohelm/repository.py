@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import logging
+import subprocess
 
 from config import Config
 
@@ -44,7 +45,11 @@ class Repository(object):
 
     def install(self):
         """ Install Helm repository """
+
         logging.debug("Installing Chart Repository: {}".format(self.name))
+        if self.config.local_development:
+            return True
+        
         if self.git is None:
             if self._repository not in self.config.installed_repositories:
                 args = ['helm', 'repo', 'add', self.name, self.url]
@@ -55,6 +60,9 @@ class Repository(object):
 
     def update(self):
         """ Update repositories """
+        if self.config.local_development:
+            return True
+        
         args = ['helm', 'repo', 'update', self.name]
         logging.debug(" ".join(args))
         subprocess.call(args)
