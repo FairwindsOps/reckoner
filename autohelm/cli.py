@@ -19,8 +19,8 @@ import logging
 import coloredlogs
 import click
 import shutil
-import autohelm
-from autohelm import AutoHelm
+from . import AutoHelm
+
 from meta import __version__
 
 
