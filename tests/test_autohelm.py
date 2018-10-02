@@ -20,7 +20,7 @@ git_repo_path = "./test"
 test_release_names = ['cluster-autoscaler', 'spotify-docker-gc', 'centrifugo', 'spotify-docker-gc-again']
 test_repositories = ['stable', 'incubator'],
 test_minimum_versions = ['helm', 'autohelm']
-test_repository_dict = {'name': 'test_repo', 'url': 'test_repo_url'}
+test_repository_dict = {'name': 'test_repo', 'url': 'https://test_repo_url'}
 test_autohelm_version = "1.0.0"
 
 test_release_name = 'spotify-docker-gc-again'
@@ -69,8 +69,8 @@ test_nested_values = {
 
 test_values_strings_chart = "spotify-docker-gc"
 
-test_files_path = "test_files"
-test_helm_archive = "{}/.helm/cache/archive/".format(test_files_path)
+test_files_path = "test_files/.helm"
+test_helm_archive = "{}/cache/archive/".format(test_files_path)
 
 
 def setUpModule():
@@ -87,7 +87,7 @@ def setUpModule():
 
 
 def tearDownModule():
-    shutil.rmtree(test_files_path)
+    pass #shutil.rmtree(test_files_path)
 
 
 class TestAutoHelm(unittest.TestCase):

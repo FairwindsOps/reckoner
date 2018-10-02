@@ -189,7 +189,7 @@ class Chart(object):
 
         logging.debug('Chart repository path: {}'.format(repo_path))
         if not os.path.isdir(repo_path):
-            os.mkdir(repo_path)
+            os.makedirs(repo_path)
 
         if not os.path.isdir("{}/.git".format(repo_path)):
             repo = git.Repo.init(repo_path)
