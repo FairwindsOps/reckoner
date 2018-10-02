@@ -13,3 +13,24 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.__init__.py
+
+import subprocess
+import logging
+from exception import AutoHelmCommandException
+
+
+def call(args):
+    """
+    Wrapper utility function for subprocess.Popen.
+    Accepts list: `args`
+    Return tuple: `(stdout, stderr, exitcode)`
+    """
+    logging.debug(' '.join(args))
+    p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = p.communicate()
+    exitcode = p.returncode
+    
+    if exitcode > 0:
+        raise AutoHelmCommandException("Error with subprocess call: {})".format(' '.join(args), exitcode, stdout, stderr), stdout, stderr, exitcode)
+    return stdout, stderr, exitcode
+    
