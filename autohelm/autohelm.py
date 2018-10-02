@@ -16,6 +16,7 @@
 
 import subprocess
 import logging
+import sys
 
 from config import Config
 from course import Course
@@ -38,11 +39,12 @@ class AutoHelmSubprocess(object):
 
 class AutoHelm(object):
 
-    def __init__(self, file=None, dryrun=False, debug=False, local_development=False):
+    def __init__(self, file=None, dryrun=False, debug=False, helm_args=None, local_development=False):
 
         self.config = Config()
         self.config.dryrun = dryrun
         self.config.debug = debug
+        self.config.helm_args = helm_args
         self.config.local_development = local_development
 
         if not self.config.tiller_present:
@@ -57,7 +59,7 @@ class AutoHelm(object):
         of the charts dictionary. Only that list of charts will be installed or
         if the argument is emmpty, All charts in the course will be installed
         """
-        selected_charts = charts or [chart._release for chart in self.course.charts]
+        selected_charts = charts or [chart._release_name for chart in self.course.charts]
         return self.course.plot(selected_charts)
 
     def _update_context(self):

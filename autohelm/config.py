@@ -30,10 +30,16 @@ class Config(object):
 
     @property
     def home(self):
-        if 'home' not in self._config:
-            logging.debug("Checking for local Helm directories.")
-            self._config['home'] = os.environ.get('HELM_HOME') + "/.helm"
-            logging.warn("$HELM_HOME not set. Using ~/.helm")
+
+        if self._config.get("home") is None:
+            helm_home = os.environ.get('HELM_HOME')
+            fallback_home = os.environ.get('HOME') + "/.helm"
+            if helm_home is not None:
+                self._config['home'] = helm_home
+            else:
+                self._config['home'] = fallback_home
+                logging.warn("$HELM_HOME not set. Using ~/.helm")
+
         return self._config['home']
 
     @property

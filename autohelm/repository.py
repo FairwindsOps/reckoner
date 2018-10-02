@@ -53,7 +53,7 @@ class Repository(object):
 
         if self.git is None:
             if self._repository not in self.config.installed_repositories:
-                args = ['helm', 'repo', 'add', self.name, self.url]
+                args = ['helm', 'repo', 'add', str(self.name), str(self.url)]
                 logging.debug(" ".join(args))
                 subprocess.call(args)
             else:

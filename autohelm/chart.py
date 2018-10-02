@@ -38,6 +38,10 @@ class Chart(object):
         self._repository = Repository(self._chart.get('repository', default_repository))
 
     @property
+    def release_name(self):
+        return self._release_name
+
+    @property
     def name(self):
         return self._chart.get('chart', self._release_name)
 
@@ -132,6 +136,7 @@ class Chart(object):
 
         args = ['helm', 'upgrade', '--install', '{}'.format(self._release_name), self.chart_path]
         args.extend(self.debug_args)
+        args.extend(self.helm_args)
 
         if self.version:
             args.append('--version={}'.format(self.version))
@@ -181,6 +186,8 @@ class Chart(object):
             repo.git.pull("origin", "{}".format(ref))
 
         repo_path = '{}/{}'.format(self.config.archive, re.sub(r'\:\/\/|\/|\.', '_', self.repository.git))
+
+        logging.debug('Chart repository path: {}'.format(repo_path))
         if not os.path.isdir(repo_path):
             os.mkdir(repo_path)
 
@@ -238,6 +245,13 @@ class Chart(object):
         if self.config.debug:
             return ['--debug']
         return []
+
+    @property
+    def helm_args(self):
+        if self.config.helm_args is not None:
+            return self.config.helm_args
+        return []
+    
 
     def _format_set(self, key, value):
         """Allows nested yaml to be set on the command line of helm.

@@ -1,7 +1,7 @@
 namespace: test #namespace to install the chart in, defaults to 'kube-system'
 repositories:
   test_repo:
-    url: test_repo_url
+    url: https://test_repo_url
 minimum_versions: #set minimum version requirements here
   helm: 2.8.2
   autohelm: 0.5.0

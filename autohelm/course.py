@@ -90,14 +90,13 @@ class Course(object):
             if not chart.install(self.namespace):
                 logging.error('Helm upgrade failed on {}. Rolling back...'.format(chart))
                 chart.rollback
-                failed_charts.append(chart)
+                _failed_charts.append(chart)
 
         if _failed_charts:
             logging.error("ERROR: Some charts failed to install and were rolled back")
-            for chart in failed_charts:
-                logging.error(" - {}".format(chart))
-            raise
-            sys.exit(1)
+            for chart in _failed_charts:
+                logging.error(" - {}".format(chart.release_name))
+                
 
         return True
 
