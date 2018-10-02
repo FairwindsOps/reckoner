@@ -14,27 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import subprocess
+
 import logging
 import sys
 
+from . import call
 from config import Config
 from course import Course
-
-
-class AutoHelmSubprocess(object):
-
-    @classmethod
-    def check_call(cls, *args, **kwargs):
-        return subprocess.check_call(*args, **kwargs)
-
-    @classmethod
-    def check_output(cls, *args, **kwargs):
-        return subprocess.check_output(*args, **kwargs)
-
-    @classmethod
-    def call(cls, *args, **kwargs):
-        return subprocess.call(*args, **kwargs)
 
 
 class AutoHelm(object):

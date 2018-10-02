@@ -19,7 +19,7 @@ import logging
 import coloredlogs
 import click
 import shutil
-from autohelm import AutoHelm
+from autohelm import AutoHelm, call
 
 from meta import __version__
 

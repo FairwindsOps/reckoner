@@ -18,8 +18,9 @@
 import os
 import sys
 import logging
-import subprocess
 
+from . import call
+from exception import AutoHelmCommandException
 
 class Config(object):
     _config = {}
@@ -68,7 +69,8 @@ class Config(object):
             return self._installed_repositories
 
         args = ['helm', 'repo', 'list']
-        for repo in [line.split() for line in subprocess.check_output(args).split('\n')[1:-1]]:
+        stdout, stderr, retcode = call(args)
+        for repo in [line.split() for line in stdout.split('\n')[1:-1]]:
             _repo = {'name': repo[0], 'url': repo[1]}
             if _repo not in self._installed_repositories:
                 self._installed_repositories.append(_repo)
@@ -79,8 +81,8 @@ class Config(object):
     def current_context(self):
         """ Returns the current cluster context """
         args = ['kubectl', 'config', 'current-context']
-        resp = subprocess.check_output(args)
-        return resp.strip()
+        stdout, stderr, retcode = call(args)
+        return stdout.strip()
 
     @property
     def helm_version(self):
@@ -88,8 +90,8 @@ class Config(object):
         if self.local_development:
             return True
         args = ['helm', 'version', '--client']
-        resp = subprocess.check_output(args)
-        return resp.replace('Client: &version.Version', '').split(',')[0].split(':')[1].replace('v', '').replace('"', '')
+        stdout, stderr, retcode = call(args)
+        return stdout.replace('Client: &version.Version', '').split(',')[0].split(':')[1].replace('v', '').replace('"', '')
 
     @property
     def tiller_present(self):
@@ -104,7 +106,8 @@ class Config(object):
 
         try:
             FNULL = open(os.devnull, 'w')
-            subprocess.check_call(['helm', 'list'], stdout=FNULL, stderr=subprocess.STDOUT)
-        except subprocess.CalledProcessError:
+            args = ['helm', 'list']
+            stdout, stderr, retcode = call(args)
+        except AutoHelmCommandException:
             return False
         return True

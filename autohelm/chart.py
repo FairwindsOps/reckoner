@@ -23,8 +23,11 @@ import git
 from collections import OrderedDict
 from string import Template
 
+from . import call
+from exception import AutoHelmCommandException
 from config import Config
 from repository import Repository
+
 
 default_repository = {'name': 'stable', 'url': 'https://kubernetes-charts.storage.googleapis.com'}
 
@@ -100,16 +103,15 @@ class Chart(object):
                 sys.exit(1)
 
     def rollback(self):
-        list_output = subprocess.check_output(['helm', 'list', '--deployed', self._release_name])
-        if not list_output:
-            # Chart has nothing to roll back to
-            return
-        logging.debug(list_output)
-        revision = int(list_output.splitlines()[-1].split('\t')[1].strip())
-        args = ['helm', 'rollback', self._release_name, str(revision)]
-        logging.debug(args)
-        if not self.config.dryrun and not self.config.local_development:
-            subprocess.call(args)
+        list_output = subprocess.check_output()
+        args = ['helm', 'list', '--deployed', self._release_name]
+        stdout, stderr, retcode = call(args)
+        if stdout:          
+            revision = int(stdout.splitlines()[-1].split('\t')[1].strip())
+            args = ['helm', 'rollback', self._release_name, str(revision)]
+            if not self.config.dryrun and not self.config.local_development:
+                call(args)
+        return True
 
     def update_dependencies(self):
 
@@ -117,9 +119,11 @@ class Chart(object):
             return True
         args = ['helm', 'dependency', 'update', self.chart_path]
         logging.debug("Updating chart dependencies: {}".format(self.chart_path))
-        logging.debug(" ".join(args))
-        subprocess.call(args)
-
+        try:
+            call(args)
+        except AutoHelmCommandException, e:
+            logging.warn("Unable to update chart dependancies: {}".format(e.stderr) )
+    
     def install(self, namespace):
 
         _namespace = self.namespace or namespace
@@ -153,8 +157,6 @@ class Chart(object):
 
         args.append('--namespace={}'.format(_namespace))
 
-        logging.debug(' '.join(args))
-
         if self._pre_install_hook:
             logging.debug("Running pre_install hook:")
             self.run_hook(pre_install_hook)
@@ -164,7 +166,12 @@ class Chart(object):
         except KeyError, e:
             raise Exception("Missing requirement environment variable: {}".format(e.args[0]))
         if not self.config.local_development:
-            return not bool(subprocess.call(args))
+            try:
+                stdout, stderr, retcode = call(args)
+            except AutoHelmCommandException, e:
+                logging.error("Failed to upgrade/install {}: {}".format(self.release_name, e.stderr))
+                return False
+           
 
         if self._post_install_hook:
             logging.debug("Running post_install hook:")

@@ -15,9 +15,10 @@
 # limitations under the License.
 
 import logging
-import subprocess
 
+from . import call
 from config import Config
+from exception import AutoHelmCommandException
 
 
 class Repository(object):
@@ -54,8 +55,10 @@ class Repository(object):
         if self.git is None:
             if self._repository not in self.config.installed_repositories:
                 args = ['helm', 'repo', 'add', str(self.name), str(self.url)]
-                logging.debug(" ".join(args))
-                subprocess.call(args)
+                try:
+                    call(args)
+                except AutoHelmCommandException, e:
+                    logging.warn("Unable to install repository {}: {}".format(self.name,e.stderr) )
             else:
                 logging.debug("Chart repository {} already installed".format(self.name))
 
@@ -65,5 +68,4 @@ class Repository(object):
             return True
 
         args = ['helm', 'repo', 'update', self.name]
-        logging.debug(" ".join(args))
-        subprocess.call(args)
+        call(args)
