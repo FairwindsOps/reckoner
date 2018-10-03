@@ -139,6 +139,7 @@ class TestAutoHelm(TestBase):
         # # Create git chart in a git repo, then have it checkout the repo from that location
         # logging.debug(os.listdir("./"))
         # os.chdir("../")
+        self.configure_subprocess_mock(test_tiller_present_return_string, '', 0)
         with open(test_course) as f:
             self.a = AutoHelm(file=f, local_development=True)
 
@@ -179,8 +180,12 @@ class TestCourse(TestBase):
         self.assertIsInstance(self.c.repositories, list)
 
     def test_minimum_version(self):
+        
+        self.configure_subprocess_mock(test_helm_version_return_string, '', 0)
+        
         self.c.minimum_versions['autohelm'] = test_autohelm_version
         self.assertRaises(MinimumVersionException, self.c._compare_required_versions)
+
 
     def test_plot_course(self):
         self.c.plot(list(self.c._dict['charts']))
@@ -191,9 +196,11 @@ class TestChart(TestBase):
 
     def setUp(self):
         super(type(self), self).setUp()
+        self.configure_subprocess_mock(test_tiller_present_return_string, '', 0)
         with open(test_course) as f:
             self.a = AutoHelm(file=f, local_development=True)
         self.charts = self.a.course.charts
+
 
     def test_releasename_is_different_than_chart_name(self):
         for chart in self.charts:
@@ -267,13 +274,7 @@ class TestConfig(TestBase):
 
     def test_home_with_envvar_set(self):
         self.assertEqual(self.c1.home, test_files_path)
-        self.assertEqual(self.c1.archive, '{}/{}'.format(test_file_path, test_archive_pathlet))
-
-    def test_home_with_no_envvar_set(self):
-        del os.environ['HELM_HOME']
-        nohome = Config()
-        self.assertEqual(nohome.home, os.path.expanduser(test_default_files_path))
-        self.assertEqual(self.c1.archive, '{}/{}'.format(os.path.expanduser(test_default_files_path), test_archive_pathlet))
+        self.assertEqual(self.c1.archive, '{}/{}'.format(test_files_path, test_archive_pathlet))
 
     def test_borg_pattern(self):
         self.assertEqual(self.c1.__dict__, self.c2.__dict__)
