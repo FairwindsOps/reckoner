@@ -206,16 +206,16 @@ class TestCourse(TestBase):
         self.assertIsInstance(self.c.repositories, list)
 
     def test_minimum_version(self):
-        
         self.configure_subprocess_mock(test_helm_version_return_string, '', 0)
-        
         self.c.minimum_versions['autohelm'] = test_autohelm_version
         self.assertRaises(MinimumVersionException, self.c._compare_required_versions)
 
 
     def test_plot_course(self):
+        self.configure_subprocess_mock('', '', 0) #Lots more work do do here with the installation of the list of charts
         self.c.plot(list(self.c._dict['charts']))
         self.assertEqual(self.c._charts_to_install, self.c.charts)
+
 
 
 class TestChart(TestBase):
