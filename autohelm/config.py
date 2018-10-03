@@ -55,7 +55,7 @@ class Config(object):
 
     def __setattr__(self, name, value):
         object.__setattr__(self, name, value)
-        logging.debug("Config: {} is {}".format(name, value))
+        #logging.debug("Config: {} is {}".format(name, value))
 
     def __str__(self):
         return str(self._config)
@@ -63,45 +63,10 @@ class Config(object):
     def __iter__(self):
         return iter(self._config)
 
-    @property
-    def installed_repositories(self):
-        if self._installed_repositories != []:
-            return self._installed_repositories
-
-        args = ['helm', 'repo', 'list']
-        stdout, stderr, retcode = call(args)
-        for repo in [line.split() for line in stdout.split('\n')[1:-1]]:
-            _repo = {'name': repo[0], 'url': repo[1]}
-            if _repo not in self._installed_repositories:
-                self._installed_repositories.append(_repo)
-        logging.debug("Getting installed repositories: {}".format(self._installed_repositories))
-        return self._installed_repositories
 
     @property
     def current_context(self):
         """ Returns the current cluster context """
         args = ['kubectl', 'config', 'current-context']
-        stdout, stderr, retcode = call(args)
-        return stdout.strip()
-
-    @property
-    def helm_version(self):
-        """ return version of installed helm binary """
-        args = ['helm', 'version', '--client']
-        stdout, stderr, retcode = call(args)
-        return stdout.replace('Client: &version.Version', '').split(',')[0].split(':')[1].replace('v', '').replace('"', '')
-
-    @property
-    def tiller_present(self):
-        """
-        Detects if tiller is present in the currently configured cluster
-        Accepts no arguments
-        """
-
-        logging.debug("Checking for Tiller")
-        try:
-            args = ['helm', 'list']
-            stdout, stderr, retcode = call(args)
-        except AutoHelmCommandException:
-            return False
-        return bool(stdout)
+        r = call(args)
+        return r.stdout.strip()

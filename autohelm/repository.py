@@ -20,10 +20,10 @@ from . import call
 from config import Config
 from exception import AutoHelmCommandException
 
-
 class Repository(object):
 
     def __init__(self, repository):
+        super(type(self), self).__init__()
         self.config = Config()
         logging.debug("Repository: {}".format(repository))
         self._repository = {}
@@ -47,29 +47,17 @@ class Repository(object):
 
     def install(self):
         """ Install Helm repository """
-
+        from helm import Helm #currently cheating to get around a circular import issue
+        helm = Helm()
         logging.debug("Installing Chart Repository: {}".format(self.name))
 
         if self.git is None:
-            if self._repository not in self.config.installed_repositories:
-                args = ['helm', 'repo', 'add', str(self.name), str(self.url)]
+            if self._repository not in helm.repositories:
                 try:
-                    call(args)
-                    return True
+                    return helm.repo_add(str(self.name),str(self.url))
                 except AutoHelmCommandException, e:
                     logging.warn("Unable to install repository {}: {}".format(self.name,e.stderr) )
                     return False
             else:
                 logging.debug("Chart repository {} already installed".format(self.name))
                 return True
-
-
-    def update(self):
-        """ Update repositories """
-        args = ['helm', 'repo', 'update']
-        try:
-            call(args)
-            return True
-        except AutoHelmCommandException, e:
-            logging.warn("Unable to update repositories: {}".format(self.name,e.stderr) )
-            return False

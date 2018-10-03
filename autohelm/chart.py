@@ -27,6 +27,7 @@ from . import call
 from exception import AutoHelmCommandException
 from config import Config
 from repository import Repository
+from helm import Helm
 
 
 default_repository = {'name': 'stable', 'url': 'https://kubernetes-charts.storage.googleapis.com'}
@@ -34,11 +35,18 @@ default_repository = {'name': 'stable', 'url': 'https://kubernetes-charts.storag
 class Chart(object):
 
     def __init__(self, chart):
+        self.helm = Helm()
         self.config = Config()
         logging.debug(chart)
         self._release_name = chart.keys()[0]
         self._chart = chart[self._release_name]
         self._repository = Repository(self._chart.get('repository', default_repository))
+        self._chart['values']= self.ordereddict_to_dict(self._chart.get('values', {}))
+        
+        value_strings = self._chart.get('values-strings', {})
+        self._chart['values_strings'] = self.ordereddict_to_dict(value_strings)
+        if value_strings != {}:
+            del(self._chart['values-strings'])
 
     @property
     def release_name(self):
@@ -47,13 +55,6 @@ class Chart(object):
     @property
     def name(self):
         return self._chart.get('chart', self._release_name)
-
-    @property
-    def values(self):
-        if self._values == None:
-            self._values = self.ordereddict_to_dict(self._chart.get('values', {}))
-
-        return self._values
 
     def ordereddict_to_dict(self, value):
         for k, v in value.items():
@@ -65,12 +66,6 @@ class Chart(object):
                         v.remove(item)
                         v.append(self.ordereddict_to_dict(item))
         return dict(value)
-
-    @property
-    def values_strings(self):
-        if self._values_strings is None:
-            self._values_strings = self.ordereddict_to_dict(self._chart.get('values-strings', {}))
-        return self._values_strings
 
     @property
     def files(self):
@@ -103,27 +98,22 @@ class Chart(object):
                 sys.exit(1)
 
     def rollback(self):
-        list_output = subprocess.check_output()
-        args = ['helm', 'list', '--deployed', self._release_name]
-        stdout, stderr, retcode = call(args)
-        if stdout:          
-            revision = int(stdout.splitlines()[-1].split('\t')[1].strip())
-            args = ['helm', 'rollback', self._release_name, str(revision)]
-            if not self.config.dryrun and not self.config.local_development:
-                call(args)
-        return True
+            
+        release = [release for release in self.helm.releases.deployed if release.name == self._release_name][0]
+        if release:
+            release.rollback()
 
     def update_dependencies(self):
 
         if self.config.local_development or self.config.dryrun:
             return True
-        args = ['helm', 'dependency', 'update', self.chart_path]
         logging.debug("Updating chart dependencies: {}".format(self.chart_path))
-        try:
-            call(args)
-        except AutoHelmCommandException, e:
-            logging.warn("Unable to update chart dependancies: {}".format(e.stderr) )
-    
+        if os.path.exists(self.chart_path):
+            try:
+                r = self.helm.dependency_update(self.chart_path)
+            except AutoHelmCommandException, e:
+                logging.warn("Unable to update chart dependancies: {}".format(e.stderr) )
+        
     def install(self, namespace):
 
         _namespace = self.namespace or namespace
@@ -138,7 +128,7 @@ class Chart(object):
 
         self.update_dependencies()
 
-        args = ['helm', 'upgrade', '--install', '{}'.format(self._release_name), self.chart_path]
+        args = ['--install', '{}'.format(self._release_name), self.chart_path]
         args.extend(self.debug_args)
         args.extend(self.helm_args)
 
@@ -167,7 +157,7 @@ class Chart(object):
             raise Exception("Missing requirement environment variable: {}".format(e.args[0]))
         if not self.config.local_development:
             try:
-                stdout, stderr, retcode = call(args)
+                r = self.helm.upgrade(*args)
             except AutoHelmCommandException, e:
                 logging.error("Failed to upgrade/install {}: {}".format(self.release_name, e.stderr))
                 return False
