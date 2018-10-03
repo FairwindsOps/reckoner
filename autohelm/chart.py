@@ -264,7 +264,7 @@ class Chart(object):
         """Allows nested yaml to be set on the command line of helm.
         Accepts key and value, if value is an ordered dict, recursively
         formats the string properly """
-        if type(value) == OrderedDict:
+        if type(value) == dict:
             for new_key, new_value in value.iteritems():
                 for k, v in self._format_set("{}.{}".format(key, new_key), new_value):
                     for a, b in self._format_set_list(k, v):
@@ -279,8 +279,8 @@ class Chart(object):
         logging.debug("Value: {}".format(value))
         if type(value) == list:
             for index, item in enumerate(value):
-                if type(item) == OrderedDict:
-                    logging.debug("Item: {}".format(dict(item)))
+                if type(item) == dict:
+                    logging.debug("Item: {}".format(item))
                     for k, v in self._format_set("{}[{}]".format(key, index), item):
                         yield k, v
                 else:
