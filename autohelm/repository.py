@@ -49,23 +49,27 @@ class Repository(object):
         """ Install Helm repository """
 
         logging.debug("Installing Chart Repository: {}".format(self.name))
-        if self.config.local_development:
-            return True
 
         if self.git is None:
             if self._repository not in self.config.installed_repositories:
                 args = ['helm', 'repo', 'add', str(self.name), str(self.url)]
                 try:
                     call(args)
+                    return True
                 except AutoHelmCommandException, e:
                     logging.warn("Unable to install repository {}: {}".format(self.name,e.stderr) )
+                    return False
             else:
                 logging.debug("Chart repository {} already installed".format(self.name))
+                return True
+
 
     def update(self):
         """ Update repositories """
-        if self.config.local_development:
+        args = ['helm', 'repo', 'update']
+        try:
+            call(args)
             return True
-
-        args = ['helm', 'repo', 'update', self.name]
-        call(args)
+        except AutoHelmCommandException, e:
+            logging.warn("Unable to update repositories: {}".format(self.name,e.stderr) )
+            return False

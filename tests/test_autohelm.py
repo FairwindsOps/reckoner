@@ -1,4 +1,20 @@
 
+# -- coding: utf-8 --
+
+# Copyright 2017 Reactive Ops Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the “License”);
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an “AS IS” BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.__init__.py
+
 import unittest
 
 import coloredlogs
@@ -21,7 +37,7 @@ git_repo_path = "./test"
 test_release_names = ['cluster-autoscaler', 'spotify-docker-gc', 'centrifugo', 'spotify-docker-gc-again']
 test_repositories = ['stable', 'incubator'],
 test_minimum_versions = ['helm', 'autohelm']
-test_repository_dict = {'name': 'test_repo', 'url': 'https://test_repo_url'}
+test_repository_dict = {'name': 'test_repo', 'url': 'https://kubernetes-charts.storage.googleapis.com'}
 test_autohelm_version = "1.0.0"
 
 test_release_name = 'spotify-docker-gc-again'
@@ -93,6 +109,16 @@ test_tiller_present_args = ['helm', 'list']
 test_tiller_not_present_return_string = ''
 test_tiller_not_present_args = ['helm', 'list']
 
+test_repo_update_return_string = '''Hang tight while we grab the latest from your chart repositories...
+...Skip local chart repository
+...Successfully got an update from the "incubator" chart repository
+...Successfully got an update from the "stable" chart repository
+Update Complete. ⎈ Happy Helming!⎈'''
+test_repo_update_args = ['helm', 'repo', 'update']
+
+
+test_repo_install_args = ['helm', 'repo', 'add', 'test_repo', 'https://kubernetes-charts.storage.googleapis.com']
+test_repo_install_return_string = '"test_repo" has been added to your repositories'
 
 def setUpModule():
     coloredlogs.install(level="DEBUG")
@@ -248,21 +274,30 @@ class TestChart(TestBase):
 
 class TestRepository(TestBase):
 
+
+
     def test_git_repository(self):
+        self.configure_subprocess_mock('', '', 0)
         r = Repository(test_git_repository)
         self.assertIsInstance(r, Repository)
         self.assertEqual(r.git, test_git_repository['git'])
         self.assertEqual(r.path, test_git_repository['path'])
-        self.assertEqual(r.install(), True)
-        self.assertEqual(r.update(), True)
+        self.assertEqual(r.install(), None)
 
     def test_tgz_repository(self):
+        self.configure_subprocess_mock('', '', 0)
         r = Repository(test_repository_dict)
         self.assertIsInstance(r, Repository)
         self.assertEqual(r.name, test_repository_dict['name'])
         self.assertEqual(r.url, test_repository_dict['url'])
         self.assertEqual(r.install(), True)
-        self.assertEqual(r.update(), True)
+
+    def test_repo_update(self):
+        self.configure_subprocess_mock(test_repo_update_return_string, '', 0)
+        r = Repository(test_repository_dict)
+        self.assertTrue(r.update())
+        self.subprocess_mock.assert_called_once_with(test_repo_update_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
 
 
 class TestConfig(TestBase):
