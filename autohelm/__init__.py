@@ -29,8 +29,8 @@ def call(args):
     p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     exitcode = p.returncode
-    
+
     if exitcode > 0:
-        raise AutoHelmCommandException("Error with subprocess call: {})".format(' '.join(args), exitcode, stdout, stderr), stdout, stderr, exitcode)
+        raise AutoHelmCommandException("Error with subprocess call: {})".format(' '.join(args)), stdout, stderr, exitcode)
     return stdout, stderr, exitcode
     

@@ -87,8 +87,6 @@ class Config(object):
     @property
     def helm_version(self):
         """ return version of installed helm binary """
-        if self.local_development:
-            return True
         args = ['helm', 'version', '--client']
         stdout, stderr, retcode = call(args)
         return stdout.replace('Client: &version.Version', '').split(',')[0].split(':')[1].replace('v', '').replace('"', '')
@@ -101,13 +99,9 @@ class Config(object):
         """
 
         logging.debug("Checking for Tiller")
-        if self.local_development:
-            return True
-
         try:
-            FNULL = open(os.devnull, 'w')
             args = ['helm', 'list']
             stdout, stderr, retcode = call(args)
         except AutoHelmCommandException:
             return False
-        return True
+        return bool(stdout)
