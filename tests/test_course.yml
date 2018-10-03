@@ -1,0 +1,41 @@
+namespace: test #namespace to install the chart in, defaults to 'kube-system'
+repositories:
+  test_repo:
+    url: https://test_repo_url
+minimum_versions: #set minimum version requirements here
+  helm: 2.8.2
+  autohelm: 0.5.0
+charts:
+  cluster-autoscaler:
+    repository: incubator
+    version: "0.2.1"
+    values:
+      string: string
+      integer: 10
+      boolean: True
+  spotify-docker-gc:
+    version: "0.1.0"
+    values-strings:
+      string: string
+      integer: 10
+      boolean: True
+  centrifugo: 
+    repository:
+      git: https://github.com/kubernetes/charts.git
+      path: stable
+    version: 263bc80322056455c7120b51f1992a40667ec686
+    values:
+      nested:
+        values:
+          are: supported
+      even:
+        - in
+        - a
+        - list
+        - or:
+            dictionary:
+              of: items
+              int: 999
+  spotify-docker-gc-again: 
+    chart: spotify-docker-gc
+    version: "0.1.0"

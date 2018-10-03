@@ -19,9 +19,9 @@ import logging
 import coloredlogs
 import click
 import shutil
-import autohelm
-from autohelm.autohelm import AutoHelm
-from autohelm.meta import __version__
+from autohelm import AutoHelm
+
+from meta import __version__
 
 
 @click.group(invoke_without_command=True)
@@ -43,8 +43,8 @@ def cli(ctx, log_level, *args, **kwargs):
 @click.option("--local-development", is_flag=True, default=False, help="Run `autohelm` in local-development mode where Tiller is not required and no helm commands are run. Useful for rapid or offline development.")
 def plot(ctx, file=None, dry_run=False, debug=False, only=None, helm_args=None, local_development=False):
     """ Install charts with given arguments as listed in yaml file argument """
-    h = AutoHelm(file=file, dryrun=dry_run, debug=debug, charts=only, helm_args=helm_args, local_development=local_development)
-    h.install()
+    h = AutoHelm(file=file, dryrun=dry_run, debug=debug, helm_args=helm_args, local_development=local_development)
+    h.install(only)
 
 
 @cli.command()
@@ -62,7 +62,3 @@ def generate(ctx):
 def version(ctx):
     """ Takes no arguements, outputs version info"""
     print(autohelm.__version__)
-
-
-if __name__ == '__main__':
-    cli()
