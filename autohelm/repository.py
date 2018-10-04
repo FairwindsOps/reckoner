@@ -25,7 +25,6 @@ class Repository(object):
     def __init__(self, repository):
         super(type(self), self).__init__()
         self.config = Config()
-        logging.debug("Repository: {}".format(repository))
         self._repository = {}
         if type(repository) is str:
             self._repository['name'] = repository
@@ -52,7 +51,6 @@ class Repository(object):
         """ Install Helm repository """
         from helm import Helm #currently cheating to get around a circular import issue
         helm = Helm()
-        logging.debug("Installing Chart Repository: {}".format(self.name))
 
         if self.git is None:
             if self._repository not in helm.repositories:

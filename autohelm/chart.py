@@ -120,9 +120,7 @@ class Chart(object):
         if self.repository.git:
             self.repository.name = '{}/{}/{}'.format(self.config.archive, re.sub(r'\:\/\/|\/|\.', '_', self.repository.git), self.repository.path)
             self._fetch_from_git_repository(self.repository.name, self.repository.git, self.version, self.repository.path)
-        else:
-            self.repository.install()
-
+        
         self.chart_path = '{}/{}'.format(self.repository.name, self.name)
 
         self.update_dependencies()
@@ -267,12 +265,9 @@ class Chart(object):
 
     def _format_set_list(self, key, value):
         """ given a list and a key, format it properly for the helm set list indexing """
-        logging.debug("Key: {}".format(key))
-        logging.debug("Value: {}".format(value))
         if type(value) == list:
             for index, item in enumerate(value):
                 if type(item) == dict:
-                    logging.debug("Item: {}".format(item))
                     for k, v in self._format_set("{}[{}]".format(key, index), item):
                         yield k, v
                 else:

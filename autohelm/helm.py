@@ -30,7 +30,6 @@ class Helm(object):
     @property
     def repositories(self):
         _repositories = []
-        logging.debug("Getting installed repositories: {}".format(self._installed_repositories))
         r = self.repo_list()
         for repo in [line.split() for line in r.stdout.split('\n')[1:-1]]:
             _repo = {'name': repo[0], 'url': repo[1]}

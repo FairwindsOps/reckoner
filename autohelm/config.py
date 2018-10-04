@@ -55,7 +55,6 @@ class Config(object):
 
     def __setattr__(self, name, value):
         object.__setattr__(self, name, value)
-        #logging.debug("Config: {} is {}".format(name, value))
 
     def __str__(self):
         return str(self._config)
