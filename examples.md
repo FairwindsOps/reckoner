@@ -29,7 +29,7 @@ charts:
 
 This includes autodiscovery of instancegroups and the 'least-waste' expander option.
 
-See the [Autoscaler Docs](https://github.com/helm/charts/tree/master/stable/cluster-autoscaler#auto-discovery) for details on how to tag your nodes for this to work.  Should Just Work™ on kops clusters.
+See the [Autoscaler Docs](https://github.com/helm/charts/tree/master/stable/cluster-autoscaler#auto-discovery) for details on how to tag your nodes and set permissions for this to work.
 
 ```
   cluster-autoscaler:
