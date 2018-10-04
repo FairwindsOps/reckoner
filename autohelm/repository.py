@@ -45,6 +45,9 @@ class Repository(object):
     def __str__(self):
         return str(self._repository)
 
+    def __eq__(self, other):
+        return self._repository == other._repository
+
     def install(self):
         """ Install Helm repository """
         from helm import Helm #currently cheating to get around a circular import issue

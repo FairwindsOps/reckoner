@@ -37,7 +37,6 @@ class Chart(object):
     def __init__(self, chart):
         self.helm = Helm()
         self.config = Config()
-        logging.debug(chart)
         self._release_name = chart.keys()[0]
         self._chart = chart[self._release_name]
         self._repository = Repository(self._chart.get('repository', default_repository))
@@ -129,6 +128,8 @@ class Chart(object):
         self.update_dependencies()
 
         args = ['--install', '{}'.format(self._release_name), self.chart_path]
+    
+
         args.extend(self.debug_args)
         args.extend(self.helm_args)
 
@@ -240,7 +241,8 @@ class Chart(object):
         if self.config.dryrun:
             return ['--dry-run', '--debug']
         if self.config.debug:
-            return ['--debug']
+            return ['--debug']   
+
         return []
 
     @property

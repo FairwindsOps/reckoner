@@ -30,6 +30,8 @@ from autohelm.config import Config
 from autohelm.course import Course
 from autohelm.repository import Repository
 from autohelm.exception import MinimumVersionException, AutoHelmCommandException
+from autohelm import Response
+from autohelm.helm import Helm
 
 test_course = "./tests/test_course.yml"
 git_repo_path = "./test"
@@ -46,7 +48,7 @@ test_chart_name = 'spotify-docker-gc'
 test_git_repository_chart = 'centrifugo'
 test_git_repository = {'path': 'stable', 'git': 'https://github.com/kubernetes/charts.git'}
 test_incubator_repository_chart = 'cluster-autoscaler'
-test_incubator_repository_str = 'incubator'
+test_incubator_repository_str = 'stable'
 
 test_flat_values_chart = 'cluster-autoscaler'
 test_flat_values = {
@@ -100,7 +102,7 @@ stable      https://kubernetes-charts.storage.googleapis.com
 local       http://127.0.0.1:8879/charts
 incubator   https://kubernetes-charts-incubator.storage.googleapis.com'''
 test_helm_repo_args = ['helm', 'repo', 'list']
-test_helm_repos = [{'url': 'https://kubernetes-charts.storage.googleapis.com', 'name': 'stable'}, {'url': 'http://127.0.0.1:8879/charts', 'name': 'local'}]
+test_helm_repos = [Repository({'url': 'https://kubernetes-charts.storage.googleapis.com', 'name': 'stable'}), Repository({'url': 'http://127.0.0.1:8879/charts', 'name': 'local'})]
 
 test_tiller_present_return_string = '''NAME         REVISION    UPDATED                     STATUS      CHART               APP VERSION NAMESPACE
 centrifugo  1           Tue Oct  2 16:19:01 2018    DEPLOYED    centrifugo-2.0.1    1.7.3       test'''
@@ -120,10 +122,11 @@ test_repo_update_args = ['helm', 'repo', 'update']
 test_repo_install_args = ['helm', 'repo', 'add', 'test_repo', 'https://kubernetes-charts.storage.googleapis.com']
 test_repo_install_return_string = '"test_repo" has been added to your repositories'
 
+
 def setUpModule():
     coloredlogs.install(level="DEBUG")
-    #config = Config()
-    #config.local_development = True
+    config = Config()
+    config.local_development = True
 
     os.makedirs(test_helm_archive)
     os.environ['HELM_HOME'] = test_files_path
@@ -187,7 +190,7 @@ class TestCourse(TestBase):
 
     def setUp(self):
         super(type(self), self).setUp()
-
+        self.configure_subprocess_mock(test_repo_update_return_string, '', 0)
         with open(test_course) as f:
             self.c = Course(f)
 
@@ -210,12 +213,10 @@ class TestCourse(TestBase):
         self.c.minimum_versions['autohelm'] = test_autohelm_version
         self.assertRaises(MinimumVersionException, self.c._compare_required_versions)
 
-
     def test_plot_course(self):
-        self.configure_subprocess_mock('', '', 0) #Lots more work do do here with the installation of the list of charts
+        self.configure_subprocess_mock('', '', 0)  # Lots more work do do here with the installation of the list of charts
         self.c.plot(list(self.c._dict['charts']))
         self.assertEqual(self.c._charts_to_install, self.c.charts)
-
 
 
 class TestChart(TestBase):
@@ -226,7 +227,6 @@ class TestChart(TestBase):
         with open(test_course) as f:
             self.a = AutoHelm(file=f, local_development=True)
         self.charts = self.a.course.charts
-
 
     def test_releasename_is_different_than_chart_name(self):
         for chart in self.charts:
@@ -274,8 +274,6 @@ class TestChart(TestBase):
 
 class TestRepository(TestBase):
 
-
-
     def test_git_repository(self):
         self.configure_subprocess_mock('', '', 0)
         r = Repository(test_git_repository)
@@ -290,14 +288,7 @@ class TestRepository(TestBase):
         self.assertIsInstance(r, Repository)
         self.assertEqual(r.name, test_repository_dict['name'])
         self.assertEqual(r.url, test_repository_dict['url'])
-        self.assertEqual(r.install(), True)
-
-    def test_repo_update(self):
-        self.configure_subprocess_mock(test_repo_update_return_string, '', 0)
-        r = Repository(test_repository_dict)
-        self.assertTrue(r.update())
-        self.subprocess_mock.assert_called_once_with(test_repo_update_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
+        self.assertEqual(r.install(), Response('', '', 0))
 
 
 class TestConfig(TestBase):
@@ -316,27 +307,19 @@ class TestConfig(TestBase):
         self.c1.test = 'value'
         self.assertEqual(self.c1.__dict__, self.c2.__dict__)
 
+
+class TestHelm(TestBase):
+
+    def setUp(self):
+        super(type(self), self).setUp()
+        self.helm = Helm()
+
     def test_helm_version(self):
         self.configure_subprocess_mock(test_helm_version_return_string, '', 0)
-        self.assertEqual(self.c1.helm_version, test_helm_version)
+        self.assertEqual(self.helm.client_version, test_helm_version)
         self.subprocess_mock.assert_called_once_with(test_helm_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     def test_installed_repositoried(self):
         self.configure_subprocess_mock(test_helm_repo_return_string, '', 0)
-        self.assertEqual(self.c1.installed_repositories, test_helm_repos)
+        self.assertEqual(self.helm.repositories, test_helm_repos)
         self.subprocess_mock.assert_called_once_with(test_helm_repo_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-    def test_tiller_present(self):
-        self.configure_subprocess_mock(test_tiller_present_return_string, '', 0)
-        self.assertTrue(self.c1.tiller_present)
-        self.subprocess_mock.assert_called_once_with(test_tiller_present_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-    def test_tiller_not_present_with_command_failure(self):
-        self.configure_subprocess_mock(test_tiller_not_present_return_string, '', 1)
-        self.assertFalse(self.c1.tiller_present)
-        self.subprocess_mock.assert_called_once_with(test_tiller_present_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-    def test_tiller_not_present_with_command_succes_but_empty_response(self):
-        self.configure_subprocess_mock('', '', 0)
-        self.assertFalse(self.c1.tiller_present)
-        self.subprocess_mock.assert_called_once_with(test_tiller_present_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

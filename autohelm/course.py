@@ -98,6 +98,7 @@ class Course(object):
             logging.error("ERROR: Some charts failed to install and were rolled back")
             for chart in _failed_charts:
                 logging.error(" - {}".format(chart.release_name))
+        return True
 
 
     def _compare_required_versions(self):

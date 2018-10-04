@@ -37,6 +37,9 @@ class Response(object):
     def __bool__(self):
         return not self._dict['exitcode']
 
+    def __eq__(self, other):
+        return  self._dict == other._dict
+
 
 def call(args):
     """

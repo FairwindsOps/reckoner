@@ -63,6 +63,9 @@ class Config(object):
     def __iter__(self):
         return iter(self._config)
 
+    def __getattr__(self, key):
+        return self._config.get(key)
+
 
     @property
     def current_context(self):
