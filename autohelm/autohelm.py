@@ -21,6 +21,7 @@ import sys
 from . import call
 from config import Config
 from course import Course
+from helm import Helm
 
 
 class AutoHelm(object):
@@ -32,8 +33,9 @@ class AutoHelm(object):
         self.config.debug = debug
         self.config.helm_args = helm_args
         self.config.local_development = local_development
+        self.helm = Helm()
 
-        if not self.config.tiller_present:
+        if not self.helm.server_version:
             logging.error("Tiller not present in cluster. Have you run `helm init`?")
             sys.exit(1)
 

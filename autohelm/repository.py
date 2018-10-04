@@ -20,12 +20,11 @@ from . import call
 from config import Config
 from exception import AutoHelmCommandException
 
-
 class Repository(object):
 
     def __init__(self, repository):
+        super(type(self), self).__init__()
         self.config = Config()
-        logging.debug("Repository: {}".format(repository))
         self._repository = {}
         if type(repository) is str:
             self._repository['name'] = repository
@@ -45,31 +44,21 @@ class Repository(object):
     def __str__(self):
         return str(self._repository)
 
+    def __eq__(self, other):
+        return self._repository == other._repository
+
     def install(self):
         """ Install Helm repository """
-
-        logging.debug("Installing Chart Repository: {}".format(self.name))
+        from helm import Helm #currently cheating to get around a circular import issue
+        helm = Helm()
 
         if self.git is None:
-            if self._repository not in self.config.installed_repositories:
-                args = ['helm', 'repo', 'add', str(self.name), str(self.url)]
+            if self._repository not in helm.repositories:
                 try:
-                    call(args)
-                    return True
+                    return helm.repo_add(str(self.name),str(self.url))
                 except AutoHelmCommandException, e:
                     logging.warn("Unable to install repository {}: {}".format(self.name,e.stderr) )
                     return False
             else:
                 logging.debug("Chart repository {} already installed".format(self.name))
                 return True
-
-
-    def update(self):
-        """ Update repositories """
-        args = ['helm', 'repo', 'update']
-        try:
-            call(args)
-            return True
-        except AutoHelmCommandException, e:
-            logging.warn("Unable to update repositories: {}".format(self.name,e.stderr) )
-            return False
