@@ -27,6 +27,10 @@ charts:
 
 ## Cluster autoscaler
 
+This includes autodiscovery of instancegroups and the 'least-waste' expander option.
+
+See the [Autoscaler Docs](https://github.com/helm/charts/tree/master/stable/cluster-autoscaler#auto-discovery) for details on how to tag your nodes for this to work.  Should Just Work™ on kops clusters.
+
 ```
   cluster-autoscaler:
     repository: stable
@@ -34,15 +38,7 @@ charts:
     values:
       cloudProvider: aws
       replicaCount: 2
-      autoscalingGroups[0].name: nodes-us-east-1a.production-1.kube.example.com
-      autoscalingGroups[0].maxSize: "15"
-      autoscalingGroups[0].minSize: "3"
-      autoscalingGroups[1].name: nodes-us-east-1c.production-1.kube.example.com
-      autoscalingGroups[1].maxSize: "15"
-      autoscalingGroups[1].minSize: "3"
-      autoscalingGroups[2].name: nodes-us-east-1d.production-1.kube.exapmle.com
-      autoscalingGroups[2].maxSize: "15"
-      autoscalingGroups[2].minSize: "3"
+      autoDiscovery.clusterName: cluster.example.com
       awsRegion: us-east-1
       resources.requests.cpu: 100m
       resources.requests.memory: 300Mi
@@ -58,25 +54,7 @@ charts:
       extraArgs.skip-nodes-with-local-storage\=false: ""
       extraArgs.skip-nodes-with-system-pods\=false: ""
       extraArgs.scan-interval: "30s"
-      extraArgs.expander: "most-pods"
-```
-
-## Cluster autoscaler with auto-discovery
-
-See here for details on how to tag your nodes for this to work. [Autoscaler Docs](https://github.com/helm/charts/tree/master/stable/cluster-autoscaler#auto-discovery)
-
-```
-  cluster-autoscaler:
-    version: "0.7.0"
-    values:
-      cloudProvider: aws
-      autoDiscovery.clusterName: production-1.kube.example.com
-      extraArgs.skip-nodes-with-local-storage\=false: ""
-      extraArgs.skip-nodes-with-system-pods\=false: ""
-      awsRegion: us-east-2
-      cloudProvider: aws
-      rbac:
-        create: true
+      extraArgs.expander: "least-waste"
 ```
 
 ## Heapster
