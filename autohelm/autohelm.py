@@ -47,9 +47,6 @@ class AutoHelm(object):
         of the charts dictionary. Only that list of charts will be installed or
         if the argument is emmpty, All charts in the course will be installed
         """
-        if not self._environment_has_requirements:
-            raise AutoHelmException("Error running install of autohelm, please see errors above.")
-
         selected_charts = charts or [chart._release_name for chart in self.course.charts]
         return self.course.plot(selected_charts)
 
