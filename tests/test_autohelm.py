@@ -24,6 +24,7 @@ import git
 import subprocess
 import shutil
 import mock
+import autohelm
 
 from autohelm.autohelm import AutoHelm
 from autohelm.config import Config
@@ -32,6 +33,41 @@ from autohelm.repository import Repository
 from autohelm.exception import MinimumVersionException, AutoHelmCommandException
 from autohelm import Response
 from autohelm.helm import Helm
+
+
+# Test properties of the mock
+@mock.patch('autohelm.autohelm.Config', autospec=True)
+@mock.patch('autohelm.autohelm.Course', autospec=True)
+@mock.patch.object(Helm, 'server_version')
+class TestAutoHelmAttributes(unittest.TestCase):
+    name = "test-autohelm-attributes"
+
+    def test_config(self, *args):
+        autohelm_instance = autohelm.autohelm.AutoHelm()
+        self.assertTrue(hasattr(autohelm_instance, 'config'))
+
+    def test_course(self, *args):
+        autohelm_instance = autohelm.autohelm.AutoHelm()
+        self.assertTrue(hasattr(autohelm_instance, 'course'))
+
+    def test_helm(self, *args):
+        autohelm_instance = autohelm.autohelm.AutoHelm()
+        self.assertTrue(hasattr(autohelm_instance, 'helm'))
+
+
+# Test methods
+@mock.patch('autohelm.autohelm.Config', autospec=True)
+@mock.patch('autohelm.autohelm.Course', autospec=True)
+@mock.patch.object(Helm, 'server_version')
+class TestAutoHelmMethods(unittest.TestCase):
+    name = 'test-autohelm-methods'
+
+    def test_install_succeeds(self, *args):
+        autohelm_instance = autohelm.autohelm.AutoHelm()
+        autohelm_instance.course.plot.return_value = True
+        install_response = autohelm_instance.install()
+        self.assertIsInstance(install_response, bool)
+        self.assertTrue(install_response)
 
 test_course = "./tests/test_course.yml"
 git_repo_path = "./test"

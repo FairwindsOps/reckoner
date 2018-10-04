@@ -33,7 +33,6 @@ class AutoHelm(object):
         self.config.debug = debug
         self.config.helm_args = helm_args
         self.config.local_development = local_development
-
         self.helm = Helm()
 
         if not self.helm.server_version:
