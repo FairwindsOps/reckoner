@@ -16,7 +16,7 @@
 
 import subprocess
 import logging
-import exception
+from exception import AutoHelmCommandException
 
 
 class Response(object):
