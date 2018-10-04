@@ -23,19 +23,29 @@ import git
 from collections import OrderedDict
 from string import Template
 
+from . import call
+from exception import AutoHelmCommandException
 from config import Config
 from repository import Repository
+from helm import Helm
+
 
 default_repository = {'name': 'stable', 'url': 'https://kubernetes-charts.storage.googleapis.com'}
 
 class Chart(object):
 
     def __init__(self, chart):
+        self.helm = Helm()
         self.config = Config()
-        logging.debug(chart)
         self._release_name = chart.keys()[0]
         self._chart = chart[self._release_name]
         self._repository = Repository(self._chart.get('repository', default_repository))
+        self._chart['values']= self.ordereddict_to_dict(self._chart.get('values', {}))
+        
+        value_strings = self._chart.get('values-strings', {})
+        self._chart['values_strings'] = self.ordereddict_to_dict(value_strings)
+        if value_strings != {}:
+            del(self._chart['values-strings'])
 
     @property
     def release_name(self):
@@ -44,13 +54,6 @@ class Chart(object):
     @property
     def name(self):
         return self._chart.get('chart', self._release_name)
-
-    @property
-    def values(self):
-        if self._values == None:
-            self._values = self.ordereddict_to_dict(self._chart.get('values', {}))
-
-        return self._values
 
     def ordereddict_to_dict(self, value):
         for k, v in value.items():
@@ -62,12 +65,6 @@ class Chart(object):
                         v.remove(item)
                         v.append(self.ordereddict_to_dict(item))
         return dict(value)
-
-    @property
-    def values_strings(self):
-        if self._values_strings is None:
-            self._values_strings = self.ordereddict_to_dict(self._chart.get('values-strings', {}))
-        return self._values_strings
 
     @property
     def files(self):
@@ -100,26 +97,22 @@ class Chart(object):
                 sys.exit(1)
 
     def rollback(self):
-        list_output = subprocess.check_output(['helm', 'list', '--deployed', self._release_name])
-        if not list_output:
-            # Chart has nothing to roll back to
-            return
-        logging.debug(list_output)
-        revision = int(list_output.splitlines()[-1].split('\t')[1].strip())
-        args = ['helm', 'rollback', self._release_name, str(revision)]
-        logging.debug(args)
-        if not self.config.dryrun and not self.config.local_development:
-            subprocess.call(args)
+            
+        release = [release for release in self.helm.releases.deployed if release.name == self._release_name][0]
+        if release:
+            release.rollback()
 
     def update_dependencies(self):
 
         if self.config.local_development or self.config.dryrun:
             return True
-        args = ['helm', 'dependency', 'update', self.chart_path]
         logging.debug("Updating chart dependencies: {}".format(self.chart_path))
-        logging.debug(" ".join(args))
-        subprocess.call(args)
-
+        if os.path.exists(self.chart_path):
+            try:
+                r = self.helm.dependency_update(self.chart_path)
+            except AutoHelmCommandException, e:
+                logging.warn("Unable to update chart dependancies: {}".format(e.stderr) )
+        
     def install(self, namespace):
 
         _namespace = self.namespace or namespace
@@ -127,14 +120,14 @@ class Chart(object):
         if self.repository.git:
             self.repository.name = '{}/{}/{}'.format(self.config.archive, re.sub(r'\:\/\/|\/|\.', '_', self.repository.git), self.repository.path)
             self._fetch_from_git_repository(self.repository.name, self.repository.git, self.version, self.repository.path)
-        else:
-            self.repository.install()
-
+        
         self.chart_path = '{}/{}'.format(self.repository.name, self.name)
 
         self.update_dependencies()
 
-        args = ['helm', 'upgrade', '--install', '{}'.format(self._release_name), self.chart_path]
+        args = ['--install', '{}'.format(self._release_name), self.chart_path]
+    
+
         args.extend(self.debug_args)
         args.extend(self.helm_args)
 
@@ -153,8 +146,6 @@ class Chart(object):
 
         args.append('--namespace={}'.format(_namespace))
 
-        logging.debug(' '.join(args))
-
         if self._pre_install_hook:
             logging.debug("Running pre_install hook:")
             self.run_hook(pre_install_hook)
@@ -164,7 +155,12 @@ class Chart(object):
         except KeyError, e:
             raise Exception("Missing requirement environment variable: {}".format(e.args[0]))
         if not self.config.local_development:
-            return not bool(subprocess.call(args))
+            try:
+                r = self.helm.upgrade(*args)
+            except AutoHelmCommandException, e:
+                logging.error("Failed to upgrade/install {}: {}".format(self.release_name, e.stderr))
+                return False
+           
 
         if self._post_install_hook:
             logging.debug("Running post_install hook:")
@@ -243,7 +239,8 @@ class Chart(object):
         if self.config.dryrun:
             return ['--dry-run', '--debug']
         if self.config.debug:
-            return ['--debug']
+            return ['--debug']   
+
         return []
 
     @property
@@ -257,7 +254,7 @@ class Chart(object):
         """Allows nested yaml to be set on the command line of helm.
         Accepts key and value, if value is an ordered dict, recursively
         formats the string properly """
-        if type(value) == OrderedDict:
+        if type(value) == dict:
             for new_key, new_value in value.iteritems():
                 for k, v in self._format_set("{}.{}".format(key, new_key), new_value):
                     for a, b in self._format_set_list(k, v):
@@ -268,12 +265,9 @@ class Chart(object):
 
     def _format_set_list(self, key, value):
         """ given a list and a key, format it properly for the helm set list indexing """
-        logging.debug("Key: {}".format(key))
-        logging.debug("Value: {}".format(value))
         if type(value) == list:
             for index, item in enumerate(value):
-                if type(item) == OrderedDict:
-                    logging.debug("Item: {}".format(dict(item)))
+                if type(item) == dict:
                     for k, v in self._format_set("{}[{}]".format(key, index), item):
                         yield k, v
                 else:

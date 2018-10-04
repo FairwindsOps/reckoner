@@ -1,13 +1,15 @@
 namespace: test #namespace to install the chart in, defaults to 'kube-system'
 repositories:
   test_repo:
-    url: https://test_repo_url
+    url: https://kubernetes-charts.storage.googleapis.com
+  incubator:
+    url: https://kubernetes-charts-incubator.storage.googleapis.com
 minimum_versions: #set minimum version requirements here
   helm: 2.8.2
   autohelm: 0.5.0
 charts:
   cluster-autoscaler:
-    repository: incubator
+    repository: stable
     version: "0.2.1"
     values:
       string: string

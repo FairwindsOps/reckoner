@@ -15,16 +15,16 @@
 # limitations under the License.
 
 import logging
-import subprocess
 
+from . import call
 from config import Config
-
+from exception import AutoHelmCommandException
 
 class Repository(object):
 
     def __init__(self, repository):
+        super(type(self), self).__init__()
         self.config = Config()
-        logging.debug("Repository: {}".format(repository))
         self._repository = {}
         if type(repository) is str:
             self._repository['name'] = repository
@@ -44,26 +44,21 @@ class Repository(object):
     def __str__(self):
         return str(self._repository)
 
+    def __eq__(self, other):
+        return self._repository == other._repository
+
     def install(self):
         """ Install Helm repository """
-
-        logging.debug("Installing Chart Repository: {}".format(self.name))
-        if self.config.local_development:
-            return True
+        from helm import Helm #currently cheating to get around a circular import issue
+        helm = Helm()
 
         if self.git is None:
-            if self._repository not in self.config.installed_repositories:
-                args = ['helm', 'repo', 'add', str(self.name), str(self.url)]
-                logging.debug(" ".join(args))
-                subprocess.call(args)
+            if self._repository not in helm.repositories:
+                try:
+                    return helm.repo_add(str(self.name),str(self.url))
+                except AutoHelmCommandException, e:
+                    logging.warn("Unable to install repository {}: {}".format(self.name,e.stderr) )
+                    return False
             else:
                 logging.debug("Chart repository {} already installed".format(self.name))
-
-    def update(self):
-        """ Update repositories """
-        if self.config.local_development:
-            return True
-
-        args = ['helm', 'repo', 'update', self.name]
-        logging.debug(" ".join(args))
-        subprocess.call(args)
+                return True

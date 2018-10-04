@@ -14,27 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import subprocess
+
 import logging
 import sys
 
+from . import call
 from config import Config
 from course import Course
-
-
-class AutoHelmSubprocess(object):
-
-    @classmethod
-    def check_call(cls, *args, **kwargs):
-        return subprocess.check_call(*args, **kwargs)
-
-    @classmethod
-    def check_output(cls, *args, **kwargs):
-        return subprocess.check_output(*args, **kwargs)
-
-    @classmethod
-    def call(cls, *args, **kwargs):
-        return subprocess.call(*args, **kwargs)
+from helm import Helm
 
 
 class AutoHelm(object):
@@ -46,8 +33,9 @@ class AutoHelm(object):
         self.config.debug = debug
         self.config.helm_args = helm_args
         self.config.local_development = local_development
+        self.helm = Helm()
 
-        if not self.config.tiller_present:
+        if not self.helm.server_version:
             logging.error("Tiller not present in cluster. Have you run `helm init`?")
             sys.exit(1)
 

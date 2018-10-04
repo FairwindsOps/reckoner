@@ -13,3 +13,45 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.__init__.py
+
+import subprocess
+import logging
+from exception import AutoHelmCommandException
+
+
+class Response(object):
+
+    def __init__(self, stdout, stderr, exitcode):
+        
+        self._dict = {}      
+        self._dict['stdout'] = stdout
+        self._dict['stderr'] = stderr
+        self._dict['exitcode'] = exitcode
+    
+    def __getattr__(self, name):
+        return self._dict.get(name)
+
+    def __str__(self):
+        return str(self._dict)
+
+    def __bool__(self):
+        return not self._dict['exitcode']
+
+    def __eq__(self, other):
+        return  self._dict == other._dict
+
+
+def call(args):
+    """
+    Wrapper utility function for subprocess.Popen.
+    Accepts list: `args`
+    Return tuple: `(stdout, stderr, exitcode)`
+    """
+    logging.debug(' '.join(args))
+    p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = p.communicate()
+    exitcode = p.returncode
+
+    if exitcode > 0:
+        raise AutoHelmCommandException("Error with subprocess call: {}".format(' '.join(args)), stdout, stderr, exitcode)
+    return Response(stdout, stderr, exitcode)

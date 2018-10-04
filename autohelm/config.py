@@ -18,8 +18,9 @@
 import os
 import sys
 import logging
-import subprocess
 
+from . import call
+from exception import AutoHelmCommandException
 
 class Config(object):
     _config = {}
@@ -54,7 +55,6 @@ class Config(object):
 
     def __setattr__(self, name, value):
         object.__setattr__(self, name, value)
-        logging.debug("Config: {} is {}".format(name, value))
 
     def __str__(self):
         return str(self._config)
@@ -62,49 +62,13 @@ class Config(object):
     def __iter__(self):
         return iter(self._config)
 
-    @property
-    def installed_repositories(self):
-        if self._installed_repositories != []:
-            return self._installed_repositories
+    def __getattr__(self, key):
+        return self._config.get(key)
 
-        args = ['helm', 'repo', 'list']
-        for repo in [line.split() for line in subprocess.check_output(args).split('\n')[1:-1]]:
-            _repo = {'name': repo[0], 'url': repo[1]}
-            if _repo not in self._installed_repositories:
-                self._installed_repositories.append(_repo)
-        logging.debug("Getting installed repositories: {}".format(self._installed_repositories))
-        return self._installed_repositories
 
     @property
     def current_context(self):
         """ Returns the current cluster context """
         args = ['kubectl', 'config', 'current-context']
-        resp = subprocess.check_output(args)
-        return resp.strip()
-
-    @property
-    def helm_version(self):
-        """ return version of installed helm binary """
-        if self.local_development:
-            return True
-        args = ['helm', 'version', '--client']
-        resp = subprocess.check_output(args)
-        return resp.replace('Client: &version.Version', '').split(',')[0].split(':')[1].replace('v', '').replace('"', '')
-
-    @property
-    def tiller_present(self):
-        """
-        Detects if tiller is present in the currently configured cluster
-        Accepts no arguments
-        """
-
-        logging.debug("Checking for Tiller")
-        if self.local_development:
-            return True
-
-        try:
-            FNULL = open(os.devnull, 'w')
-            subprocess.check_call(['helm', 'list'], stdout=FNULL, stderr=subprocess.STDOUT)
-        except subprocess.CalledProcessError:
-            return False
-        return True
+        r = call(args)
+        return r.stdout.strip()
