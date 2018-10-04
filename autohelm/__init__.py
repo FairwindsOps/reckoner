@@ -16,7 +16,7 @@
 
 import subprocess
 import logging
-from exception import AutoHelmCommandException
+import exception
 
 
 def call(args):
@@ -31,6 +31,8 @@ def call(args):
     exitcode = p.returncode
 
     if exitcode > 0:
-        raise AutoHelmCommandException("Error with subprocess call: {})".format(' '.join(args)), stdout, stderr, exitcode)
+        raise exception.AutoHelmCommandException(
+            "Error with subprocess call: {})"
+            .format(' '.join(args)), stdout, stderr, exitcode
+            )
     return stdout, stderr, exitcode
-    

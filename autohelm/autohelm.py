@@ -21,6 +21,7 @@ import sys
 from . import call
 from config import Config
 from course import Course
+from exception import AutoHelmException
 
 
 class AutoHelm(object):
@@ -32,11 +33,6 @@ class AutoHelm(object):
         self.config.debug = debug
         self.config.helm_args = helm_args
         self.config.local_development = local_development
-
-        if not self.config.tiller_present:
-            logging.error("Tiller not present in cluster. Have you run `helm init`?")
-            sys.exit(1)
-
         self.course = Course(file)
 
     def install(self, charts=[]):
@@ -45,6 +41,9 @@ class AutoHelm(object):
         of the charts dictionary. Only that list of charts will be installed or
         if the argument is emmpty, All charts in the course will be installed
         """
+        if not self._environment_has_requirements:
+            raise AutoHelmException("Error running install of autohelm, please see errors above.")
+
         selected_charts = charts or [chart._release_name for chart in self.course.charts]
         return self.course.plot(selected_charts)
 
@@ -70,3 +69,11 @@ class AutoHelm(object):
             return True
         else:
             raise AutoHelmException("Unable to set cluster context to: {}".format(self._context))
+
+    @property
+    def _environment_has_requirements(self):
+        if self.config.tiller_present:
+            return True
+        else:
+            logging.error("Tiller not present in cluster. Have you run `helm init`?")
+            return False
