@@ -115,60 +115,99 @@ class Chart(object):
 
     def install(self, namespace):
 
+        # Set the namespace
         _namespace = self.namespace or namespace
 
+        # If git repo, grab contents
         if self.repository.git:
-            self.repository.name = '{}/{}/{}'.format(self.config.archive, re.sub(r'\:\/\/|\/|\.', '_', self.repository.git), self.repository.path)
-            self._fetch_from_git_repository(self.repository.name, self.repository.git, self.version, self.repository.path)
-        
+            self.repository.name = '{}/{}/{}' .format(
+                self.config.archive,
+                re.sub(
+                    r'\:\/\/|\/|\.', '_',
+                    self.repository.git
+                ),
+                self.repository.path)
+            self._fetch_from_git_repository(
+                self.repository.name,
+                self.repository.git,
+                self.version,
+                self.repository.path)
+
+        # FIXME: This is broken and is supposed to solve support for the chart
+        #       to be installed living in the root of the github repository.
+        # # If the chart_name is in the repo path and appears to be redundant pb
+        # chart_redundant = self.name.endswith(self.name) \
+        #     and os.path.isdir(self.repository) \
+        #     and not os.path.isdir('{}/{}'.format(repository_name, self.name))
+        # if chart_redundant:
+        #     logging.warn("Chart name {} in {}. Removing to try and prevent errors.".format(chart_name, repository_name))
+        #     repository_name = repository_name[:-len(chart_name) - 1]
+
+        # Set the chart path
         self.chart_path = '{}/{}'.format(self.repository.name, self.name)
 
+        # Update the helm dependencies
         self.update_dependencies()
 
+        # Build the args for the chart installation
+        # And add any extra arguments
         args = ['--install', '{}'.format(self._release_name), self.chart_path]
         args.extend(self.debug_args)
         args.extend(self.helm_args)
 
+        # Add specific version of chart if set
         if self.version:
             args.append('--version={}'.format(self.version))
 
+        # Build the arguments for values file(s)
         for file in self.files:
             args.append("-f={}".format(file))
 
+        # Build `--set=...` arguments with values set for the chart in the course
         for key, value in self.values.iteritems():
             for k, v in self._format_set(key, value):
                 args.append("--set={}={}".format(k, v))
+
+        # Build `--set-string=...` arguments for the chart in the course
         for key, value in self.values_strings.iteritems():
             for k, v in self._format_set(key, value):
                 args.append("--set-string={}={}".format(k, v))
 
+        # Append the namespace you'd like to install the chart in
         args.append('--namespace={}'.format(_namespace))
 
+        # Run the pre-install-hook if set
         if self._pre_install_hook:
             logging.debug("Running pre_install hook:")
             self.run_hook(pre_install_hook)
 
+        # Assure all environment variables are set for the chart
         try:
             args = [Template(arg).substitute(os.environ) for arg in args]
         except KeyError, e:
             raise Exception("Missing requirement environment variable: {}".format(e.args[0]))
+
+        # If local_development is not False
         if not self.config.local_development:
+            # Try to perform the actual helm install and return error for any
+            # failed chart installs
             try:
                 r = self.helm.upgrade(*args)
             except AutoHelmCommandException, e:
                 logging.error("Failed to upgrade/install {}: {}".format(self.release_name, e.stderr))
                 return False
 
+        # If there are any post-install-hooks, run them
         if self._post_install_hook:
             logging.debug("Running post_install hook:")
             self.run_hook(post_install_hook)
+
         return True
 
-    # # If the chart_name is in the repo path and appears to be redundant pb
-    # if self.name.endswith(self.name) and os.path.isdir(self.repository) and not os.path.isdir('{}/{}'.format(repository_name, self.name)):
-    #     logging.warn("Chart name {} in {}. Removing to try and prevent errros.".format(chart_name, repository_name))
-    #     repository_name = repository_name[:-len(chart_name) - 1]
-
+    # FIXME: This method does not take into account the new class of Repository
+    #        and should incorporate this model.
+    #        The `git_repo`, `branch`, and `path` are all unused parameters
+    #        from the signature in this function definition.
     def _fetch_from_git_repository(self, name, git_repo, branch, path):
         """ Does a sparse checkout for a git repository git_repo@branch and retrieves the chart at the path """
 
@@ -178,7 +217,10 @@ class Chart(object):
             repo.git.checkout("{}".format(ref))
             repo.git.pull("origin", "{}".format(ref))
 
-        repo_path = '{}/{}'.format(self.config.archive, re.sub(r'\:\/\/|\/|\.', '_', self.repository.git))
+        repo_path = '{}/{}'.format(
+            self.config.archive,
+            re.sub(r'\:\/\/|\/|\.', '_', self.repository.git)
+        )
 
         logging.debug('Chart repository path: {}'.format(repo_path))
         if not os.path.isdir(repo_path):
