@@ -20,6 +20,7 @@ from . import call
 from config import Config
 from exception import AutoHelmCommandException
 
+
 class Repository(object):
 
     def __init__(self, repository):

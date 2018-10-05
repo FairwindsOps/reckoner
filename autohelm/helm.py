@@ -112,13 +112,13 @@ class Release(object):
     def __str__(self):
         return str(self._dict)
 
-    @property    
+    @property
     def deployed(self):
         if self.status == 'DEPLOYED':
             return True
         return False
 
-    @property    
+    @property
     def failed(self):
         if self.status == 'FAILED':
             return True
