@@ -307,6 +307,15 @@ class TestChart(TestBase):
         chart.config.dryrun = True
         self.assertEqual(chart.debug_args, ['--dry-run', '--debug'])
 
+    # FIXME: Related to the FIXME in install() of Chart class.
+    @unittest.skip("Skipping non-implmeneted test.")
+    def test_chart_at_git_root(self):
+        """
+        Chart should support cloning git repositories where the chart is in
+        the root of the repository.
+        """
+        pass
+
 
 class TestRepository(TestBase):
 
