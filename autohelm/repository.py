@@ -22,6 +22,16 @@ from exception import AutoHelmCommandException
 
 
 class Repository(object):
+    """
+    Description:
+    - Helm repository object
+
+    Arguments:
+    - name: repostiory name
+    - url: tgz reppsitory url
+    - git: git repository url
+    - path: path in git repository
+    """
 
     def __init__(self, repository):
         super(type(self), self).__init__()

@@ -34,6 +34,25 @@ default_repository = {'name': 'stable', 'url': 'https://kubernetes-charts.storag
 
 
 class Chart(object):
+    """
+    Description:
+    - Chart class for each release in the course.yml
+
+    Arguments: 
+    - chart (dict): 
+
+    Attributes:
+    - config: Instance of Config()
+    - helm: Instance of Helm()
+    - release_name : String. Name of the release
+    - name: String. Name of chart 
+    - files: List. Values files 
+    - namespace
+
+    Returns:
+    - Instance of Response() is truthy where Reponse.exitcode == 0  
+    - Instance Response() is falsey where Reponse.exitcode != 0
+    """
 
     def __init__(self, chart):
         self.helm = Helm()
@@ -50,13 +69,22 @@ class Chart(object):
 
     @property
     def release_name(self):
+        """ 
+        Returns relase name of course chart
+        """
         return self._release_name
 
     @property
     def name(self):
+        """
+        Retturns chart name of course chart
+        """
         return self._chart.get('chart', self._release_name)
 
     def ordereddict_to_dict(self, value):
+        """
+        Converts an OrderedDict to a standard dict
+        """
         for k, v in value.items():
             if type(v) == OrderedDict:
                 value[k] = self.ordereddict_to_dict(v)
@@ -69,14 +97,17 @@ class Chart(object):
 
     @property
     def files(self):
+        """ List of values files from the course chart """
         return dict(self._chart.get('files', []))
 
     @property
     def namespace(self):
+        """ Namespace to install the course chart """
         return self._namespace
 
     @property
     def repository(self):
+        """ Repository object parsed from course chart """
         return self._repository
 
     def __getattr__(self, key):
@@ -98,13 +129,13 @@ class Chart(object):
                 sys.exit(1)
 
     def rollback(self):
-
+        """ Rollsback most recent release of the course chart """
         release = [release for release in self.helm.releases.deployed if release.name == self._release_name][0]
         if release:
             release.rollback()
 
     def update_dependencies(self):
-
+        """ Update the course chart dependencies """
         if self.config.local_development or self.config.dryrun:
             return True
         logging.debug("Updating chart dependencies: {}".format(self.chart_path))
@@ -115,6 +146,16 @@ class Chart(object):
                 logging.warn("Unable to update chart dependancies: {}".format(e.stderr))
 
     def install(self, namespace):
+        """
+        Description:
+        - Uprade --install the course chart
+
+        Arguments:
+        - namespace (string). Passed in but will be overriddne by Chart().namespace if set
+
+        Returns:
+        - Bool
+        """
 
         _namespace = self.namespace or namespace
 
@@ -172,7 +213,10 @@ class Chart(object):
     #     repository_name = repository_name[:-len(chart_name) - 1]
 
     def _fetch_from_git_repository(self, name, git_repo, branch, path):
-        """ Does a sparse checkout for a git repository git_repo@branch and retrieves the chart at the path """
+        """
+        Does a sparse checkout for a git repository git_repo@branch and
+        retrieves the chart at the path
+        """
 
         def fetch_pull(ref):
             """ Do the fetch, checkout pull for the git ref """
@@ -235,6 +279,7 @@ class Chart(object):
 
     @property
     def debug_args(self):
+        """ Returns list of Helm debug arguments """
         if self.config.dryrun:
             return ['--dry-run', '--debug']
         if self.config.debug:
@@ -244,14 +289,17 @@ class Chart(object):
 
     @property
     def helm_args(self):
+        """ Returns list of extra options/args for the helm command """
         if self.config.helm_args is not None:
             return self.config.helm_args
         return []
 
     def _format_set(self, key, value):
-        """Allows nested yaml to be set on the command line of helm.
+        """
+        Allows nested yaml to be set on the command line of helm.
         Accepts key and value, if value is an ordered dict, recursively
-        formats the string properly """
+        formats the string properly
+        """
         if type(value) == dict:
             for new_key, new_value in value.iteritems():
                 for k, v in self._format_set("{}.{}".format(key, new_key), new_value):
@@ -262,7 +310,10 @@ class Chart(object):
                 yield a, b
 
     def _format_set_list(self, key, value):
-        """ given a list and a key, format it properly for the helm set list indexing """
+        """
+        given a list and a key, format it properly
+        for the helm set list indexing
+        """
         if type(value) == list:
             for index, item in enumerate(value):
                 if type(item) == dict:

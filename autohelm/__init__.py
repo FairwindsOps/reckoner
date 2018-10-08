@@ -20,8 +20,27 @@ from exception import AutoHelmCommandException
 
 
 class Response(object):
+    """
+    Description:
+    - Utility class to simplify the results from call()
+
+    Arguments: 
+    - stdout(string) 
+    - stderr (string)
+    - exitcode (sting,int) 
+
+    Attributes:
+    - stdout
+    - stderr
+    - exitcode
+
+    Returns:
+    - Instance of Response() is truthy where Reponse.exitcode == 0  
+    - Instance Response() is falsey where Reponse.exitcode != 0
+    """
 
     def __init__(self, stdout, stderr, exitcode):
+
         
         self._dict = {}      
         self._dict['stdout'] = stdout
@@ -43,10 +62,17 @@ class Response(object):
 
 def call(args):
     """
-    Wrapper utility function for subprocess.Popen.
-    Accepts list: `args`
-    Return tuple: `(stdout, stderr, exitcode)`
+    Description:
+    - Wrapper for subprocess.Popen. Joins `args` and passes
+    to `subprocess.Popen`
+
+    Arguments: 
+    - args (list)
+
+    Returns:
+    - Instance of Response()
     """
+
     logging.debug(' '.join(args))
     p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
