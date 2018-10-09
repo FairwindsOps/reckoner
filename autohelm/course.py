@@ -47,7 +47,7 @@ class Course(object):
         for repo in self.repositories:
             if not self.config.local_development:
                 repo.install()
-        
+
         self.helm.repo_update()
 
         if not self.config.local_development:
@@ -81,7 +81,7 @@ class Course(object):
         try:
             iter(charts_to_install)
         except TypeError:
-            charts_to_install = (charts_to_install)       
+            charts_to_install = (charts_to_install)
 
         for chart in self.charts:
             if chart.name in charts_to_install:
@@ -99,7 +99,6 @@ class Course(object):
             for chart in _failed_charts:
                 logging.error(" - {}".format(chart.release_name))
         return True
-
 
     def _compare_required_versions(self):
         """
@@ -121,7 +120,7 @@ class Course(object):
         r1 = semver.compare(autohelm_version, autohelm_minimum_version)
         if r1 < 0:
             raise MinimumVersionException("autohelm Minimum Version {} not met.".format(autohelm_minimum_version))
-        
+
         if not self.config.local_development:
             r2 = semver.compare(self.helm.client_version, helm_minimum_version)
             if r2 < 0:

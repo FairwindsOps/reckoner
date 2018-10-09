@@ -32,6 +32,7 @@ from helm import Helm
 
 default_repository = {'name': 'stable', 'url': 'https://kubernetes-charts.storage.googleapis.com'}
 
+
 class Chart(object):
 
     def __init__(self, chart):
@@ -40,8 +41,8 @@ class Chart(object):
         self._release_name = chart.keys()[0]
         self._chart = chart[self._release_name]
         self._repository = Repository(self._chart.get('repository', default_repository))
-        self._chart['values']= self.ordereddict_to_dict(self._chart.get('values', {}))
-        
+        self._chart['values'] = self.ordereddict_to_dict(self._chart.get('values', {}))
+
         value_strings = self._chart.get('values-strings', {})
         self._chart['values_strings'] = self.ordereddict_to_dict(value_strings)
         if value_strings != {}:
@@ -97,7 +98,7 @@ class Chart(object):
                 sys.exit(1)
 
     def rollback(self):
-            
+
         release = [release for release in self.helm.releases.deployed if release.name == self._release_name][0]
         if release:
             release.rollback()
@@ -111,8 +112,8 @@ class Chart(object):
             try:
                 r = self.helm.dependency_update(self.chart_path)
             except AutoHelmCommandException, e:
-                logging.warn("Unable to update chart dependancies: {}".format(e.stderr) )
-        
+                logging.warn("Unable to update chart dependancies: {}".format(e.stderr))
+
     def install(self, namespace):
 
         _namespace = self.namespace or namespace
@@ -120,13 +121,12 @@ class Chart(object):
         if self.repository.git:
             self.repository.name = '{}/{}/{}'.format(self.config.archive, re.sub(r'\:\/\/|\/|\.', '_', self.repository.git), self.repository.path)
             self._fetch_from_git_repository(self.repository.name, self.repository.git, self.version, self.repository.path)
-        
+
         self.chart_path = '{}/{}'.format(self.repository.name, self.name)
 
         self.update_dependencies()
 
         args = ['--install', '{}'.format(self._release_name), self.chart_path]
-    
 
         args.extend(self.debug_args)
         args.extend(self.helm_args)
@@ -160,7 +160,6 @@ class Chart(object):
             except AutoHelmCommandException, e:
                 logging.error("Failed to upgrade/install {}: {}".format(self.release_name, e.stderr))
                 return False
-           
 
         if self._post_install_hook:
             logging.debug("Running post_install hook:")
@@ -207,7 +206,7 @@ class Chart(object):
             if 'origin' in [remote.name for remote in repo.remotes]:
                 origin = repo.remotes['origin']
             else:
-                origin = repo.create_remote('origin', (self.git))
+                origin = repo.create_remote('origin', (self.repository.git))
 
             try:
                 chart_path = "{}/{}/{}".format(repo_path, self.path, self._chart_name)
@@ -239,7 +238,7 @@ class Chart(object):
         if self.config.dryrun:
             return ['--dry-run', '--debug']
         if self.config.debug:
-            return ['--debug']   
+            return ['--debug']
 
         return []
 
@@ -248,7 +247,6 @@ class Chart(object):
         if self.config.helm_args is not None:
             return self.config.helm_args
         return []
-    
 
     def _format_set(self, key, value):
         """Allows nested yaml to be set on the command line of helm.
@@ -274,4 +272,3 @@ class Chart(object):
                     yield "{}[{}]".format(key, index), item
         else:
             yield key, value
-

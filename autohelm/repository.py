@@ -20,6 +20,7 @@ from . import call
 from config import Config
 from exception import AutoHelmCommandException
 
+
 class Repository(object):
 
     def __init__(self, repository):
@@ -49,15 +50,15 @@ class Repository(object):
 
     def install(self):
         """ Install Helm repository """
-        from helm import Helm #currently cheating to get around a circular import issue
+        from helm import Helm  # currently cheating to get around a circular import issue
         helm = Helm()
 
         if self.git is None:
-            if self._repository not in helm.repositories:
+            if self not in helm.repositories:
                 try:
-                    return helm.repo_add(str(self.name),str(self.url))
+                    return helm.repo_add(str(self.name), str(self.url))
                 except AutoHelmCommandException, e:
-                    logging.warn("Unable to install repository {}: {}".format(self.name,e.stderr) )
+                    logging.warn("Unable to install repository {}: {}".format(self.name, e.stderr))
                     return False
             else:
                 logging.debug("Chart repository {} already installed".format(self.name))
