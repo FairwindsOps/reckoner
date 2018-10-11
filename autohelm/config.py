@@ -24,6 +24,20 @@ from exception import AutoHelmCommandException
 
 
 class Config(object):
+    """
+    Description:
+    - Following the borg patter, this class is used by all other classes to
+    share default and top level config setting between instances
+
+    Arguments:
+    - None
+
+    Atrributes:
+    - home (String): Defaults to "$HOME/.helm" but is overridden by
+    environment variable $HELM_HOME
+    - archive (String): Interpolated path for the helm archive
+
+    """
     _config = {}
 
     def __init__(self):
@@ -32,7 +46,7 @@ class Config(object):
 
     @property
     def home(self):
-
+        """ Helm home path """
         if self._config.get("home") is None:
             helm_home = os.environ.get('HELM_HOME')
             fallback_home = os.environ.get('HOME') + "/.helm"
@@ -46,6 +60,7 @@ class Config(object):
 
     @property
     def archive(self):
+        """ Helm archive path """
         if 'archive' not in self._config:
             archive = self.home + '/cache/archive'
             if not os.path.isdir(archive):

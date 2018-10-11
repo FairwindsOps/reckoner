@@ -7,7 +7,25 @@ from repository import Repository
 
 
 class Helm(object):
+    """
+    Description:
+    - Interface like class to the helm binary.
+    - Most helm calls are not defined as method, but any helm command can be
+    called by an instance of this class with the command name as the method
+    name and positional argumenst passed a list. Multiword commands are
+    '_' delimited
+    - example: Helm().repo_update() will call `helm repo update`
+    - example: Helm().upgrade(['--install','stable/redis'])
+    will call `helm upgrade --install stable/redis"
 
+    Attributes:
+    - client_version: Shortcut to  `Helm().version('--client')
+    - server_version: Shortcut to  `Helm().version('--server')
+    - releases: Instance of Releases() with all current helm releases
+    - repositories: list of Repository() isntances that are
+    currently configured
+
+    """
     helm_binary = 'helm'
 
     def _call(self, args):
@@ -30,6 +48,7 @@ class Helm(object):
 
     @property
     def repositories(self):
+        """list of Repository() instances as the currently configured repositories"""
         _repositories = []
         r = self.repo_list()
         for repo in [line.split() for line in r.stdout.split('\n')[1:-1]]:
@@ -39,17 +58,19 @@ class Helm(object):
 
     @property
     def client_version(self):
+        """ helm client version """
         r = self.version("--client")
         return r.stdout.replace('Client: &version.Version', '').split(',')[0].split(':')[1].replace('v', '').replace('"', '')
 
     @property
     def server_version(self):
+        """ helm tiller server version"""
         r = self.version("--server")
         return r.stdout.replace('Server: &version.Version', '').split(',')[0].split(':')[1].replace('v', '').replace('"', '')
 
     @property
     def releases(self):
-
+        """ Releases() instance with current releases """
         r = self.list()
         _releases = Releases()
 
@@ -60,6 +81,16 @@ class Helm(object):
 
 
 class Releases(object):
+    """
+    Description:
+    - Container class of Release() instances
+    - Duck type list
+
+    Attributes:
+    - deployed: Returns list of Release() with `DEPLOYED` status
+    - failed: Return list of Release() with `FAILED` status
+
+    """
 
     def __init__(self):
         self._deployed = []
@@ -79,10 +110,12 @@ class Releases(object):
 
     @property
     def deployed(self):
+        """ Returns list of Release() with `DEPLOYED` status """
         return self._deployed
 
     @property
     def failed(self):
+        """ Return list of Release() with `FAILED` status"""
         return self._failed
 
     def __iter__(self):
@@ -93,6 +126,24 @@ class Releases(object):
 
 
 class Release(object):
+    """
+    Description:
+    -  Active helm release
+
+    Arguments:
+    - name: releae name
+    - revision: revisiong number
+    - updated: last updated date
+    - status: Helm status
+    - chart: chart name
+    - app-version: chart version
+    - namespace: installed namespace
+
+    Attributes:
+    - deployed: Returns list of Release() with `DEPLOYED` status
+    - failed: Return list of Release() with `FAILED` status
+
+    """
 
     def __init__(self, name, revision, updated, status, chart, app_version, namespace):
         self._dict = {
@@ -115,15 +166,18 @@ class Release(object):
 
     @property
     def deployed(self):
+        """ Boolean test for Releas().status """
         if self.status == 'DEPLOYED':
             return True
         return False
 
     @property
     def failed(self):
+        """ Boolean test for Release().status """
         if self.status == 'FAILED':
             return True
         return False
 
     def rollback(self):
+        """ Roll back current release """
         return self.helm.rollback(self.name, self.revision)

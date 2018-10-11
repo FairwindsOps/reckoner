@@ -25,6 +25,23 @@ from helm import Helm
 
 
 class AutoHelm(object):
+    """
+    Description:
+    - Core AutoHelm class
+
+    Arguments: 
+    - file(file object) - file object of the course.yml
+    - dryrun (bool) - passes --dry-run flag to helm binary
+    - debug (bool) - passes --debug flag to helm binar
+    - helm_args (list) - passes content of list as additional arguments to helm binary
+    - local_development (bool) - when true, most actions over the network are switched off
+
+    Attributes:
+    - config: Instance of Config()
+    - helm: Instance of Helm()
+    - course: Instance of Course()
+
+    """
 
     def __init__(self, file=None, dryrun=False, debug=False, helm_args=None, local_development=False):
 
@@ -43,16 +60,24 @@ class AutoHelm(object):
 
     def install(self, charts=[]):
         """
-        Calls plot on course instance. Accepts list or tuple that is the keys
-        of the charts dictionary. Only that list of charts will be installed or
-        if the argument is emmpty, All charts in the course will be installed
+        Description:
+        - Calls plot on course instance.
+
+        Arguments:
+        - charts (default: []): list or tuple of releae_names from the course. That list of 
+        charts will be installed or if the argument is emmpty, All charts in the course will be installed
+
+        Returns:
+        - bool
+
         """
         selected_charts = charts or [chart._release_name for chart in self.course.charts]
         return self.course.plot(selected_charts)
 
     def _update_context(self):
         """
-        Update the current context in the kubeconfig to the desired context
+        Description:
+        - Update the current context in the kubeconfig to the desired context.
         Accepts no arguments
         """
         logging.debug("Checking for correct cluster context")

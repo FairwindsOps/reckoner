@@ -30,8 +30,26 @@ from meta import __version__ as autohelm_version
 
 
 class Course(object):
+    """
+    Description:
+    - Top level class for the attribues of the course.yml file
+    - Parses yaml file into verious AutoHelm classes
+
+    Arguments:
+    - file (File)
+
+    Attributes:
+    - config: Instance of Config()
+    - helm: Instance of Helm()
+    - charts: List of Chart() instances
+    - repositories: List of Repository() instances
+
+    """
 
     def __init__(self, file):
+        """
+        Parse course.yml contents into instances.
+        """
         self.config = Config()
         self.helm = Helm()
         self._dict = yaml.load(file)
@@ -58,6 +76,7 @@ class Course(object):
 
     @property
     def repositories(self):
+        """ Course repositories """
         return self._repositories
 
     def __getattr__(self, key):
@@ -65,6 +84,7 @@ class Course(object):
 
     @property
     def charts(self):
+        """ List of Chart() instances """
         return self._charts
 
     def plot(self, charts_to_install):
