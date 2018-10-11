@@ -173,7 +173,7 @@ class Release(object):
 
     @property
     def failed(self):
-        """ Boolean test for Releas().status """
+        """ Boolean test for Release().status """
         if self.status == 'FAILED':
             return True
         return False

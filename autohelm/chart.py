@@ -38,20 +38,20 @@ class Chart(object):
     Description:
     - Chart class for each release in the course.yml
 
-    Arguments: 
-    - chart (dict): 
+    Arguments:
+    - chart (dict):
 
     Attributes:
     - config: Instance of Config()
     - helm: Instance of Helm()
     - release_name : String. Name of the release
-    - name: String. Name of chart 
-    - files: List. Values files 
+    - name: String. Name of chart
+    - files: List. Values files
     - namespace
 
     Returns:
-    - Instance of Response() is truthy where Reponse.exitcode == 0  
-    - Instance Response() is falsey where Reponse.exitcode != 0
+    - Instance of Response() is truthy where Reponse.exitcode == 0
+    - Instance of Response() is falsey where Reponse.exitcode != 0
     """
 
     def __init__(self, chart):
@@ -69,8 +69,8 @@ class Chart(object):
 
     @property
     def release_name(self):
-        """ 
-        Returns relase name of course chart
+        """
+        Returns release name of course chart
         """
         return self._release_name
 

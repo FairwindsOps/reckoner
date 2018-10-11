@@ -60,7 +60,13 @@ class Repository(object):
 
     def install(self):
         """ Install Helm repository """
-        from helm import Helm  # currently cheating to get around a circular import issue
+        # TODO: Sort out imports so that Helm() can be imported here.
+        # autohelm.helm imports autohelm.repository (this file) and
+        # I couldn't figure out a way to avoid the circular import
+        # fairly quickly so I dropped it here an moved on for the
+        # time being.
+
+        from helm import Helm
         helm = Helm()
 
         if self.git is None:
