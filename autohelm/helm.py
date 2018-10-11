@@ -5,6 +5,7 @@ import logging
 from . import call
 from repository import Repository
 
+
 class Helm(object):
 
     helm_binary = 'helm'
@@ -112,13 +113,13 @@ class Release(object):
     def __str__(self):
         return str(self._dict)
 
-    @property    
+    @property
     def deployed(self):
         if self.status == 'DEPLOYED':
             return True
         return False
 
-    @property    
+    @property
     def failed(self):
         if self.status == 'FAILED':
             return True
@@ -126,6 +127,3 @@ class Release(object):
 
     def rollback(self):
         return self.helm.rollback(self.name, self.revision)
-
-
-    

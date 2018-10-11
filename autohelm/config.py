@@ -22,6 +22,7 @@ import logging
 from . import call
 from exception import AutoHelmCommandException
 
+
 class Config(object):
     _config = {}
 
@@ -64,7 +65,6 @@ class Config(object):
 
     def __getattr__(self, key):
         return self._config.get(key)
-
 
     @property
     def current_context(self):
