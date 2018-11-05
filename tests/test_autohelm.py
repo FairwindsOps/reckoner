@@ -325,7 +325,7 @@ class TestRepository(TestBase):
         self.assertIsInstance(r, Repository)
         self.assertEqual(r.git, test_git_repository['git'])
         self.assertEqual(r.path, test_git_repository['path'])
-        self.assertEqual(r.install(), None)
+        self.assertEqual(r.install("test_chart"), None)
 
     def test_tgz_repository(self):
         self.configure_subprocess_mock('', '', 0)
@@ -333,7 +333,7 @@ class TestRepository(TestBase):
         self.assertIsInstance(r, Repository)
         self.assertEqual(r.name, test_repository_dict['name'])
         self.assertEqual(r.url, test_repository_dict['url'])
-        self.assertEqual(r.install(), Response('', '', 0))
+        self.assertEqual(r.install("test_chart"), Response('', '', 0))
 
 
 class TestConfig(TestBase):

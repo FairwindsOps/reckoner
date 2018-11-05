@@ -60,7 +60,6 @@ class Repository(object):
         """ Install Helm repository """
         from helm import Helm #currently cheating to get around a circular import issue
         helm = Helm()
-
         if self.git is None:
             self._chart_path = "{}/{}".format(self.name, chart_name)
             if self not in helm.repositories:
@@ -89,7 +88,6 @@ class Repository(object):
                 self.path or '')
 
             self._fetch_from_git(chart_name, version)
-
 
             # If the chart_name is in the repo path and appears to be redundant pb
             chart_redundant = self._chart_path.endswith(chart_name) \

@@ -114,7 +114,6 @@ class Chart(object):
 
         # Set the namespace
         _namespace = self.namespace or namespace
-
         self.repository.install(self.name, self.version)            
         self.chart_path = self.repository.chart_path
         # Update the helm dependencies
