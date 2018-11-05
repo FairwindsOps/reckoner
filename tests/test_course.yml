@@ -1,13 +1,18 @@
 namespace: test #namespace to install the chart in, defaults to 'kube-system'
 repositories:
-  test_repo:
-    url: https://kubernetes-charts.storage.googleapis.com
   incubator:
     url: https://kubernetes-charts-incubator.storage.googleapis.com
 minimum_versions: #set minimum version requirements here
   helm: 2.8.2
   autohelm: 0.5.0
 charts:
+  test-chart:
+    chart: test_chart
+    repository:
+      git: https://github.com/ejether/test_chart.git
+      # path: ./
+    values:
+      test: true
   cluster-autoscaler:
     repository: stable
     version: "0.2.1"
@@ -25,7 +30,7 @@ charts:
     repository:
       git: https://github.com/kubernetes/charts.git
       path: stable
-    version: 263bc80322056455c7120b51f1992a40667ec686
+    version: master
     values:
       nested:
         values:
