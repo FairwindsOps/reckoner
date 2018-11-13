@@ -73,37 +73,69 @@ See the [Autoscaler Docs](https://github.com/helm/charts/tree/master/stable/clus
 ## Datadog
 
 ```
-datadog:
-  version: 1.0.1
-  repository: stable
-  values:
-    rbac.create: "true"
-    daemonset.updateStrategy: RollingUpdate
-    daemonset.tolerations[0].key: node-role.kubernetes.io/master
-    daemonset.tolerations[0].effect: NoSchedule
-    kube-state-metrics.rbac.create: "true"
-    kubeStateMetrics.enabled: "true"
-    datadog:
-      resources:
-        requests:
-          cpu: 100m
-          memory: 256Mi
-        limits:
-          cpu: 200m
-          memory: 512Mi
-      apiKey: "${DATADOG_API_KEY}"
-      leaderElection: "true"
-      collectEvents: "true"
+  datadog:
+    version: "1.5.1"
+    repository: stable
+    values:
+      image.tag: 6.5.2
+      daemonset:
+        updateStrategy: RollingUpdate
+        tolerations:
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
+      rbac.create: "true"
+      kubeStateMetrics.enabled: "true"
+      kube-state-metrics.rbac.create: "true"
+      datadog:
+        apiKey: "${DATADOG_API_KEY}"
+        appKey: "${DATADOG_APP_KEY}"
+        leaderElection: "true"
+        collectEvents: "true"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 250Mi
+          limits:
+            cpu: 200m
+            memory: 500Mi
+      clusterAgent:
+        enabled: true
+        token: "${DATADOG_CLUSTER_AGENT_TOKEN}"
+        metricsProvider:
+          enabled: true
 ```
 
 Enable Statsd Collection in Datadog.  This will create a deployment with a service on port 8125/UDP that you can send statsd metrics to.
 
 ```
-      image:
-        repository: datadog/dogstatsd
-      deployment:
-        enabled: true
-        replicas: 1
+  datadog-statsd:
+    chart: datadog
+    version: 1.0.1
+    repository: stable
+    values:
+      daemonset.enabled: "false"
+      deployment.enabled: "true"
+      daemonset.updateStrategy: RollingUpdate
+      kubeStateMetrics.enabled: "false"
+      datadog:
+        apiKey: "${DATADOG_API_KEY}"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        volumeMounts:
+          - name: confd
+            mountPath: /etc/datadog-agent/datadog.yaml
+            readOnly: true
+            subPath: datadog.yaml
+        confd:
+          datadog\.yaml: |
+            use_dogstatsd: true
+            dogstatsd_port: 8125
+            dogstatsd_non_local_traffic: true
 ```
 
 ## spotify-docker-gc
