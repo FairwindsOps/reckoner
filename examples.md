@@ -74,10 +74,9 @@ See the [Autoscaler Docs](https://github.com/helm/charts/tree/master/stable/clus
 
 ```
   datadog:
-    version: "1.5.1"
+    version: "1.10.1"
     repository: stable
     values:
-      image.tag: 6.5.2
       daemonset:
         updateStrategy: RollingUpdate
         tolerations:
