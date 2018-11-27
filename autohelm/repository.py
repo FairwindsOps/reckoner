@@ -52,21 +52,22 @@ class Repository(object):
 
     def __eq__(self, other):
         return self._repository == other._repository
+
     @property
     def chart_path(self):
         return self._chart_path
 
     def install(self, chart_name=None, version=None):
         """ Install Helm repository """
-        from helm import Helm #currently cheating to get around a circular import issue
+        from helm import Helm  # currently cheating to get around a circular import issue
         helm = Helm()
         if self.git is None:
             self._chart_path = "{}/{}".format(self.name, chart_name)
             if self not in helm.repositories:
                 try:
-                    return helm.repo_add(str(self.name),str(self.url))
+                    return helm.repo_add(str(self.name), str(self.url))
                 except AutoHelmCommandException, e:
-                    logging.warn("Unable to install repository {}: {}".format(self.name,e.stderr) )
+                    logging.warn("Unable to install repository {}: {}".format(self.name, e.stderr))
                     return False
             else:
                 logging.debug("Chart repository {} already installed".format(self.name))
@@ -99,7 +100,7 @@ class Repository(object):
 
     def _fetch_from_git(self, chart_name, version):
         """ Does a sparse checkout for a git repository git_repo@branch and retrieves the chart at the path """
-        
+
         def fetch_pull(ref):
             """ Do the fetch, checkout pull for the git ref """
             origin.fetch(tags=True)
@@ -122,12 +123,10 @@ class Repository(object):
 
         sparse_checkout_file_path = "{}/.git/info/sparse-checkout".format(repo_path)
 
-        
-        # A path in the list implies that the Chart is at the root of the git repository. 
+        # A path in the list implies that the Chart is at the root of the git repository.
         if self.path not in ['', '/', './', None]:
 
             self._chart_path = "{}/{}\n".format(self.path, chart_name)
-            
 
             repo.git.config('core.sparseCheckout', 'true')
             with open(sparse_checkout_file_path, "ab+") as scf:
