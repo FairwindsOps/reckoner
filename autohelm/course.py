@@ -44,8 +44,10 @@ class Course(object):
         for name, chart in self._dict.get('charts', {}).iteritems():
             self._charts.append(Chart({name: chart}))
 
-        for repo in self.repositories:
+        for repo in self._repositories:
+            type(repo)
             if not self.config.local_development:
+                logging.debug("Installing repository: {}".format(repo))
                 repo.install()
         
         self.helm.repo_update()
@@ -84,7 +86,7 @@ class Course(object):
             charts_to_install = (charts_to_install)       
 
         for chart in self.charts:
-            if chart.name in charts_to_install:
+            if chart.release_name in charts_to_install:
                 self._charts_to_install.append(chart)
 
         for chart in self._charts_to_install:

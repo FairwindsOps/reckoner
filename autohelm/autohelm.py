@@ -35,7 +35,7 @@ class AutoHelm(object):
         self.config.local_development = local_development
         self.helm = Helm()
 
-        if not self.helm.server_version:
+        if not self.config.local_development and not self.helm.server_version:
             logging.error("Tiller not present in cluster. Have you run `helm init`?")
             sys.exit(1)
 
