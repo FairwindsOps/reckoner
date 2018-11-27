@@ -25,6 +25,7 @@ import subprocess
 import shutil
 import mock
 import autohelm
+import yaml
 
 from autohelm.autohelm import AutoHelm
 from autohelm.config import Config
@@ -69,10 +70,12 @@ class TestAutoHelmMethods(unittest.TestCase):
         self.assertIsInstance(install_response, bool)
         self.assertTrue(install_response)
 
+
 test_course = "./tests/test_course.yml"
 git_repo_path = "./test"
 
-test_release_names = ['cluster-autoscaler', 'spotify-docker-gc', 'centrifugo', 'spotify-docker-gc-again']
+course_yaml_dict = yaml.load(file(test_course, 'r'))
+test_release_names = course_yaml_dict['charts'].keys()
 test_repositories = ['stable', 'incubator'],
 test_minimum_versions = ['helm', 'autohelm']
 test_repository_dict = {'name': 'test_repo', 'url': 'https://kubernetes-charts.storage.googleapis.com'}
@@ -138,7 +141,8 @@ stable      https://kubernetes-charts.storage.googleapis.com
 local       http://127.0.0.1:8879/charts
 incubator   https://kubernetes-charts-incubator.storage.googleapis.com'''
 test_helm_repo_args = ['helm', 'repo', 'list']
-test_helm_repos = [Repository({'url': 'https://kubernetes-charts.storage.googleapis.com', 'name': 'stable'}), Repository({'url': 'http://127.0.0.1:8879/charts', 'name': 'local'})]
+test_helm_repos = [Repository({'url': 'https://kubernetes-charts.storage.googleapis.com', 'name': 'stable'}),
+                   Repository({'url': 'http://127.0.0.1:8879/charts', 'name': 'local'})]
 
 test_tiller_present_return_string = '''NAME         REVISION    UPDATED                     STATUS      CHART               APP VERSION NAMESPACE
 centrifugo  1           Tue Oct  2 16:19:01 2018    DEPLOYED    centrifugo-2.0.1    1.7.3       test'''
@@ -238,7 +242,8 @@ class TestCourse(TestBase):
     def test_course_values(self):
         self.assertIsInstance(self.c, Course)
         self.assertEqual([chart._release_name for chart in self.c.charts], test_release_names)
-        self.assertNotEqual([chart.name for chart in self.c.charts], test_release_names)
+        self.assertNotEqual([chart.name for chart in self.c.charts], test_release_names,
+                            msg="All the release names match the chart names, this may happen if you've edited the test_course.yml and not provided an example with a different chart_name and chart.")
         self.assertEqual(self.c.repositories[0].name, test_repository_dict['name'])
         self.assertEqual(self.c.repositories[0].url,  test_repository_dict['url'])
         self.assertEqual(self.c.minimum_versions.keys(), test_minimum_versions)
@@ -307,6 +312,15 @@ class TestChart(TestBase):
         chart.config.dryrun = True
         self.assertEqual(chart.debug_args, ['--dry-run', '--debug'])
 
+    # FIXME: Related to the FIXME in install() of Chart class.
+    @unittest.skip("Skipping non-implmeneted test.")
+    def test_chart_at_git_root(self):
+        """
+        Chart should support cloning git repositories where the chart is in
+        the root of the repository.
+        """
+        pass
+
 
 class TestRepository(TestBase):
 
@@ -316,7 +330,7 @@ class TestRepository(TestBase):
         self.assertIsInstance(r, Repository)
         self.assertEqual(r.git, test_git_repository['git'])
         self.assertEqual(r.path, test_git_repository['path'])
-        self.assertEqual(r.install(), None)
+        self.assertEqual(r.install("test_chart"), None)
 
     def test_tgz_repository(self):
         self.configure_subprocess_mock('', '', 0)
@@ -324,7 +338,7 @@ class TestRepository(TestBase):
         self.assertIsInstance(r, Repository)
         self.assertEqual(r.name, test_repository_dict['name'])
         self.assertEqual(r.url, test_repository_dict['url'])
-        self.assertEqual(r.install(), Response('', '', 0))
+        self.assertEqual(r.install("test_chart"), Response('', '', 0))
 
 
 class TestConfig(TestBase):

@@ -41,3 +41,7 @@ charts:
   spotify-docker-gc-again: 
     chart: spotify-docker-gc
     version: "0.1.0"
+  go-harbor:
+    repository:
+      git: https://github.com/goharbor/harbor-helm.git
+    version: master

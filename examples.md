@@ -27,6 +27,10 @@ charts:
 
 ## Cluster autoscaler
 
+This includes autodiscovery of instancegroups and the 'least-waste' expander option.
+
+See the [Autoscaler Docs](https://github.com/helm/charts/tree/master/stable/cluster-autoscaler#auto-discovery) for details on how to tag your nodes and set permissions for this to work.
+
 ```
   cluster-autoscaler:
     repository: stable
@@ -34,15 +38,7 @@ charts:
     values:
       cloudProvider: aws
       replicaCount: 2
-      autoscalingGroups[0].name: nodes-us-east-1a.production-1.kube.example.com
-      autoscalingGroups[0].maxSize: "15"
-      autoscalingGroups[0].minSize: "3"
-      autoscalingGroups[1].name: nodes-us-east-1c.production-1.kube.example.com
-      autoscalingGroups[1].maxSize: "15"
-      autoscalingGroups[1].minSize: "3"
-      autoscalingGroups[2].name: nodes-us-east-1d.production-1.kube.exapmle.com
-      autoscalingGroups[2].maxSize: "15"
-      autoscalingGroups[2].minSize: "3"
+      autoDiscovery.clusterName: cluster.example.com
       awsRegion: us-east-1
       resources.requests.cpu: 100m
       resources.requests.memory: 300Mi
@@ -58,25 +54,7 @@ charts:
       extraArgs.skip-nodes-with-local-storage\=false: ""
       extraArgs.skip-nodes-with-system-pods\=false: ""
       extraArgs.scan-interval: "30s"
-      extraArgs.expander: "most-pods"
-```
-
-## Cluster autoscaler with auto-discovery
-
-See here for details on how to tag your nodes for this to work. [Autoscaler Docs](https://github.com/helm/charts/tree/master/stable/cluster-autoscaler#auto-discovery)
-
-```
-  cluster-autoscaler:
-    version: "0.7.0"
-    values:
-      cloudProvider: aws
-      autoDiscovery.clusterName: production-1.kube.example.com
-      extraArgs.skip-nodes-with-local-storage\=false: ""
-      extraArgs.skip-nodes-with-system-pods\=false: ""
-      awsRegion: us-east-2
-      cloudProvider: aws
-      rbac:
-        create: true
+      extraArgs.expander: "least-waste"
 ```
 
 ## Heapster
@@ -95,37 +73,68 @@ See here for details on how to tag your nodes for this to work. [Autoscaler Docs
 ## Datadog
 
 ```
-datadog:
-  version: 1.0.1
-  repository: stable
-  values:
-    rbac.create: "true"
-    daemonset.updateStrategy: RollingUpdate
-    daemonset.tolerations[0].key: node-role.kubernetes.io/master
-    daemonset.tolerations[0].effect: NoSchedule
-    kube-state-metrics.rbac.create: "true"
-    kubeStateMetrics.enabled: "true"
-    datadog:
-      resources:
-        requests:
-          cpu: 100m
-          memory: 256Mi
-        limits:
-          cpu: 200m
-          memory: 512Mi
-      apiKey: "${DATADOG_API_KEY}"
-      leaderElection: "true"
-      collectEvents: "true"
+  datadog:
+    version: "1.10.1"
+    repository: stable
+    values:
+      daemonset:
+        updateStrategy: RollingUpdate
+        tolerations:
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
+      rbac.create: "true"
+      kubeStateMetrics.enabled: "true"
+      kube-state-metrics.rbac.create: "true"
+      datadog:
+        apiKey: "${DATADOG_API_KEY}"
+        appKey: "${DATADOG_APP_KEY}"
+        leaderElection: "true"
+        collectEvents: "true"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 250Mi
+          limits:
+            cpu: 200m
+            memory: 500Mi
+      clusterAgent:
+        enabled: true
+        token: "${DATADOG_CLUSTER_AGENT_TOKEN}"
+        metricsProvider:
+          enabled: true
 ```
 
 Enable Statsd Collection in Datadog.  This will create a deployment with a service on port 8125/UDP that you can send statsd metrics to.
 
 ```
-      image:
-        repository: datadog/dogstatsd
-      deployment:
-        enabled: true
-        replicas: 1
+  datadog-statsd:
+    chart: datadog
+    version: 1.0.1
+    repository: stable
+    values:
+      daemonset.enabled: "false"
+      deployment.enabled: "true"
+      daemonset.updateStrategy: RollingUpdate
+      kubeStateMetrics.enabled: "false"
+      datadog:
+        apiKey: "${DATADOG_API_KEY}"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        volumeMounts:
+          - name: confd
+            mountPath: /etc/datadog-agent/datadog.yaml
+            readOnly: true
+            subPath: datadog.yaml
+        confd:
+          datadog\.yaml: |
+            use_dogstatsd: true
+            dogstatsd_port: 8125
+            dogstatsd_non_local_traffic: true
 ```
 
 ## spotify-docker-gc

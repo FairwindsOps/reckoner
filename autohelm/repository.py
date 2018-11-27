@@ -15,10 +15,16 @@
 # limitations under the License.
 
 import logging
+import re
+import git
+import os
+import sys
 
 from . import call
 from config import Config
 from exception import AutoHelmCommandException
+from git import GitCommandError
+
 
 
 class Repository(object):
@@ -47,7 +53,7 @@ class Repository(object):
             if repository.get('git'):
                 self._repository['git'] = repository.get('git')
             if repository.get('path'):
-                self._repository['path'] = repository.get('path', '')
+                self._repository['path'] = repository.get('path')
 
     def __getattr__(self, key):
         return self._repository.get(key)
@@ -58,18 +64,18 @@ class Repository(object):
     def __eq__(self, other):
         return self._repository == other._repository
 
-    def install(self):
+    @property
+    def chart_path(self):
+        return self._chart_path
+
+    def install(self, chart_name=None, version=None):
         """ Install Helm repository """
-        # TODO: Sort out imports so that Helm() can be imported here.
-        # autohelm.helm imports autohelm.repository (this file) and
-        # I couldn't figure out a way to avoid the circular import
-        # fairly quickly so I dropped it here an moved on for the
-        # time being.
 
-        from helm import Helm
+        from helm import Helm  # currently cheating to get around a circular import issue
+
         helm = Helm()
-
         if self.git is None:
+            self._chart_path = "{}/{}".format(self.name, chart_name)
             if self not in helm.repositories:
                 try:
                     return helm.repo_add(str(self.name), str(self.url))
@@ -79,3 +85,96 @@ class Repository(object):
             else:
                 logging.debug("Chart repository {} already installed".format(self.name))
                 return True
+        else:
+            if version is None:
+                version = 'master'
+
+            if self.path is None:
+                self.path = '/'
+
+            self.name = '{}/{}/{}/{}' .format(
+                self.config.archive,
+                re.sub(
+                    r'\:\/\/|\/|\.', '_',
+                    self.git
+                ),
+                chart_name,
+                self.path or '')
+
+            self._fetch_from_git(chart_name, version)
+
+            # If the chart_name is in the repo path and appears to be redundant pb
+            chart_redundant = self._chart_path.endswith(chart_name) \
+                and os.path.isdir(self.path) \
+                and not os.path.isdir('{}/{}'.format(self.path, chart_name))
+            if chart_redundant:
+                logging.warn("Chart name {} in {}. Removing to try and prevent errors.".format(chart_name, self._chart_path))
+                self._chart_path = self._chart_path[:-len(chart_name) - 1]
+
+    def _fetch_from_git(self, chart_name, version):
+        """ Does a sparse checkout for a git repository git_repo@branch and retrieves the chart at the path """
+
+        def fetch_pull(ref):
+            """ Do the fetch, checkout pull for the git ref """
+            origin.fetch(tags=True)
+            repo.git.checkout("{}".format(ref))
+            repo.git.pull("origin", "{}".format(ref))
+
+        repo_path = '{}/{}'.format(
+            self.config.archive,
+            re.sub(r'\:\/\/|\/|\.', '_', self.git)
+        )
+
+        logging.debug('Chart repository path: {}'.format(repo_path))
+        if not os.path.isdir(repo_path):
+            os.makedirs(repo_path)
+
+        if not os.path.isdir("{}/.git".format(repo_path)):
+            repo = git.Repo.init(repo_path)
+        else:
+            repo = git.Repo(repo_path)
+
+        sparse_checkout_file_path = "{}/.git/info/sparse-checkout".format(repo_path)
+
+        # A path in the list implies that the Chart is at the root of the git repository.
+        if self.path not in ['', '/', './', None]:
+
+            self._chart_path = "{}/{}\n".format(self.path, chart_name)
+
+            repo.git.config('core.sparseCheckout', 'true')
+            with open(sparse_checkout_file_path, "ab+") as scf:
+                if self.path not in scf.readlines():
+                    scf.write(self._chart_path)
+            logging.debug("Configuring sparse checkout for path: {}".format(self.path))
+
+        self._chart_path = "{}/{}/{}".format(repo_path, self.path, chart_name)
+
+        if not self.config.local_development:
+            if 'origin' in [remote.name for remote in repo.remotes]:
+                origin = repo.remotes['origin']
+            else:
+                origin = repo.create_remote('origin', (self.git))
+
+            try:
+                fetch_pull(version)
+            except GitCommandError, e:
+                if 'Sparse checkout leaves no entry on working directory' in str(e):
+                    logging.warn("Error with path \"{}\"! Remove path when chart exists at the repository root".format(self.path))
+                    logging.warn("Skipping chart {}".format(chart_name))
+                    return False
+                elif 'did not match any file(s) known to git.' in str(e):
+                    logging.warn("Branch/tag \"{}\" does not seem to exist!".format(version))
+                    logging.warn("Skipping chart {}".format(chart_name))
+                    return False
+                else:
+                    logging.error(e)
+                    raise e
+            except Exception, e:
+                logging.error(e)
+                raise e
+            finally:
+                # Remove sparse-checkout to prevent path issues from poisoning the cache
+                logging.debug("Removing sparse checkout config")
+                if os.path.isfile(sparse_checkout_file_path):
+                    os.remove(sparse_checkout_file_path)
+                repo.git.config('core.sparseCheckout', 'false')
