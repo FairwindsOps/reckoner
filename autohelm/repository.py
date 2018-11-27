@@ -133,7 +133,8 @@ class Repository(object):
                 if self.path not in scf.readlines():
                     scf.write(self._chart_path)
             logging.debug("Configuring sparse checkout for path: {}".format(self.path))
-            
+
+        self._chart_path = "{}/{}/{}".format(repo_path, self.path, chart_name)
 
         if not self.config.local_development:
             if 'origin' in [remote.name for remote in repo.remotes]:
@@ -142,7 +143,6 @@ class Repository(object):
                 origin = repo.create_remote('origin', (self.git))
 
             try:
-                self._chart_path = "{}/{}/{}".format(repo_path, self.path, chart_name)
                 fetch_pull(version)
             except GitCommandError, e:
                 if 'Sparse checkout leaves no entry on working directory' in str(e):
