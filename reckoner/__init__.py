@@ -16,7 +16,8 @@
 
 import subprocess
 import logging
-from exception import AutoHelmCommandException
+
+from exception import ReckonerCommandException
 
 
 class Response(object):
@@ -24,10 +25,10 @@ class Response(object):
     Description:
     - Utility class to simplify the results from call()
 
-    Arguments: 
-    - stdout(string) 
+    Arguments:
+    - stdout(string)
     - stderr (string)
-    - exitcode (sting,int) 
+    - exitcode (sting,int)
 
     Attributes:
     - stdout
@@ -35,18 +36,17 @@ class Response(object):
     - exitcode
 
     Returns:
-    - Instance of Response() is truthy where Reponse.exitcode == 0  
+    - Instance of Response() is truthy where Reponse.exitcode == 0
     - Instance Response() is falsey where Reponse.exitcode != 0
     """
 
     def __init__(self, stdout, stderr, exitcode):
 
-        
-        self._dict = {}      
+        self._dict = {}
         self._dict['stdout'] = stdout
         self._dict['stderr'] = stderr
         self._dict['exitcode'] = exitcode
-    
+
     def __getattr__(self, name):
         return self._dict.get(name)
 
@@ -57,7 +57,7 @@ class Response(object):
         return not self._dict['exitcode']
 
     def __eq__(self, other):
-        return  self._dict == other._dict
+        return self._dict == other._dict
 
 
 def call(args):
@@ -79,5 +79,5 @@ def call(args):
     exitcode = p.returncode
 
     if exitcode > 0:
-        raise AutoHelmCommandException("Error with subprocess call: {}".format(' '.join(args)), stdout, stderr, exitcode)
+        raise ReckonerCommandException("Error with subprocess call: {}".format(' '.join(args)), stdout, stderr, exitcode)
     return Response(stdout, stderr, exitcode)

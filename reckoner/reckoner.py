@@ -24,12 +24,12 @@ from course import Course
 from helm import Helm
 
 
-class AutoHelm(object):
+class Reckoner(object):
     """
     Description:
-    - Core AutoHelm class
+    - Core Reckoner class
 
-    Arguments: 
+    Arguments:
     - file(file object) - file object of the course.yml
     - dryrun (bool) - passes --dry-run flag to helm binary
     - debug (bool) - passes --debug flag to helm binar
@@ -96,4 +96,4 @@ class AutoHelm(object):
         if self.config.current_context == self._context:
             return True
         else:
-            raise AutoHelmException("Unable to set cluster context to: {}".format(self._context))
+            raise ReckonerException("Unable to set cluster context to: {}".format(self._context))

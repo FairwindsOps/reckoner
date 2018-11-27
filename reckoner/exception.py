@@ -15,15 +15,15 @@
 # limitations under the License.
 
 
-class AutoHelmException(Exception):
+class ReckonerException(Exception):
     pass
 
 
-class MinimumVersionException(AutoHelmException):
+class MinimumVersionException(ReckonerException):
     pass
 
 
-class AutoHelmCommandException(Exception):
+class ReckonerCommandException(Exception):
 
     def __init__(self, msg, stdout=None, stderr=None, exitcode=None):
         self.message = msg

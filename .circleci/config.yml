@@ -19,22 +19,22 @@ jobs:
     docker:
       - image: circleci/python:2
     environment: ~
-    working_directory: ~/autohelm
+    working_directory: ~/reckoner
     steps:
       - checkout
       - run:
           name: Unit Tests
           command: |
             sudo pip install .
-            autohelm --version
+            reckoner --version
             sudo pip install -r tests/requirements.txt
             nose2
       - setup_remote_docker
       - run:
           name: Build Docker Image
           command: |
-            docker build -t autohelm .
-            docker run --rm autohelm --version
+            docker build -t reckoner .
+            docker run --rm reckoner --version
             
   release:
     docker:
@@ -43,7 +43,7 @@ jobs:
       PYPI_USERNAME: ReactiveOps
       GITHUB_ORGANIZATION: $CIRCLE_PROJECT_USERNAME
       GITHUB_REPOSITORY: $CIRCLE_PROJECT_REPONAME
-    working_directory: ~/autohelm
+    working_directory: ~/reckoner
     steps:
       - checkout
       - run:
@@ -57,7 +57,7 @@ jobs:
           command: |
             git fetch --tags
             curl -O https://raw.githubusercontent.com/reactiveops/release.sh/v0.0.2/release
-            /bin/bash release
+            /bin/bash release || true
       - run:
           name: package and upload
           command: |

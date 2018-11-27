@@ -22,9 +22,8 @@ import sys
 
 from . import call
 from config import Config
-from exception import AutoHelmCommandException
+from exception import ReckonerCommandException
 from git import GitCommandError
-
 
 
 class Repository(object):
@@ -79,7 +78,7 @@ class Repository(object):
             if self not in helm.repositories:
                 try:
                     return helm.repo_add(str(self.name), str(self.url))
-                except AutoHelmCommandException, e:
+                except ReckonerCommandException, e:
                     logging.warn("Unable to install repository {}: {}".format(self.name, e.stderr))
                     return False
             else:

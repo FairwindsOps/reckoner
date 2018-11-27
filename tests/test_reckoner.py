@@ -24,49 +24,49 @@ import git
 import subprocess
 import shutil
 import mock
-import autohelm
+import reckoner
 import yaml
 
-from autohelm.autohelm import AutoHelm
-from autohelm.config import Config
-from autohelm.course import Course
-from autohelm.repository import Repository
-from autohelm.exception import MinimumVersionException, AutoHelmCommandException
-from autohelm import Response
-from autohelm.helm import Helm
+from reckoner.reckoner import Reckoner
+from reckoner.config import Config
+from reckoner.course import Course
+from reckoner.repository import Repository
+from reckoner.exception import MinimumVersionException, ReckonerCommandException
+from reckoner import Response
+from reckoner.helm import Helm
 
 
 # Test properties of the mock
-@mock.patch('autohelm.autohelm.Config', autospec=True)
-@mock.patch('autohelm.autohelm.Course', autospec=True)
+@mock.patch('reckoner.reckoner.Config', autospec=True)
+@mock.patch('reckoner.reckoner.Course', autospec=True)
 @mock.patch.object(Helm, 'server_version')
-class TestAutoHelmAttributes(unittest.TestCase):
-    name = "test-autohelm-attributes"
+class TestReckonerAttributes(unittest.TestCase):
+    name = "test-reckoner-attributes"
 
     def test_config(self, *args):
-        autohelm_instance = autohelm.autohelm.AutoHelm()
-        self.assertTrue(hasattr(autohelm_instance, 'config'))
+        reckoner_instance = reckoner.reckoner.Reckoner()
+        self.assertTrue(hasattr(reckoner_instance, 'config'))
 
     def test_course(self, *args):
-        autohelm_instance = autohelm.autohelm.AutoHelm()
-        self.assertTrue(hasattr(autohelm_instance, 'course'))
+        reckoner_instance = reckoner.reckoner.Reckoner()
+        self.assertTrue(hasattr(reckoner_instance, 'course'))
 
     def test_helm(self, *args):
-        autohelm_instance = autohelm.autohelm.AutoHelm()
-        self.assertTrue(hasattr(autohelm_instance, 'helm'))
+        reckoner_instance = reckoner.reckoner.Reckoner()
+        self.assertTrue(hasattr(reckoner_instance, 'helm'))
 
 
 # Test methods
-@mock.patch('autohelm.autohelm.Config', autospec=True)
-@mock.patch('autohelm.autohelm.Course', autospec=True)
+@mock.patch('reckoner.reckoner.Config', autospec=True)
+@mock.patch('reckoner.reckoner.Course', autospec=True)
 @mock.patch.object(Helm, 'server_version')
-class TestAutoHelmMethods(unittest.TestCase):
-    name = 'test-autohelm-methods'
+class TestReckonerMethods(unittest.TestCase):
+    name = 'test-reckoner-methods'
 
     def test_install_succeeds(self, *args):
-        autohelm_instance = autohelm.autohelm.AutoHelm()
-        autohelm_instance.course.plot.return_value = True
-        install_response = autohelm_instance.install()
+        reckoner_instance = reckoner.reckoner.Reckoner()
+        reckoner_instance.course.plot.return_value = True
+        install_response = reckoner_instance.install()
         self.assertIsInstance(install_response, bool)
         self.assertTrue(install_response)
 
@@ -77,9 +77,9 @@ git_repo_path = "./test"
 course_yaml_dict = yaml.load(file(test_course, 'r'))
 test_release_names = course_yaml_dict['charts'].keys()
 test_repositories = ['stable', 'incubator'],
-test_minimum_versions = ['helm', 'autohelm']
+test_minimum_versions = ['helm', 'reckoner']
 test_repository_dict = {'name': 'test_repo', 'url': 'https://kubernetes-charts.storage.googleapis.com'}
-test_autohelm_version = "1.0.0"
+test_reckoner_version = "1.0.0"
 
 test_release_name = 'spotify-docker-gc-again'
 test_chart_name = 'spotify-docker-gc'
@@ -196,7 +196,7 @@ class TestBase(unittest.TestCase):
         self.subprocess_mock_patch.stop()
 
 
-class TestAutoHelm(TestBase):
+class TestReckoner(TestBase):
     name = "test-pentagon-base"
 
     def setUp(self):
@@ -210,14 +210,14 @@ class TestAutoHelm(TestBase):
         # os.chdir("../")
         self.configure_subprocess_mock(test_tiller_present_return_string, '', 0)
         with open(test_course) as f:
-            self.a = AutoHelm(file=f, local_development=True)
+            self.a = Reckoner(file=f, local_development=True)
 
     # def tearDown(self):
     #     self.a = None
     #     subprocess.call(['rm', '-rf', git_repo_path])
 
     def test_instance(self):
-        self.assertIsInstance(self.a, AutoHelm)
+        self.assertIsInstance(self.a, Reckoner)
 
     def test_config_instance(self):
         self.assertIsInstance(self.a.config, Config)
@@ -251,7 +251,7 @@ class TestCourse(TestBase):
 
     def test_minimum_version(self):
         self.configure_subprocess_mock(test_helm_version_return_string, '', 0)
-        self.c.minimum_versions['autohelm'] = test_autohelm_version
+        self.c.minimum_versions['reckoner'] = test_reckoner_version
         self.assertRaises(MinimumVersionException, self.c._compare_required_versions)
 
     def test_plot_course(self):
@@ -266,7 +266,7 @@ class TestChart(TestBase):
         super(type(self), self).setUp()
         self.configure_subprocess_mock(test_tiller_present_return_string, '', 0)
         with open(test_course) as f:
-            self.a = AutoHelm(file=f, local_development=True)
+            self.a = Reckoner(file=f, local_development=True)
         self.charts = self.a.course.charts
 
     def test_releasename_is_different_than_chart_name(self):

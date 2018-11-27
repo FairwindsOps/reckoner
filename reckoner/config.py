@@ -20,7 +20,7 @@ import sys
 import logging
 
 from . import call
-from exception import AutoHelmCommandException
+from exception import ReckonerCommandException
 
 
 class Config(object):

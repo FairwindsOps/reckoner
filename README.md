@@ -1,5 +1,5 @@
 
-# autohelm [![CircleCI](https://circleci.com/gh/reactiveops/autohelm.svg?style=svg)](https://circleci.com/gh/reactiveops/autohelm)
+# reckoner [![CircleCI](https://circleci.com/gh/reactiveops/reckoner.svg?style=svg)](https://circleci.com/gh/reactiveops/reckoner)
 
 Command line helper for helm.
 This utility adds to the functionality of [Helm](https://github.com/kubernetes/helm) in multiple ways:
@@ -13,17 +13,17 @@ This utility adds to the functionality of [Helm](https://github.com/kubernetes/h
 
 ## Installation
 ### As standalone shell command
-- pip install git+https://github.com/reactiveops/autohelm
+- pip install git+https://github.com/reactiveops/reckoner
 ### As Helm plugin
-- pip install git+https://github.com/reactiveops/autohelm
-- helm plugin install https://github.com/reactiveops/autohelm
+- pip install git+https://github.com/reactiveops/reckoner
+- helm plugin install https://github.com/reactiveops/reckoner
 
 ## Usage
 ### As standalone shell command
-- Usage: autohelm [OPTIONS] COMMAND [ARGS]...
+- Usage: reckoner [OPTIONS] COMMAND [ARGS]...
 - Options:
     * `--help`  Show this message and exit.
-    * `--log-level=TEXT` Set the log level for autohelm (defaults to `INFO`. Set to `DEBUG` for more details including helm commands)
+    * `--log-level=TEXT` Set the log level for reckoner (defaults to `INFO`. Set to `DEBUG` for more details including helm commands)
 - Commands:
   * `plot FILE`: Runs helm based on specified yaml file (see configuration example below)
     * Options:
@@ -33,11 +33,11 @@ This utility adds to the functionality of [Helm](https://github.com/kubernetes/h
       * `--helm-args <helm-arg>`: Pass arbitrary flags and parameters onto helm
         such as `--helm-args --set=foo=toast`, or `--helm-args --recreate-pods`.
         Multiples are supported but only one parameter per `--helm-args` is supported.
-      * `--local-development`: Run `autohelm` in local-development mode where Tiller is not required and no helm commands are run. Useful for rapid or offline development.
+      * `--local-development`: Run `reckoner` in local-development mode where Tiller is not required and no helm commands are run. Useful for rapid or offline development.
   * `generate`: Generates example file `course.yml` with extensive descriptions
-  * `version`: Output autohelm version
+  * `version`: Output reckoner version
 ### As helm plugin
-- Usage: helm autohelm [OPTIONS] COMMAND [ARGS]...
+- Usage: helm reckoner [OPTIONS] COMMAND [ARGS]...
 - Options:
     --help  Show this message and exit.
 - Commands:
@@ -45,11 +45,11 @@ This utility adds to the functionality of [Helm](https://github.com/kubernetes/h
   * Argument:
     - file: YAML file with description of charts to load
   * `generate`: Generates example file `course.yml` with extensive descriptions
-  * `version`: Output autohelm version
+  * `version`: Output reckoner version
 
 ## Example configuration file:
 
-There is an example file in autohelm/example-course.yml
+There is an example file in reckoner/example-course.yml
 
 Further customization is documented below.
 
@@ -111,7 +111,7 @@ charts:
       - /path/to/values/file.yml
 ```
 Note: The file paths will be interpreted as relative to the working directory of
-the shell calling autohelm.
+the shell calling reckoner.
 
 ### namespace
 

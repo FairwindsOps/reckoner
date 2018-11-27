@@ -20,7 +20,7 @@ import sys
 
 from setuptools import setup, find_packages
 
-from autohelm.meta import __version__, __author__
+from reckoner.meta import __version__, __author__
 
 try:
     from setuptools import setup, find_packages
@@ -30,7 +30,7 @@ except ImportError:
     sys.exit(1)
 
 
-setup(name='autohelm',
+setup(name='reckoner',
       version=__version__,
       description='Declarative Helm configuration with Git capability',
       author=__author__,
@@ -50,6 +50,6 @@ setup(name='autohelm',
       ],
       entry_points=''' #for click integration
           [console_scripts]
-          autohelm=autohelm.cli:cli
+          reckoner=reckoner.cli:cli
       '''
       )

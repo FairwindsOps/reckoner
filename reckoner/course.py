@@ -16,7 +16,7 @@
 
 import logging
 import semver
-import autohelm
+import reckoner
 
 import oyaml as yaml
 
@@ -26,14 +26,14 @@ from repository import Repository
 from exception import MinimumVersionException
 from helm import Helm
 
-from meta import __version__ as autohelm_version
+from meta import __version__ as reckoner_version
 
 
 class Course(object):
     """
     Description:
     - Top level class for the attribues of the course.yml file
-    - Parses yaml file into verious AutoHelm classes
+    - Parses yaml file into verious Reckoner classes
 
     Arguments:
     - file (File)
@@ -124,24 +124,24 @@ class Course(object):
 
     def _compare_required_versions(self):
         """
-        Compare installed versions of helm and autohelm to the minimum versions
+        Compare installed versions of helm and reckoner to the minimum versions
         required by the course.yml
         Accepts no arguments
         """
         if self.minimum_versions is None:
             return True
         helm_minimum_version = self.minimum_versions.get('helm', '0.0.0')
-        autohelm_minimum_version = self.minimum_versions.get('autohelm', '0.0.0')
+        reckoner_minimum_version = self.minimum_versions.get('reckoner', '0.0.0')
 
         logging.debug("Helm Minimum Version is: {}".format(helm_minimum_version))
         logging.debug("Helm Installed Version is {}".format(self.helm.client_version))
 
-        logging.debug("Autohelm Minimum Version is {}".format(autohelm_minimum_version))
-        logging.debug("Autohelm Installed Version is {}".format(autohelm_version))
+        logging.debug("Autohelm Minimum Version is {}".format(reckoner_minimum_version))
+        logging.debug("Autohelm Installed Version is {}".format(reckoner_version))
 
-        r1 = semver.compare(autohelm_version, autohelm_minimum_version)
+        r1 = semver.compare(reckoner_version, reckoner_minimum_version)
         if r1 < 0:
-            raise MinimumVersionException("autohelm Minimum Version {} not met.".format(autohelm_minimum_version))
+            raise MinimumVersionException("reckoner Minimum Version {} not met.".format(reckoner_minimum_version))
 
         if not self.config.local_development:
             r2 = semver.compare(self.helm.client_version, helm_minimum_version)

@@ -21,7 +21,7 @@ import os
 from collections import OrderedDict
 from string import Template
 
-from exception import AutoHelmCommandException
+from exception import ReckonerCommandException
 from config import Config
 from repository import Repository
 from helm import Helm
@@ -139,7 +139,7 @@ class Chart(object):
         if os.path.exists(self.chart_path):
             try:
                 r = self.helm.dependency_update(self.chart_path)
-            except AutoHelmCommandException, e:
+            except ReckonerCommandException, e:
                 logging.warn("Unable to update chart dependancies: {}".format(e.stderr))
 
     def install(self, namespace):

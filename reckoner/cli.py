@@ -19,7 +19,7 @@ import logging
 import coloredlogs
 import click
 import shutil
-from autohelm import AutoHelm, call
+from reckoner import Reckoner, call
 import pkg_resources
 
 from meta import __version__
@@ -41,10 +41,10 @@ def cli(ctx, log_level, *args, **kwargs):
 @click.option("--debug", is_flag=True, help="Pass --debug to helm")
 @click.option("--heading", "--only", metavar="<chart>", help="Only run a specific chart by name", multiple=True)
 @click.option("--helm-args", help="Passes the following arg on to helm, can be used more than once", multiple=True)
-@click.option("--local-development", is_flag=True, default=False, help="Run `autohelm` in local-development mode where Tiller is not required and no helm commands are run. Useful for rapid or offline development.")
+@click.option("--local-development", is_flag=True, default=False, help="Run `reckoner` in local-development mode where Tiller is not required and no helm commands are run. Useful for rapid or offline development.")
 def plot(ctx, file=None, dry_run=False, debug=False, only=None, helm_args=None, local_development=False):
     """ Install charts with given arguments as listed in yaml file argument """
-    h = AutoHelm(file=file, dryrun=dry_run, debug=debug, helm_args=helm_args, local_development=local_development)
+    h = Reckoner(file=file, dryrun=dry_run, debug=debug, helm_args=helm_args, local_development=local_development)
     h.install(only)
 
 
@@ -53,7 +53,7 @@ def plot(ctx, file=None, dry_run=False, debug=False, only=None, helm_args=None, 
 def generate(ctx):
     """ Takes no arguements, outputs an example plan """
     logging.info('Generating exampl course as course.yml')
-    src = pkg_resources.resource_string("autohelm", "example-course.yml")
+    src = pkg_resources.resource_string("reckoner", "example-course.yml")
     logging.debug(src)
     with open("./course.yml", "w") as course_file:
         course_file.write(src)
@@ -63,4 +63,4 @@ def generate(ctx):
 @click.pass_context
 def version(ctx):
     """ Takes no arguements, outputs version info"""
-    print(autohelm.__version__)
+    print(reckoner.__version__)

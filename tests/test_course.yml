@@ -6,7 +6,7 @@ repositories:
     url: https://kubernetes-charts-incubator.storage.googleapis.com
 minimum_versions: #set minimum version requirements here
   helm: 2.8.2
-  autohelm: 0.5.0
+  reckoner: 0.5.0
 charts:
   cluster-autoscaler:
     repository: stable
