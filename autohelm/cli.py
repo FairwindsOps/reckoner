@@ -20,6 +20,7 @@ import coloredlogs
 import click
 import shutil
 from autohelm import AutoHelm, call
+import pkg_resources
 
 from meta import __version__
 
@@ -52,9 +53,10 @@ def plot(ctx, file=None, dry_run=False, debug=False, only=None, helm_args=None, 
 def generate(ctx):
     """ Takes no arguements, outputs an example plan """
     logging.info('Generating exampl course as course.yml')
-    src = autohelm.__path__[0] + '/example-course.yml'
+    src = pkg_resources.resource_string("autohelm", "example-course.yml")
     logging.debug(src)
-    shutil.copyfile(src, './course.yml')
+    with open("./course.yml", "w") as course_file:
+        course_file.write(src)
 
 
 @cli.command()
