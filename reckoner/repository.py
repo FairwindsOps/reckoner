@@ -111,8 +111,6 @@ class Repository(object):
                 if os.path.isfile("{}/Chart.yaml".format(self.chart_path)):
                     return True
 
-            return False
-
     def _fetch_from_git(self, chart_name, version):
         """ Does a sparse checkout for a git repository git_repo@branch and retrieves the chart at the path """
 

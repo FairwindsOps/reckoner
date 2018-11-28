@@ -115,7 +115,7 @@ class Course(object):
             try:
                 chart.install(self.namespace)
             except Exception, e:
-                logging.error('Helm upgrade failed on {}. Rolling back...'.format(chart))
+                logging.error('Helm upgrade failed. Rolling back {}'.format(chart.release_name))
                 logging.error(e)
                 logging.debug(traceback.format_exc())
                 chart.rollback

@@ -114,14 +114,6 @@ class Chart(object):
             raise Exception("Missing requirement environment variable: {}".format(e.args[0]))
 
     @property
-    def values(self):
-        return self._chart.get('values', {})
-
-    @property
-    def values_strings(self):
-        return self._chart.get('values-string', {})
-
-    @property
     def repository(self):
         """ Repository object parsed from course chart """
         return self._repository
@@ -198,6 +190,7 @@ class Chart(object):
         # Set the namespace
         _namespace = self.namespace or namespace
         self.pre_install_hook()
+        # TODO: Improve error handling of a repository installation
         self.repository.install(self.name, self.version)
         self.chart_path = self.repository.chart_path
         # Update the helm dependencies

@@ -80,6 +80,7 @@ test_repositories = ['stable', 'incubator'],
 test_minimum_versions = ['helm', 'reckoner']
 test_repository_dict = {'name': 'test_repo', 'url': 'https://kubernetes-charts.storage.googleapis.com'}
 test_reckoner_version = "1.0.0"
+test_namespace = 'test_namespace'
 
 test_release_name = 'spotify-docker-gc-again'
 test_chart_name = 'spotify-docker-gc'
@@ -321,6 +322,16 @@ class TestChart(TestBase):
         """
         pass
 
+    def test_chart_install(self):
+        self.configure_subprocess_mock(test_helm_version_return_string, '', 0)
+        for chart in self.charts:
+            self.subprocess_mock.assert_called()
+            chart.install(test_namespace)
+            self.assertEqual(
+                self.subprocess_mock.call_args_list[-1][0][0][0:5],
+                ['helm', 'upgrade', '--install', chart.release_name, chart.chart_path]
+            )
+
 
 class TestRepository(TestBase):
 
@@ -369,7 +380,7 @@ class TestHelm(TestBase):
         self.assertEqual(self.helm.client_version, test_helm_version)
         self.subprocess_mock.assert_called_once_with(test_helm_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-    def test_installed_repositoried(self):
+    def test_installed_repositories(self):
         self.configure_subprocess_mock(test_helm_repo_return_string, '', 0)
         self.assertEqual(self.helm.repositories, test_helm_repos)
         self.subprocess_mock.assert_called_once_with(test_helm_repo_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
