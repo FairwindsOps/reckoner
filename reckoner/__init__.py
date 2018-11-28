@@ -60,24 +60,28 @@ class Response(object):
         return self._dict == other._dict
 
 
-def call(args):
+def call(args, shell=False, executable=None):
     """
     Description:
     - Wrapper for subprocess.Popen. Joins `args` and passes
     to `subprocess.Popen`
 
     Arguments: 
-    - args (list)
+    - args (list or string)
 
     Returns:
     - Instance of Response()
     """
+    if type(args) == str:
+        args_string = args
+    else:
+        args_string = ' '.join(args)
+    logging.debug(args_string)
 
-    logging.debug(' '.join(args))
-    p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=shell, executable=executable)
     stdout, stderr = p.communicate()
     exitcode = p.returncode
 
     if exitcode > 0:
-        raise ReckonerCommandException("Error with subprocess call: {}".format(' '.join(args)), stdout, stderr, exitcode)
+        raise ReckonerCommandException("Error with subprocess call: {}".format(args_string), stdout, stderr, exitcode)
     return Response(stdout, stderr, exitcode)

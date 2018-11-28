@@ -378,9 +378,9 @@ class TestHelm(TestBase):
     def test_helm_version(self):
         self.configure_subprocess_mock(test_helm_version_return_string, '', 0)
         self.assertEqual(self.helm.client_version, test_helm_version)
-        self.subprocess_mock.assert_called_once_with(test_helm_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.subprocess_mock.assert_called_once_with(test_helm_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, executable=None, shell=False)
 
     def test_installed_repositories(self):
         self.configure_subprocess_mock(test_helm_repo_return_string, '', 0)
         self.assertEqual(self.helm.repositories, test_helm_repos)
-        self.subprocess_mock.assert_called_once_with(test_helm_repo_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.subprocess_mock.assert_called_once_with(test_helm_repo_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, executable=None, shell=False)

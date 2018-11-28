@@ -148,12 +148,12 @@ class Chart(object):
                 logging.debug("Hook not run: {}".format(com))
                 continue
 
-            logging.debug("Hook: {}".format(com))
             try:
-                call(com.split())
+                r = call(com, shell=True, executable="/bin/bash")
+                logging.debug(r)
             except ReckonerCommandException, e:
                 logging.error("{} hook failed to run".format(hook_type))
-                logging.error(e.stderr)
+                logging.debug('Hook stderr {}'.format(e.stderr))
                 raise e
 
     def rollback(self):
@@ -195,7 +195,8 @@ class Chart(object):
         self.chart_path = self.repository.chart_path
         # Update the helm dependencies
 
-        self.update_dependencies()
+        if self.repository.git is None:
+            self.update_dependencies()
 
         # Build the args for the chart installation
         # And add any extra arguments
@@ -217,7 +218,12 @@ class Chart(object):
                 args.append("--set-string={}={}".format(k, v))
 
         self.__check_env_vars(args)
-        helm.upgrade(args)
+        try:
+            helm.upgrade(args)
+        except ReckonerCommandException, e:
+            logging.error(e.stderr)
+            raise e
+
         self.post_install_hook()
 
     @property

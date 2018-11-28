@@ -23,7 +23,7 @@ class Helm(object):
     - client_version: Shortcut to  `Helm().version('--client')
     - server_version: Shortcut to  `Helm().version('--server')
     - releases: Instance of Releases() with all current helm releases
-    - repositories: list of Repository() isntances that are
+    - repositories: list of Repository() instances that are
     currently configured
 
     """
@@ -85,7 +85,8 @@ class Helm(object):
         try:
             self._call(initial_args + args)
         except ReckonerCommandException, e:
-            print e
+            logging.error(e)
+            raise e
 
 
 class Releases(object):

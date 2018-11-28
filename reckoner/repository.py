@@ -65,17 +65,16 @@ class Repository(object):
 
     @property
     def chart_path(self):
-        return os.path.abspath(self._chart_path)
+        return self._chart_path
 
     def install(self, chart_name=None, version=None):
         """ Install Helm repository """
-
         from helm import Helm  # currently cheating to get around a circular import issue
 
         helm = Helm()
         if self.git is None:
             self._chart_path = "{}/{}".format(self.name, chart_name)
-            if self not in helm.repositories:
+            if self.name not in [repository.name for repository in helm.repositories]:
                 try:
                     return helm.repo_add(str(self.name), str(self.url))
                 except ReckonerCommandException, e:
@@ -85,6 +84,7 @@ class Repository(object):
                 logging.debug("Chart repository {} already installed".format(self.name))
                 return True
         else:
+            print self
             if version is None:
                 version = 'master'
 
