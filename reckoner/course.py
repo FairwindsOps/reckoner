@@ -16,6 +16,7 @@
 
 import logging
 import semver
+import traceback
 import reckoner
 
 import oyaml as yaml
@@ -110,9 +111,13 @@ class Course(object):
                 self._charts_to_install.append(chart)
 
         for chart in self._charts_to_install:
-            logging.debug("Installing {}".format(chart.name))
-            if not chart.install(self.namespace):
+            logging.info("Installing {}".format(chart.release_name))
+            try:
+                chart.install(self.namespace)
+            except Exception, e:
                 logging.error('Helm upgrade failed on {}. Rolling back...'.format(chart))
+                logging.error(e)
+                logging.debug(traceback.format_exc())
                 chart.rollback
                 _failed_charts.append(chart)
 

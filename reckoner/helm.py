@@ -4,6 +4,7 @@ import logging
 
 from . import call
 from repository import Repository
+from exception import ReckonerCommandException
 
 
 class Helm(object):
@@ -78,6 +79,13 @@ class Helm(object):
             _releases.append(Release(*[field.strip() for field in release.split('\t')]))
 
         return _releases
+
+    def upgrade(self, args):
+        initial_args = ['upgrade', '--install']
+        try:
+            self._call(initial_args + args)
+        except ReckonerCommandException, e:
+            print e
 
 
 class Releases(object):

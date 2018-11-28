@@ -25,7 +25,7 @@ from exception import ReckonerCommandException
 from config import Config
 from repository import Repository
 from helm import Helm
-
+from . import call
 
 default_repository = {'name': 'stable', 'url': 'https://kubernetes-charts.storage.googleapis.com'}
 
@@ -101,6 +101,26 @@ class Chart(object):
         """ Namespace to install the course chart """
         return self._namespace
 
+    def __check_env_vars(self, args):
+        """
+        accepts list of args
+        if any of those appear to be env vars
+        and are missing from the environment
+        an exception is raised
+        """
+        try:
+            [Template(arg).substitute(os.environ) for arg in args]
+        except KeyError, e:
+            raise Exception("Missing requirement environment variable: {}".format(e.args[0]))
+
+    @property
+    def values(self):
+        return self._chart.get('values', {})
+
+    @property
+    def values_strings(self):
+        return self._chart.get('values-string', {})
+
     @property
     def repository(self):
         """ Repository object parsed from course chart """
@@ -112,17 +132,37 @@ class Chart(object):
     def __str__(self):
         return str(dict(self._chart))
 
-    def run_hook(self, coms):
-        """ Expects a list of shell commands. Runs the commands defined by the hook """
+    def __get_hook(self, hook_type):
+        if self.hooks is not None:
+            return self.hooks.get(hook_type)
+
+    def pre_install_hook(self):
+        self.run_hook('pre_install')
+
+    def post_install_hook(self):
+        self.run_hook('post_install')
+
+    def run_hook(self, hook_type):
+        """ Hook Type. Runs the commands defined by the hook """
+        coms = self.__get_hook(hook_type)
+        if coms is None:
+            return coms
+        logging.info("Running {} hook.".format(hook_type))
         if type(coms) == str:
             coms = [coms]
 
         for com in coms:
-            logging.debug("Running Hook {}".format(com))
-            ret = subprocess.call(com, shell=True, executable="/bin/bash")
-            if ret != 0:
-                logging.error("Hook command `{}` returned non-zero exit code".format(com))
-                sys.exit(1)
+            if self.config.local_development or self.config.dryrun:
+                logging.debug("Hook not run: {}".format(com))
+                continue
+
+            logging.debug("Hook: {}".format(com))
+            try:
+                call(com.split())
+            except ReckonerCommandException, e:
+                logging.error("{} hook failed to run".format(hook_type))
+                logging.error(e.stderr)
+                raise e
 
     def rollback(self):
         """ Rollsback most recent release of the course chart """
@@ -153,10 +193,11 @@ class Chart(object):
         Returns:
         - Bool
         """
+        helm = Helm()
 
         # Set the namespace
         _namespace = self.namespace or namespace
-
+        self.pre_install_hook()
         self.repository.install(self.name, self.version)
         self.chart_path = self.repository.chart_path
         # Update the helm dependencies
@@ -165,8 +206,26 @@ class Chart(object):
 
         # Build the args for the chart installation
         # And add any extra arguments
-        args = ['--install', '{}'.format(self._release_name), self.chart_path]
-        return True
+
+        args = ['{}'.format(self._release_name), self.chart_path, ]
+        args.append('--namespace={}'.format(_namespace))
+        args.extend(self.debug_args)
+        args.extend(self.helm_args)
+        if self.version:
+            args.append('--version={}'.format(self.version))
+        for file in self.files:
+            args.append("-f={}".format(file))
+
+        for key, value in self.values.iteritems():
+            for k, v in self._format_set(key, value):
+                args.append("--set={}={}".format(k, v))
+        for key, value in self.values_strings.iteritems():
+            for k, v in self._format_set(key, value):
+                args.append("--set-string={}={}".format(k, v))
+
+        self.__check_env_vars(args)
+        helm.upgrade(args)
+        self.post_install_hook()
 
     @property
     def debug_args(self):
