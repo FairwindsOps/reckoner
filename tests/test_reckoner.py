@@ -36,12 +36,35 @@ from reckoner import Response
 from reckoner.helm import Helm
 
 
+class TestBase(unittest.TestCase):
+
+    def setUp(self):
+        self.subprocess_mock_patch = mock.patch('subprocess.Popen')
+        self.subprocess_mock = self.subprocess_mock_patch.start()
+        self.m = mock.Mock()
+
+    def configure_subprocess_mock(self, stdout, stderr, returncode):
+        attrs = {'returncode': returncode, 'communicate.return_value': (stdout, stderr)}
+        self.m.configure_mock(**attrs)
+        self.subprocess_mock.return_value = self.m
+
+    def reset_mock(self):
+        self.subprocess_mock.reset_mock()
+
+    def tearDown(self):
+        self.subprocess_mock_patch.stop()
+
+
 # Test properties of the mock
 @mock.patch('reckoner.reckoner.Config', autospec=True)
 @mock.patch('reckoner.reckoner.Course', autospec=True)
 @mock.patch.object(Helm, 'server_version')
-class TestReckonerAttributes(unittest.TestCase):
+class TestReckonerAttributes(TestBase):
     name = "test-reckoner-attributes"
+
+    def setUp(self):
+        super(type(self), self).setUp()
+        self.configure_subprocess_mock('', '', 0)
 
     def test_config(self, *args):
         reckoner_instance = reckoner.reckoner.Reckoner()
@@ -60,8 +83,12 @@ class TestReckonerAttributes(unittest.TestCase):
 @mock.patch('reckoner.reckoner.Config', autospec=True)
 @mock.patch('reckoner.reckoner.Course', autospec=True)
 @mock.patch.object(Helm, 'server_version')
-class TestReckonerMethods(unittest.TestCase):
+class TestReckonerMethods(TestBase):
     name = 'test-reckoner-methods'
+
+    def setUp(self):
+        super(type(self), self).setUp()
+        self.configure_subprocess_mock('', '', 0)
 
     def test_install_succeeds(self, *args):
         reckoner_instance = reckoner.reckoner.Reckoner()
@@ -80,6 +107,7 @@ test_repositories = ['stable', 'incubator'],
 test_minimum_versions = ['helm', 'reckoner']
 test_repository_dict = {'name': 'test_repo', 'url': 'https://kubernetes-charts.storage.googleapis.com'}
 test_reckoner_version = "1.0.0"
+test_namespace = 'test_namespace'
 
 test_release_name = 'spotify-docker-gc-again'
 test_chart_name = 'spotify-docker-gc'
@@ -178,22 +206,6 @@ def setUpModule():
 
 def tearDownModule():
     shutil.rmtree(test_files_path)
-
-
-class TestBase(unittest.TestCase):
-
-    def setUp(self):
-        self.subprocess_mock_patch = mock.patch('subprocess.Popen')
-        self.subprocess_mock = self.subprocess_mock_patch.start()
-        self.m = mock.Mock()
-
-    def configure_subprocess_mock(self, stdout, stderr, returncode):
-        attrs = {'returncode': returncode, 'communicate.return_value': (stdout, stderr)}
-        self.m.configure_mock(**attrs)
-        self.subprocess_mock.return_value = self.m
-
-    def tearDown(self):
-        self.subprocess_mock_patch.stop()
 
 
 class TestReckoner(TestBase):
@@ -321,6 +333,16 @@ class TestChart(TestBase):
         """
         pass
 
+    def test_chart_install(self):
+        self.configure_subprocess_mock(test_helm_version_return_string, '', 0)
+        for chart in self.charts:
+            self.subprocess_mock.assert_called()
+            chart.install(test_namespace)
+            self.assertEqual(
+                self.subprocess_mock.call_args_list[-1][0][0][0:5],
+                ['helm', 'upgrade', '--install', chart.release_name, chart.chart_path]
+            )
+
 
 class TestRepository(TestBase):
 
@@ -362,14 +384,16 @@ class TestHelm(TestBase):
 
     def setUp(self):
         super(type(self), self).setUp()
+        self.configure_subprocess_mock('', '', 0)
         self.helm = Helm()
+        self.reset_mock()
 
     def test_helm_version(self):
         self.configure_subprocess_mock(test_helm_version_return_string, '', 0)
         self.assertEqual(self.helm.client_version, test_helm_version)
-        self.subprocess_mock.assert_called_once_with(test_helm_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.subprocess_mock.assert_called_once_with(test_helm_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, executable=None, shell=False)
 
-    def test_installed_repositoried(self):
+    def test_installed_repositories(self):
         self.configure_subprocess_mock(test_helm_repo_return_string, '', 0)
         self.assertEqual(self.helm.repositories, test_helm_repos)
-        self.subprocess_mock.assert_called_once_with(test_helm_repo_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.subprocess_mock.assert_called_once_with(test_helm_repo_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, executable=None, shell=False)

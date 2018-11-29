@@ -4,6 +4,11 @@ import logging
 
 from . import call
 from repository import Repository
+from exception import ReckonerCommandException
+
+
+class HelmException(Exception):
+    pass
 
 
 class Helm(object):
@@ -22,11 +27,18 @@ class Helm(object):
     - client_version: Shortcut to  `Helm().version('--client')
     - server_version: Shortcut to  `Helm().version('--server')
     - releases: Instance of Releases() with all current helm releases
-    - repositories: list of Repository() isntances that are
+    - repositories: list of Repository() instances that are
     currently configured
 
     """
     helm_binary = 'helm'
+
+    def __init__(self):
+
+        try:
+            r = self.help()
+        except ReckonerCommandException, e:
+            raise HelmException("Helm not installed properly")
 
     def _call(self, args):
         args.insert(0, self.helm_binary)
@@ -59,14 +71,20 @@ class Helm(object):
     @property
     def client_version(self):
         """ helm client version """
-        r = self.version("--client")
-        return r.stdout.replace('Client: &version.Version', '').split(',')[0].split(':')[1].replace('v', '').replace('"', '')
+        try:
+            r = self.version("--client")
+            return r.stdout.replace('Client: &version.Version', '').split(',')[0].split(':')[1].replace('v', '').replace('"', '')
+        except ReckonerCommandException, e:
+            pass
 
     @property
     def server_version(self):
         """ helm tiller server version"""
-        r = self.version("--server")
-        return r.stdout.replace('Server: &version.Version', '').split(',')[0].split(':')[1].replace('v', '').replace('"', '')
+        try:
+            r = self.version("--server")
+            return r.stdout.replace('Server: &version.Version', '').split(',')[0].split(':')[1].replace('v', '').replace('"', '')
+        except ReckonerCommandException, e:
+            pass
 
     @property
     def releases(self):
@@ -78,6 +96,14 @@ class Helm(object):
             _releases.append(Release(*[field.strip() for field in release.split('\t')]))
 
         return _releases
+
+    def upgrade(self, args):
+        initial_args = ['upgrade', '--install']
+        try:
+            self._call(initial_args + args)
+        except ReckonerCommandException, e:
+            logging.error(e)
+            raise e
 
 
 class Releases(object):
