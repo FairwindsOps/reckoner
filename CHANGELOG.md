@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Focus around testing and testability
 - Refactoring code for easier maintainability
 
+##[0.8.0]
+
+### Added
+- mock reset so tests will pass again after adding helm.help call
+
+### Updated
+- Improved error handling around helm binary
+- `plot` process to it actually installs the charts
+
+
+##[0.7.2]
+
+### Deprecated
+  Autohelm
+
+### Updated
+   Major refactor from a scripty based version to a modular object version
+
+### Added
+    Lots of Unit Testing
+
+
 ##[0.6.5]
 ### Added
 - `--helm-args` flag to pass flags and params on to helm
