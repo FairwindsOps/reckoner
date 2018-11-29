@@ -50,7 +50,12 @@ class Reckoner(object):
         self.config.debug = debug
         self.config.helm_args = helm_args
         self.config.local_development = local_development
-        self.helm = Helm()
+
+        try:
+            self.helm = Helm()
+        except Exception, e:
+            logging.error(e)
+            sys.exit(1)
 
         if not self.config.local_development and not self.helm.server_version:
             logging.error("Tiller not present in cluster. Have you run `helm init`?")

@@ -84,7 +84,6 @@ class Repository(object):
                 logging.debug("Chart repository {} already installed".format(self.name))
                 return True
         else:
-            print self
             if version is None:
                 version = 'master'
 
