@@ -77,14 +77,10 @@ def call(args, shell=False, executable=None):
     else:
         args_string = ' '.join(args)
     logging.debug(args_string)
-    try:
-        p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=shell, executable=executable)
-        stdout, stderr = p.communicate()
-        exitcode = p.returncode
+    p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=shell, executable=executable)
+    stdout, stderr = p.communicate()
+    exitcode = p.returncode
 
-        if exitcode > 0:
-            raise ReckonerCommandException("Error with subprocess call: {}".format(args_string), stdout, stderr, exitcode)
-        return Response(stdout, stderr, exitcode)
-    except Exception, e:
-        raise ReckonerCommandException("Error with subprocess call: {}".format(e))
-
+    if exitcode > 0:
+        raise ReckonerCommandException("Error with subprocess call: {}".format(args_string), stdout, stderr, exitcode)
+    return Response(stdout, stderr, exitcode)

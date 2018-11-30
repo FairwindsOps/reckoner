@@ -96,11 +96,6 @@ class Chart(object):
         """ List of values files from the course chart """
         return dict(self._chart.get('files', []))
 
-    @property
-    def namespace(self):
-        """ Namespace to install the course chart """
-        return self._namespace
-
     def __check_env_vars(self, args):
         """
         accepts list of args
@@ -189,6 +184,7 @@ class Chart(object):
 
         # Set the namespace
         _namespace = self.namespace or namespace
+
         self.pre_install_hook()
         # TODO: Improve error handling of a repository installation
         self.repository.install(self.name, self.version)
@@ -210,19 +206,16 @@ class Chart(object):
         for file in self.files:
             args.append("-f={}".format(file))
 
-        for key, value in self.values.iteritems():
+        for key, value in self.ordereddict_to_dict(self.values).iteritems():
             for k, v in self._format_set(key, value):
                 args.append("--set={}={}".format(k, v))
-        for key, value in self.values_strings.iteritems():
+        for key, value in self.ordereddict_to_dict(self.values_strings).iteritems():
             for k, v in self._format_set(key, value):
                 args.append("--set-string={}={}".format(k, v))
 
         self.__check_env_vars(args)
-        try:
-            helm.upgrade(args)
-        except ReckonerCommandException, e:
-            logging.error(e.stderr)
-            raise e
+
+        helm.upgrade(args)
 
         self.post_install_hook()
 
