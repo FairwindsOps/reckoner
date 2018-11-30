@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Focus around testing and testability
 - Refactoring code for easier maintainability
 
+##[0.8.1]
+### Fixed
+- Nested values not being converted to strings properly
+- Namespaces not being handled properly
+
+### Updated
+- Error handling in the .call() method and course.plot()
+
 ##[0.8.0]
 
 ### Added
@@ -15,7 +23,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Updated
 - Improved error handling around helm binary
 - `plot` process to it actually installs the charts
-
 
 ##[0.7.2]
 

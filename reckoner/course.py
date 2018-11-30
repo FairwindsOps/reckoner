@@ -24,7 +24,7 @@ import oyaml as yaml
 from config import Config
 from chart import Chart
 from repository import Repository
-from exception import MinimumVersionException
+from exception import MinimumVersionException, ReckonerCommandException
 from helm import Helm
 
 from meta import __version__ as reckoner_version
@@ -114,9 +114,10 @@ class Course(object):
             logging.info("Installing {}".format(chart.release_name))
             try:
                 chart.install(self.namespace)
-            except Exception, e:
+            except (Exception, ReckonerCommandException), e:
+                if type(e) == ReckonerCommandException:
+                    logging.error(e.stderr)
                 logging.error('Helm upgrade failed. Rolling back {}'.format(chart.release_name))
-                logging.error(e)
                 logging.debug(traceback.format_exc())
                 chart.rollback
                 _failed_charts.append(chart)
