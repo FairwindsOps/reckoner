@@ -57,10 +57,12 @@ class Chart(object):
         self._release_name = chart.keys()[0]
         self._chart = chart[self._release_name]
         self._repository = Repository(self._chart.get('repository', default_repository))
-        self._chart['values'] = self.ordereddict_to_dict(self._chart.get('values', {}))
+        self._chart['values'] = self._chart.get('values', {})
+        
         self._namespace = self._chart.get('namespace')
         value_strings = self._chart.get('values-strings', {})
-        self._chart['values_strings'] = self.ordereddict_to_dict(value_strings)
+        self._chart['values_strings'] = value_strings
+        
         if value_strings != {}:
             del(self._chart['values-strings'])
 
@@ -77,20 +79,6 @@ class Chart(object):
         Retturns chart name of course chart
         """
         return self._chart.get('chart', self._release_name)
-
-    def ordereddict_to_dict(self, value):
-        """
-        Converts an OrderedDict to a standard dict
-        """
-        for k, v in value.items():
-            if type(v) == OrderedDict:
-                value[k] = self.ordereddict_to_dict(v)
-            if type(v) == list:
-                for item in v:
-                    if type(item) == OrderedDict:
-                        v.remove(item)
-                        v.append(self.ordereddict_to_dict(item))
-        return dict(value)
 
     @property
     def files(self):
@@ -253,7 +241,7 @@ class Chart(object):
         Accepts key and value, if value is an ordered dict, recursively
         formats the string properly
         """
-        if type(value) == dict:
+        if type(value) in  [dict, OrderedDict]:
             for new_key, new_value in value.iteritems():
                 for k, v in self._format_set("{}.{}".format(key, new_key), new_value):
                     for a, b in self._format_set_list(k, v):
@@ -269,7 +257,7 @@ class Chart(object):
         """
         if type(value) == list:
             for index, item in enumerate(value):
-                if type(item) == dict:
+                if type(item) in [dict, OrderedDict]:
                     for k, v in self._format_set("{}[{}]".format(key, index), item):
                         yield k, v
                 else:
