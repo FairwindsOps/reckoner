@@ -60,6 +60,7 @@ class Chart(object):
         self._chart['values'] = self._chart.get('values', {})
         
         self._namespace = self._chart.get('namespace')
+        self._context = self._chart.get('context')
         value_strings = self._chart.get('values-strings', {})
         self._chart['values_strings'] = value_strings
         
@@ -89,6 +90,11 @@ class Chart(object):
     def namespace(self):
         """ Namespace to install the course chart """
         return self._namespace
+
+    @property
+    def context(self):
+        """ Namespace to install the course chart """
+        return self._context
 
     def __check_env_vars(self):
         """
@@ -163,7 +169,7 @@ class Chart(object):
             except ReckonerCommandException, e:
                 logging.warn("Unable to update chart dependancies: {}".format(e.stderr))
 
-    def install(self, namespace):
+    def install(self, namespace=None, context=None):
         """
         Description:
         - Uprade --install the course chart
@@ -180,6 +186,10 @@ class Chart(object):
         if self.namespace is None:
             self._namespace = namespace
 
+        # Set the context
+        if self.context is None:
+            self._context = context
+
         self.pre_install_hook()
         # TODO: Improve error handling of a repository installation
         self.repository.install(self.name, self.version)
@@ -194,6 +204,8 @@ class Chart(object):
 
         self.args = ['{}'.format(self._release_name), self.chart_path, ]
         self.args.append('--namespace={}'.format(self.namespace))
+        if self.context is not None:
+            self.args.append('--kube-context={}'.format(self.context))
         self.args.extend(self.debug_args)
         self.args.extend(self.helm_args)
         if self.version:

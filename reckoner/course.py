@@ -113,7 +113,7 @@ class Course(object):
         for chart in self._charts_to_install:
             logging.info("Installing {}".format(chart.release_name))
             try:
-                chart.install(self.namespace)
+                chart.install(namespace=self.namespace, context=self.context)
             except (Exception, ReckonerCommandException), e:
                 if type(e) == ReckonerCommandException:
                     logging.error(e.stderr)
