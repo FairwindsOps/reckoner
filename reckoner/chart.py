@@ -58,6 +58,7 @@ class Chart(object):
         self._chart = chart[self._release_name]
         self._repository = Repository(self._chart.get('repository', default_repository))
         self._chart['values'] = self.ordereddict_to_dict(self._chart.get('values', {}))
+        self._namespace = self._chart.get('namespace')
         value_strings = self._chart.get('values-strings', {})
         self._chart['values_strings'] = self.ordereddict_to_dict(value_strings)
         if value_strings != {}:
@@ -187,8 +188,9 @@ class Chart(object):
         """
         helm = Helm()
 
-        # Set the namespace
-        _namespace = self.namespace or namespace
+        # Set the namespace      
+        if self.namespace is None:
+            self._namespace = namespace
 
         self.pre_install_hook()
         # TODO: Improve error handling of a repository installation
@@ -203,7 +205,7 @@ class Chart(object):
         # And add any extra arguments
 
         self.args = ['{}'.format(self._release_name), self.chart_path, ]
-        self.args.append('--namespace={}'.format(_namespace))
+        self.args.append('--namespace={}'.format(self.namespace))
         self.args.extend(self.debug_args)
         self.args.extend(self.helm_args)
         if self.version:

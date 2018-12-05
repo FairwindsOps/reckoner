@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Fixed
 - environment variable interpolation
+- fix namespace override at chart level
 
 ## [0.8.1]
 ### Fixed
@@ -25,11 +26,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Improved error handling around helm binary
 - `plot` process to it actually installs the charts
 
-<<<<<<< HEAD
+
 ## [0.7.2]
-=======
-## [0.7.2]
->>>>>>> Added args as a instance attribute and allow the environment variable check and replace the environment variables
 
 ### Deprecated
   Autohelm
