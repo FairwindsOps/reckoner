@@ -213,11 +213,13 @@ class Chart(object):
         for file in self.files:
             self.args.append("-f={}".format(file))
 
-        for key, value in self.ordereddict_to_dict(self.values).iteritems():
+        for key, value in self.values.iteritems():
+            for k, v in self._format_set(key, value):
                 self.args.append("--set={}={}".format(k, v))
+        
         for key, value in self.values_strings.iteritems():
             for k, v in self._format_set(key, value):
-                self.args.append("--set-string={}={}".format(k, v))
+                self.args.append("--set={}={}".format(k, v))
 
         self.__check_env_vars()
         try:

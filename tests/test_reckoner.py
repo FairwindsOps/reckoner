@@ -342,7 +342,6 @@ class TestChart(TestBase):
         for chart in self.charts:
             self.subprocess_mock.assert_called()
             os.environ[test_environ_var_name] = test_environ_var
-            print test_namespace
             chart.install(test_namespace)
             logging.debug(chart)
 
