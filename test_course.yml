@@ -1,0 +1,11 @@
+namespace: kube-system
+repository: stable
+repositories:
+  incubator:
+    url: https://kubernetes-charts-incubator.storage.googleapis.com
+  stable:
+    url: https://kubernetes-charts.storage.googleapis.com
+charts:
+  redis:
+    values:
+      test: ${TEST}

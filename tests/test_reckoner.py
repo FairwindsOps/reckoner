@@ -107,7 +107,7 @@ test_repositories = ['stable', 'incubator'],
 test_minimum_versions = ['helm', 'reckoner']
 test_repository_dict = {'name': 'test_repo', 'url': 'https://kubernetes-charts.storage.googleapis.com'}
 test_reckoner_version = "1.0.0"
-test_namespace = 'test_namespace'
+test_namespace = 'test'
 
 test_release_name = 'spotify-docker-gc-again'
 test_chart_name = 'spotify-docker-gc'
@@ -117,11 +117,16 @@ test_git_repository = {'path': 'stable', 'git': 'https://github.com/kubernetes/c
 test_incubator_repository_chart = 'cluster-autoscaler'
 test_incubator_repository_str = 'stable'
 
+test_environ_var = 'test_environment_variable_string'
+test_environ_var_name = 'test_environ_var'
+test_environ_var_chart = "redis"
+
 test_flat_values_chart = 'cluster-autoscaler'
 test_flat_values = {
     'string': 'string',
     'integer': 10,
     'boolean': True,
+    test_environ_var_name: '${' + str(test_environ_var_name) + '}'
 }
 
 
@@ -138,8 +143,8 @@ test_nested_values = {
                 'dictionary':
                 {
                     'int': 999,
-                    'of':
-                    'items'
+                    'of':'items',
+                    test_environ_var_name: '${' + str(test_environ_var_name) + '}'
                 }
             }
         }
@@ -185,7 +190,6 @@ test_repo_update_return_string = '''Hang tight while we grab the latest from you
 ...Successfully got an update from the "stable" chart repository
 Update Complete. ⎈ Happy Helming!⎈'''
 test_repo_update_args = ['helm', 'repo', 'update']
-
 
 test_repo_install_args = ['helm', 'repo', 'add', 'test_repo', 'https://kubernetes-charts.storage.googleapis.com']
 test_repo_install_return_string = '"test_repo" has been added to your repositories'
@@ -337,12 +341,20 @@ class TestChart(TestBase):
         self.configure_subprocess_mock(test_helm_version_return_string, '', 0)
         for chart in self.charts:
             self.subprocess_mock.assert_called()
+            os.environ[test_environ_var_name] = test_environ_var
             chart.install(test_namespace)
-            self.assertEqual(
-                self.subprocess_mock.call_args_list[-1][0][0][0:5],
-                ['helm', 'upgrade', '--install', chart.release_name, chart.chart_path]
-            )
+            logging.debug(chart)
 
+            last_mock = self.subprocess_mock.call_args_list[-1][0][0]
+            self.assertEqual(
+                last_mock[0:6],
+                ['helm', 'upgrade', '--install', chart.release_name, chart.chart_path, '--namespace={}'.format(chart.namespace)]
+            )
+            if chart.name == test_environ_var_chart:
+                self.assertEqual(
+                last_mock,
+                ['helm', 'upgrade', '--install', chart.release_name, chart.chart_path, '--namespace={}'.format(chart.namespace), '--set={}={}'.format(test_environ_var_name,test_environ_var)]
+            )
 
 class TestRepository(TestBase):
 

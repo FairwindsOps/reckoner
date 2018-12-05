@@ -15,12 +15,14 @@ charts:
       string: string
       integer: 10
       boolean: True
+      test_environ_var: ${test_environ_var}
   spotify-docker-gc:
     version: "0.1.0"
     values-strings:
       string: string
       integer: 10
       boolean: True
+      test_environ_var: ${test_environ_var}
   centrifugo: 
     repository:
       git: https://github.com/kubernetes/charts.git
@@ -38,6 +40,7 @@ charts:
             dictionary:
               of: items
               int: 999
+              test_environ_var: ${test_environ_var}
   spotify-docker-gc-again: 
     chart: spotify-docker-gc
     version: "0.1.0"
@@ -45,3 +48,7 @@ charts:
     repository:
       git: https://github.com/goharbor/harbor-helm.git
     version: master
+  redis:
+    namespace: redis-test-namespace
+    values:
+      test_environ_var: ${test_environ_var}
