@@ -96,7 +96,12 @@ class Chart(object):
         """ List of values files from the course chart """
         return dict(self._chart.get('files', []))
 
-    def __check_env_vars(self, args):
+    @property
+    def namespace(self):
+        """ Namespace to install the course chart """
+        return self._namespace
+
+    def __check_env_vars(self):
         """
         accepts list of args
         if any of those appear to be env vars
@@ -104,7 +109,7 @@ class Chart(object):
         an exception is raised
         """
         try:
-            [Template(arg).substitute(os.environ) for arg in args]
+            self.args = [Template(arg).substitute(os.environ) for arg in self.args]
         except KeyError, e:
             raise Exception("Missing requirement environment variable: {}".format(e.args[0]))
 
@@ -197,25 +202,27 @@ class Chart(object):
         # Build the args for the chart installation
         # And add any extra arguments
 
-        args = ['{}'.format(self._release_name), self.chart_path, ]
-        args.append('--namespace={}'.format(_namespace))
-        args.extend(self.debug_args)
-        args.extend(self.helm_args)
+        self.args = ['{}'.format(self._release_name), self.chart_path, ]
+        self.args.append('--namespace={}'.format(_namespace))
+        self.args.extend(self.debug_args)
+        self.args.extend(self.helm_args)
         if self.version:
-            args.append('--version={}'.format(self.version))
+            self.args.append('--version={}'.format(self.version))
         for file in self.files:
-            args.append("-f={}".format(file))
+            self.args.append("-f={}".format(file))
 
         for key, value in self.ordereddict_to_dict(self.values).iteritems():
+                self.args.append("--set={}={}".format(k, v))
+        for key, value in self.values_strings.iteritems():
             for k, v in self._format_set(key, value):
-                args.append("--set={}={}".format(k, v))
-        for key, value in self.ordereddict_to_dict(self.values_strings).iteritems():
-            for k, v in self._format_set(key, value):
-                args.append("--set-string={}={}".format(k, v))
+                self.args.append("--set-string={}={}".format(k, v))
 
-        self.__check_env_vars(args)
-
-        helm.upgrade(args)
+        self.__check_env_vars()
+        try:
+            helm.upgrade(self.args)
+        except ReckonerCommandException, e:
+            logging.error(e.stderr)
+            raise e
 
         self.post_install_hook()
 

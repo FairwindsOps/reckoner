@@ -3,9 +3,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
+
 ## [Unreleased]
-- Focus around testing and testability
-- Refactoring code for easier maintainability
+### Fixed
+- environment variable interpolation
 
 ## [0.8.1]
 ### Fixed
@@ -13,7 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Namespaces not being handled properly
 
 ### Updated
-- Error handling in the .call() method and course.plot()
+- Error handling during chart install
 
 ## [0.8.0]
 
@@ -24,7 +25,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Improved error handling around helm binary
 - `plot` process to it actually installs the charts
 
+<<<<<<< HEAD
 ## [0.7.2]
+=======
+## [0.7.2]
+>>>>>>> Added args as a instance attribute and allow the environment variable check and replace the environment variables
 
 ### Deprecated
   Autohelm
@@ -44,16 +49,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - swapped the order of evaluation of the --debug and --dryrun flags to prevent --dryrun from getting lost if both flags are set
 
 
-##[0.6.4]
+## [0.6.4]
 ### Added
 - Upload to PyPi
 
-##[0.6.3]
+## [0.6.3]
 ### Fixed
 - issue where chart dependencies/requirements were not being updated
 - issue where helm release would be rolled back even when using --dry-run
 
-##[0.6.2]
+## [0.6.2]
 ### Fixed
 - issue where tags were not being pulled properly
 - Description in setup.py
