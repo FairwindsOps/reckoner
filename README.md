@@ -13,11 +13,14 @@ This utility adds to the functionality of [Helm](https://github.com/kubernetes/h
 
 ## Installation
 ### As standalone shell command
-- pip install git+https://github.com/reactiveops/reckoner
+```sh
+pip install git+https://github.com/reactiveops/reckoner
+```
 ### As Helm plugin
-- pip install git+https://github.com/reactiveops/reckoner
-- helm plugin install https://github.com/reactiveops/reckoner
-
+```sh
+pip install git+https://github.com/reactiveops/reckoner
+helm plugin install https://github.com/reactiveops/reckoner
+```
 ## Usage
 ### As standalone shell command
 - Usage: reckoner [OPTIONS] COMMAND [ARGS]...
