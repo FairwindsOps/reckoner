@@ -280,5 +280,10 @@ To do http TLS termination on the ELB add
 
 ```
   metrics-server:
-    version: "1.1.0"
+    version: 2.0.4
+    values-strings:
+      args:
+        - --logtostderr
+        - --kubelet-insecure-tls
+
 ```
