@@ -134,14 +134,15 @@ class Chart(object):
         coms = self.__get_hook(hook_type)
         if coms is None:
             return coms
-        logging.info("Running {} hook.".format(hook_type))
         if type(coms) == str:
             coms = [coms]
 
         for com in coms:
             if self.config.local_development or self.config.dryrun:
-                logging.debug("Hook not run: {}".format(com))
+                logging.info("Hook not run due to --dry-run: {}".format(com))
                 continue
+            else:
+                logging.info("Running {} hook.".format(hook_type))
 
             try:
                 r = call(com, shell=True, executable="/bin/bash")
