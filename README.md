@@ -36,6 +36,7 @@ helm plugin install https://github.com/reactiveops/reckoner
       * `--helm-args <helm-arg>`: Pass arbitrary flags and parameters onto helm
         such as `--helm-args --set=foo=toast`, or `--helm-args --recreate-pods`.
         Multiples are supported but only one parameter per `--helm-args` is supported.
+        Note that specifying this flag will override `helm_args` in the course.yml file.
       * `--local-development`: Run `reckoner` in local-development mode where Tiller is not required and no helm commands are run. Useful for rapid or offline development.
   * `generate`: Generates example file `course.yml` with extensive descriptions
   * `version`: Output reckoner version
@@ -82,6 +83,15 @@ repositories:
     url: https://kubernetes-charts-incubator.storage.googleapis.com
   stable:
     url: https://kubernetes-charts.storage.googleapis.com
+```
+
+### helm_args
+
+A list of arguments to pass to helm by default each time reckoner is run.
+
+```
+helm_args:
+  - --tiller-namespace=helm-system
 ```
 
 ## Options for Charts

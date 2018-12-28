@@ -7,6 +7,9 @@ repositories:
 minimum_versions: #set minimum version requirements here
   helm: 2.8.2
   reckoner: 0.5.0
+helm_args:
+  - --recreate-pods
+  - --tiller-namespace=helm-system
 charts:
   cluster-autoscaler:
     repository: stable

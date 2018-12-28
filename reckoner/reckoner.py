@@ -31,8 +31,8 @@ class Reckoner(object):
 
     Arguments:
     - file(file object) - file object of the course.yml
-    - dryrun (bool) - passes --dry-run flag to helm binary
-    - debug (bool) - passes --debug flag to helm binar
+    - dryrun (bool) - implies helm --dry-run --debug and skips any hooks
+    - debug (bool) DEPRECATED - use helm_args instead or just --dry-run
     - helm_args (list) - passes content of list as additional arguments to helm binary
     - local_development (bool) - when true, most actions over the network are switched off
 
@@ -50,6 +50,11 @@ class Reckoner(object):
         self.config.debug = debug
         self.config.helm_args = helm_args
         self.config.local_development = local_development
+
+        if self.config.debug:
+            logging.warn("The --debug flag will be deprecated.  Please use --helm-args or --dry-run instead.")
+        if self.config.helm_args:
+            logging.warn("Specifying --helm-args on the cli will override helm_args in the course file.")
 
         try:
             self.helm = Helm()
@@ -69,8 +74,8 @@ class Reckoner(object):
         - Calls plot on course instance.
 
         Arguments:
-        - charts (default: []): list or tuple of releae_names from the course. That list of 
-        charts will be installed or if the argument is emmpty, All charts in the course will be installed
+        - charts (default: []): list or tuple of release_names from the course. That list of
+          charts will be installed or if the argument is empty, All charts in the course will be installed
 
         Returns:
         - bool
@@ -83,7 +88,7 @@ class Reckoner(object):
         """
         Description:
         - Update the current context in the kubeconfig to the desired context.
-        Accepts no arguments
+          Accepts no arguments
         """
         logging.debug("Checking for correct cluster context")
         logging.debug("Current cluster context is: {}".format(self.config.current_context))

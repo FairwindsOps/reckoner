@@ -33,8 +33,8 @@ from meta import __version__ as reckoner_version
 class Course(object):
     """
     Description:
-    - Top level class for the attribues of the course.yml file
-    - Parses yaml file into verious Reckoner classes
+    - Top level class for the attributes of the course.yml file
+    - Parses yaml file into various Reckoner classes
 
     Arguments:
     - file (File)
@@ -74,6 +74,9 @@ class Course(object):
         if not self.config.local_development:
             self._compare_required_versions()
 
+        if not self.config.helm_args:
+            self.config.helm_args = self._dict.get('helm_args')
+
     def __str__(self):
         return str(self._dict)
 
@@ -93,7 +96,7 @@ class Course(object):
     def plot(self, charts_to_install):
         """
         Accepts charts_to_install, an interable of the names of the charts
-        to install. This method compares the charts in the argument to the 
+        to install. This method compares the charts in the argument to the
         charts in the course and calls Chart.install()
 
         """

@@ -1,4 +1,3 @@
-
 # -- coding: utf-8 --
 
 # Copyright 2017 Reactive Ops Inc.
@@ -129,33 +128,32 @@ test_flat_values = {
     test_environ_var_name: '${' + str(test_environ_var_name) + '}'
 }
 
-
 test_nested_values_chart = 'centrifugo'
 test_nested_values = {
     'even':
-    [
-        'in',
-        'a',
-        'list',
-        {
-            'or':
+        [
+            'in',
+            'a',
+            'list',
             {
-                'dictionary':
-                {
-                    'int': 999,
-                    'of':'items',
-                    test_environ_var_name: '${' + str(test_environ_var_name) + '}'
-                }
+                'or':
+                    {
+                        'dictionary':
+                            {
+                                'int': 999,
+                                'of': 'items',
+                                test_environ_var_name: '${' + str(test_environ_var_name) + '}'
+                            }
+                    }
             }
-        }
-    ],
+        ],
     'nested':
-    {
-        'values':
         {
-            'are': 'supported'
+            'values':
+                {
+                    'are': 'supported'
+                }
         }
-    }
 }
 
 test_values_strings_chart = "spotify-docker-gc"
@@ -166,7 +164,8 @@ test_archive_pathlet = 'cache/archive'
 test_helm_archive = "{}/{}".format(test_files_path, test_archive_pathlet)
 
 test_helm_args = ['helm', 'version', '--client']
-test_helm_version_return_string = '''Client: &version.Version{SemVer:"v2.11.0", GitCommit:"2e55dbe1fdb5fdb96b75ff144a339489417b146b", GitTreeState:"clean"}'''
+test_helm_version_return_string = '''Client: &version.Version{SemVer:"v2.11.0", 
+GitCommit:"2e55dbe1fdb5fdb96b75ff144a339489417b146b", GitTreeState:"clean"} '''
 test_helm_version = '2.11.0'
 
 test_helm_repo_return_string = '''NAME          URL
@@ -177,8 +176,9 @@ test_helm_repo_args = ['helm', 'repo', 'list']
 test_helm_repos = [Repository({'url': 'https://kubernetes-charts.storage.googleapis.com', 'name': 'stable'}),
                    Repository({'url': 'http://127.0.0.1:8879/charts', 'name': 'local'})]
 
-test_tiller_present_return_string = '''NAME         REVISION    UPDATED                     STATUS      CHART               APP VERSION NAMESPACE
-centrifugo  1           Tue Oct  2 16:19:01 2018    DEPLOYED    centrifugo-2.0.1    1.7.3       test'''
+test_tiller_present_return_string = '''NAME         REVISION    UPDATED                     STATUS      CHART         
+      APP VERSION NAMESPACE centrifugo  1           Tue Oct  2 16:19:01 2018    DEPLOYED    centrifugo-2.0.1    1.7.3 
+            test '''
 test_tiller_present_args = ['helm', 'list']
 
 test_tiller_not_present_return_string = ''
@@ -259,9 +259,10 @@ class TestCourse(TestBase):
         self.assertIsInstance(self.c, Course)
         self.assertEqual([chart._release_name for chart in self.c.charts], test_release_names)
         self.assertNotEqual([chart.name for chart in self.c.charts], test_release_names,
-                            msg="All the release names match the chart names, this may happen if you've edited the test_course.yml and not provided an example with a different chart_name and chart.")
+                            msg="All the release names match the chart names, this may happen if you've edited the "
+                                "test_course.yml and not provided an example with a different chart_name and chart.")
         self.assertEqual(self.c.repositories[0].name, test_repository_dict['name'])
-        self.assertEqual(self.c.repositories[0].url,  test_repository_dict['url'])
+        self.assertEqual(self.c.repositories[0].url, test_repository_dict['url'])
         self.assertEqual(self.c.minimum_versions.keys(), test_minimum_versions)
         self.assertIsInstance(self.c.repositories, list)
 
@@ -271,7 +272,7 @@ class TestCourse(TestBase):
         self.assertRaises(MinimumVersionException, self.c._compare_required_versions)
 
     def test_plot_course(self):
-        self.configure_subprocess_mock('', '', 0)  # Lots more work do do here with the installation of the list of charts
+        self.configure_subprocess_mock('', '', 0)  # TODO: Lots of work do do here on installation of the list of charts
         self.c.plot(list(self.c._dict['charts']))
         self.assertEqual(self.c._charts_to_install, self.c.charts)
 
@@ -313,7 +314,7 @@ class TestChart(TestBase):
             elif chart.name == test_nested_values_chart:
                 self.assertEqual(chart.values, test_nested_values)
             elif chart.release_name == test_values_strings_chart:
-                self.assertEqual(chart.values_strings, test_flat_values,)
+                self.assertEqual(chart.values_strings, test_flat_values, )
                 self.assertIsInstance(chart.values_strings['string'], str)
                 self.assertIsInstance(chart.values_strings['integer'], int)
                 self.assertIsInstance(chart.values_strings['boolean'], bool)
@@ -329,7 +330,7 @@ class TestChart(TestBase):
         self.assertEqual(chart.debug_args, ['--dry-run', '--debug'])
 
     # FIXME: Related to the FIXME in install() of Chart class.
-    @unittest.skip("Skipping non-implmeneted test.")
+    @unittest.skip("Skipping non-implemented test.")
     def test_chart_at_git_root(self):
         """
         Chart should support cloning git repositories where the chart is in
@@ -348,13 +349,19 @@ class TestChart(TestBase):
             last_mock = self.subprocess_mock.call_args_list[-1][0][0]
             self.assertEqual(
                 last_mock[0:6],
-                ['helm', 'upgrade', '--install', chart.release_name, chart.chart_path, '--namespace={}'.format(chart.namespace)]
+                ['helm', 'upgrade', '--install', chart.release_name, chart.chart_path,
+                 '--namespace={}'.format(chart.namespace)]
             )
             if chart.name == test_environ_var_chart:
                 self.assertEqual(
-                last_mock,
-                ['helm', 'upgrade', '--install', chart.release_name, chart.chart_path, '--namespace={}'.format(chart.namespace), '--set={}={}'.format(test_environ_var_name,test_environ_var)]
-            )
+                    last_mock,
+                    ['helm', 'upgrade', '--install', chart.release_name, chart.chart_path,
+                     '--namespace={}'.format(chart.namespace),
+                     '--recreate-pods',
+                     '--tiller-namespace=helm-system',
+                     '--set={}={}'.format(test_environ_var_name, test_environ_var)]
+                )
+
 
 class TestRepository(TestBase):
 
@@ -403,9 +410,11 @@ class TestHelm(TestBase):
     def test_helm_version(self):
         self.configure_subprocess_mock(test_helm_version_return_string, '', 0)
         self.assertEqual(self.helm.client_version, test_helm_version)
-        self.subprocess_mock.assert_called_once_with(test_helm_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, executable=None, shell=False)
+        self.subprocess_mock.assert_called_once_with(test_helm_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                                     executable=None, shell=False)
 
     def test_installed_repositories(self):
         self.configure_subprocess_mock(test_helm_repo_return_string, '', 0)
         self.assertEqual(self.helm.repositories, test_helm_repos)
-        self.subprocess_mock.assert_called_once_with(test_helm_repo_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, executable=None, shell=False)
+        self.subprocess_mock.assert_called_once_with(test_helm_repo_args, stdout=subprocess.PIPE,
+                                                     stderr=subprocess.PIPE, executable=None, shell=False)
