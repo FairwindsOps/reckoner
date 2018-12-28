@@ -100,7 +100,7 @@ class Helm(object):
     def upgrade(self, args):
         initial_args = ['upgrade', '--install']
         try:
-            self._call(initial_args + args)
+            return self._call(initial_args + args)
         except ReckonerCommandException, e:
             logging.error(e)
             raise e
