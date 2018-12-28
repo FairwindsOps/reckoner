@@ -58,12 +58,12 @@ class Chart(object):
         self._chart = chart[self._release_name]
         self._repository = Repository(self._chart.get('repository', default_repository))
         self._chart['values'] = self._chart.get('values', {})
-        
+
         self._namespace = self._chart.get('namespace')
         self._context = self._chart.get('context')
         value_strings = self._chart.get('values-strings', {})
         self._chart['values_strings'] = value_strings
-        
+
         if value_strings != {}:
             del(self._chart['values-strings'])
 
@@ -183,7 +183,7 @@ class Chart(object):
         """
         helm = Helm()
 
-        # Set the namespace      
+        # Set the namespace
         if self.namespace is None:
             self._namespace = namespace
 
@@ -217,14 +217,16 @@ class Chart(object):
         for key, value in self.values.iteritems():
             for k, v in self._format_set(key, value):
                 self.args.append("--set={}={}".format(k, v))
-        
+
         for key, value in self.values_strings.iteritems():
             for k, v in self._format_set(key, value):
                 self.args.append("--set={}={}".format(k, v))
 
         self.__check_env_vars()
         try:
-            helm.upgrade(self.args)
+            r = helm.upgrade(self.args)
+            logging.info(r.stdout)
+
         except ReckonerCommandException, e:
             logging.error(e.stderr)
             raise e
@@ -234,6 +236,7 @@ class Chart(object):
     @property
     def debug_args(self):
         """ Returns list of Helm debug arguments """
+
         if self.config.dryrun:
             return ['--dry-run', '--debug']
         if self.config.debug:
@@ -254,7 +257,7 @@ class Chart(object):
         Accepts key and value, if value is an ordered dict, recursively
         formats the string properly
         """
-        if type(value) in  [dict, OrderedDict]:
+        if type(value) in [dict, OrderedDict]:
             for new_key, new_value in value.iteritems():
                 for k, v in self._format_set("{}.{}".format(key, new_key), new_value):
                     for a, b in self._format_set_list(k, v):
