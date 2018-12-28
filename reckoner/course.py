@@ -142,8 +142,8 @@ class Course(object):
         logging.debug("Helm Minimum Version is: {}".format(helm_minimum_version))
         logging.debug("Helm Installed Version is {}".format(self.helm.client_version))
 
-        logging.debug("Autohelm Minimum Version is {}".format(reckoner_minimum_version))
-        logging.debug("Autohelm Installed Version is {}".format(reckoner_version))
+        logging.debug("Reckoner Minimum Version is {}".format(reckoner_minimum_version))
+        logging.debug("Reckoner Installed Version is {}".format(reckoner_version))
 
         r1 = semver.compare(reckoner_version, reckoner_minimum_version)
         if r1 < 0:
