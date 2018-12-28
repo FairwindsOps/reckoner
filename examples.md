@@ -9,7 +9,7 @@ repositories:
     url: https://kubernetes-charts.storage.googleapis.com
 minimum_versions: #set minimum version requirements here
   helm: 2.10.0
-  autohelm: 0.6.3
+  reckoner: 0.6.3
 charts:
 ```
 
