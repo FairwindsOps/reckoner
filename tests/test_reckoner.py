@@ -358,7 +358,6 @@ class TestChart(TestBase):
                     ['helm', 'upgrade', '--install', chart.release_name, chart.chart_path,
                      '--namespace={}'.format(chart.namespace),
                      '--recreate-pods',
-                     '--tiller-namespace=helm-system',
                      '--set={}={}'.format(test_environ_var_name, test_environ_var)]
                 )
 

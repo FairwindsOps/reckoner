@@ -42,7 +42,8 @@ def cli(ctx, log_level, *args, **kwargs):
 @click.option("--debug", is_flag=True, help='DEPRECATED - use --dry-run instead, or pass to --helm-args')
 @click.option("--heading", "--only", metavar="<chart>", help='Only run a specific chart by name', multiple=True)
 @click.option("--helm-args", help='Passes the following arg on to helm, can be used more than once. WARNING: Setting '
-                                  'this will completely override any helm_args in the course.', multiple=True)
+                                  'this will completely override any helm_args in the course. Also cannot be used for '
+                                  'configuring how helm connects to tiller.', multiple=True)
 @click.option("--local-development", is_flag=True, default=False, help='Run `reckoner` in local-development mode '
                                                                        'where Tiller is not required and no helm '
                                                                        'commands are run. Useful for rapid or offline '

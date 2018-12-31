@@ -38,7 +38,8 @@ helm plugin install https://github.com/reactiveops/reckoner
         `--helm-args --set=foo=toast`, or `--helm-args --recreate-pods`.
         Multiples are supported but only one parameter per `--helm-args` is
         supported. Note that specifying this flag will override `helm_args`
-        in the course.yml file.
+        in the course.yml file. WARNING: This cannot be used for arguments that specify
+        how Helm connects to tiller such as `tiller-namespace`
       * `--local-development`: Run `reckoner` in local-development mode where Tiller is not required and no helm commands are run. Useful for rapid or offline development.
   * `generate`: Generates example file `course.yml` with extensive descriptions
   * `version`: Output reckoner version
@@ -90,11 +91,12 @@ repositories:
 ### helm_args
 
 A list of arguments to pass to helm each time reckoner is run. Arguments are
-applied for every chart install in your course.
+applied for every chart install in your course.  This cannot be used for args
+that specify how Helm connects to the tiller.
 
 ```
 helm_args:
-  - --tiller-namespace=helm-system
+  - --recreate-pods
 ```
 
 ## Options for Charts
