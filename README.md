@@ -33,9 +33,13 @@ helm plugin install https://github.com/reactiveops/reckoner
       * `--debug`: Pass --debug to helm
       * `--dry-run`: Pass --dry-run to helm so no action is taken. Also includes `--debug`
       * `--heading <chart>`: Run only the specified chart out of the course.yml
-      * `--helm-args <helm-arg>`: Pass arbitrary flags and parameters onto helm
-        such as `--helm-args --set=foo=toast`, or `--helm-args --recreate-pods`.
-        Multiples are supported but only one parameter per `--helm-args` is supported.
+      * `--helm-args <helm-arg>`: Pass arbitrary flags and parameters to all
+        helm chart commands in your course.yml.  Example:
+        `--helm-args --set=foo=toast`, or `--helm-args --recreate-pods`.
+        Multiples are supported but only one parameter per `--helm-args` is
+        supported. Note that specifying this flag will override `helm_args`
+        in the course.yml file. WARNING: This cannot be used for arguments that specify
+        how Helm connects to tiller such as `tiller-namespace`
       * `--local-development`: Run `reckoner` in local-development mode where Tiller is not required and no helm commands are run. Useful for rapid or offline development.
   * `generate`: Generates example file `course.yml` with extensive descriptions
   * `version`: Output reckoner version
@@ -82,6 +86,17 @@ repositories:
     url: https://kubernetes-charts-incubator.storage.googleapis.com
   stable:
     url: https://kubernetes-charts.storage.googleapis.com
+```
+
+### helm_args
+
+A list of arguments to pass to helm each time reckoner is run. Arguments are
+applied for every chart install in your course.  This cannot be used for args
+that specify how Helm connects to the tiller.
+
+```
+helm_args:
+  - --recreate-pods
 ```
 
 ## Options for Charts

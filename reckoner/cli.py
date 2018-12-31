@@ -37,11 +37,17 @@ def cli(ctx, log_level, *args, **kwargs):
 @cli.command()
 @click.pass_context
 @click.argument('file', type=click.File('rb'))
-@click.option("--dry-run", is_flag=True, help="Pass --dry-run to helm so no action is taken")
-@click.option("--debug", is_flag=True, help="Pass --debug to helm")
-@click.option("--heading", "--only", metavar="<chart>", help="Only run a specific chart by name", multiple=True)
-@click.option("--helm-args", help="Passes the following arg on to helm, can be used more than once", multiple=True)
-@click.option("--local-development", is_flag=True, default=False, help="Run `reckoner` in local-development mode where Tiller is not required and no helm commands are run. Useful for rapid or offline development.")
+@click.option("--dry-run", is_flag=True, help='Pass --dry-run to helm so no action is taken. Implies --debug and '
+                                              'skips hooks.')
+@click.option("--debug", is_flag=True, help='DEPRECATED - use --dry-run instead, or pass to --helm-args')
+@click.option("--heading", "--only", metavar="<chart>", help='Only run a specific chart by name', multiple=True)
+@click.option("--helm-args", help='Passes the following arg on to helm, can be used more than once. WARNING: Setting '
+                                  'this will completely override any helm_args in the course. Also cannot be used for '
+                                  'configuring how helm connects to tiller.', multiple=True)
+@click.option("--local-development", is_flag=True, default=False, help='Run `reckoner` in local-development mode '
+                                                                       'where Tiller is not required and no helm '
+                                                                       'commands are run. Useful for rapid or offline '
+                                                                       'development.')
 def plot(ctx, file=None, dry_run=False, debug=False, only=None, helm_args=None, local_development=False):
     """ Install charts with given arguments as listed in yaml file argument """
     h = Reckoner(file=file, dryrun=dry_run, debug=debug, helm_args=helm_args, local_development=local_development)
@@ -51,8 +57,8 @@ def plot(ctx, file=None, dry_run=False, debug=False, only=None, helm_args=None, 
 @cli.command()
 @click.pass_context
 def generate(ctx):
-    """ Takes no arguements, outputs an example plan """
-    logging.info('Generating exampl course as course.yml')
+    """ Takes no arguments, outputs an example plan """
+    logging.info('Generating example course as course.yml')
     src = pkg_resources.resource_string("reckoner", "example-course.yml")
     logging.debug(src)
     with open("./course.yml", "w") as course_file:
@@ -62,5 +68,5 @@ def generate(ctx):
 @cli.command()
 @click.pass_context
 def version(ctx):
-    """ Takes no arguements, outputs version info"""
+    """ Takes no arguments, outputs version info"""
     print(reckoner.__version__)

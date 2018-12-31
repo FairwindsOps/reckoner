@@ -26,15 +26,15 @@ from exception import ReckonerCommandException
 class Config(object):
     """
     Description:
-    - Following the borg patter, this class is used by all other classes to
-    share default and top level config setting between instances
+    - Following the borg pattern, this class is used by all other classes to
+      share default and top level config setting between instances
 
     Arguments:
     - None
 
     Atrributes:
     - home (String): Defaults to "$HOME/.helm" but is overridden by
-    environment variable $HELM_HOME
+      environment variable $HELM_HOME
     - archive (String): Interpolated path for the helm archive
 
     """

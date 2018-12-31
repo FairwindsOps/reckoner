@@ -16,19 +16,19 @@ class Helm(object):
     Description:
     - Interface like class to the helm binary.
     - Most helm calls are not defined as method, but any helm command can be
-    called by an instance of this class with the command name as the method
-    name and positional argumenst passed a list. Multiword commands are
-    '_' delimited
+      called by an instance of this class with the command name as the method
+      name and positional argumenst passed a list. Multiword commands are
+      '_' delimited
     - example: Helm().repo_update() will call `helm repo update`
     - example: Helm().upgrade(['--install','stable/redis'])
-    will call `helm upgrade --install stable/redis"
+      will call `helm upgrade --install stable/redis"
 
     Attributes:
     - client_version: Shortcut to  `Helm().version('--client')
     - server_version: Shortcut to  `Helm().version('--server')
     - releases: Instance of Releases() with all current helm releases
     - repositories: list of Repository() instances that are
-    currently configured
+      currently configured
 
     """
     helm_binary = 'helm'

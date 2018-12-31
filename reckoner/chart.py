@@ -77,7 +77,7 @@ class Chart(object):
     @property
     def name(self):
         """
-        Retturns chart name of course chart
+        Returns chart name of course chart
         """
         return self._chart.get('chart', self._release_name)
 

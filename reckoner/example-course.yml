@@ -9,6 +9,8 @@ repositories:
 minimum_versions: #set minimum version requirements here
   helm: 2.8.2
   reckoner: 0.5.0
+helm_args: # Specify arguments to pass to helm by default.
+  - --recreate-pods
 charts: # list of charts
 # release_name:
 #   chart: Optional, name of chart. defaults to release_name if not present.
