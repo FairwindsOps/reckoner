@@ -314,7 +314,6 @@ class TestChart(TestBase):
             elif chart.name == test_nested_values_chart:
                 self.assertEqual(chart.values, test_nested_values)
             elif chart.release_name == test_values_strings_chart:
-                self.assertEqual(chart.values_strings, test_flat_values, )
                 self.assertIsInstance(chart.values_strings['string'], str)
                 self.assertIsInstance(chart.values_strings['integer'], int)
                 self.assertIsInstance(chart.values_strings['boolean'], bool)
@@ -359,6 +358,20 @@ class TestChart(TestBase):
                      '--namespace={}'.format(chart.namespace),
                      '--recreate-pods',
                      '--set={}={}'.format(test_environ_var_name, test_environ_var)]
+                )
+            if chart.release_name == test_values_strings_chart:
+                self.assertEqual(
+                    last_mock,
+                    [
+                        'helm', 'upgrade', '--install',
+                        chart.release_name,
+                        chart.chart_path,
+                        '--namespace={}'.format(chart.namespace),
+                        '--version=0.1.0',
+                        '--set-string=string=string',
+                        '--set-string=integer=10',
+                        '--set-string=boolean=True'
+                    ]
                 )
 
 
