@@ -367,6 +367,7 @@ class TestChart(TestBase):
                         chart.release_name,
                         chart.chart_path,
                         '--namespace={}'.format(chart.namespace),
+                        '--recreate-pods',
                         '--version=0.1.0',
                         '--set-string=string=string',
                         '--set-string=integer=10',
