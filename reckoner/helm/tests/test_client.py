@@ -171,3 +171,7 @@ incubator       https://kubernetes-charts-incubator.storage.googleapis.com
         for example in examples:
             filter(example['original'])
             self.assertItemsEqual(example['expected'], example['original'])
+
+    def test_rollback(self):
+        with self.assertRaises(NotImplementedError):
+            HelmClient(provider=self.dummy_provider).rollback('broken')
