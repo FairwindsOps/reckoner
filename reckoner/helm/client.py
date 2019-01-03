@@ -119,22 +119,18 @@ class HelmClient(object):
         #   3. For each item in defaults check if it matches a known good global argument
         #   4. if matches note it, set known good = true and break inner iteration
         #   5. if inner iter doesn't find global param then known_global is bad and delete it from list
-        logging.debug(str(list_of_args))
         for arg in list_of_args:
-            logging.debug('Processing {}'.format(arg))
+            logging.debug('Processing {} argument'.format(arg))
             known_global = False
             for valid in HelmClient.global_helm_flags:
-                logging.debug('Processing valid check: {}'.format(valid))
                 if re.findall("--{}(\s|$)+".format(valid), arg):
-                    logging.debug('Found pattern, keeping in list')
                     known_global = True
-                    continue
-                else:
-                    logging.debug('Pattern not found, removing from list')
-            if not known_global:
+                    break # break out of loop and stop searching for valids for this one argument
+            if known_global:
+                logging.debug('This argument {} was found in valid arguments: {}, keeping in list.'.format(arg, ' '.join(HelmClient.global_helm_flags)))
+            else:
                 list_of_args.remove(arg)
-
-        logging.debug(str(list_of_args))
+                logging.debug('This argument {} was not found in valid arguments: {}, removing from list.'.format(arg, ' '.join(HelmClient.global_helm_flags)))
 
     def _get_version(self, kind='--server'):
         get_ver = self.execute("version", arguments=['--short', kind], filter_non_global_flags=True)
