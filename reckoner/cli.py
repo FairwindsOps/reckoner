@@ -19,7 +19,7 @@ import logging
 import coloredlogs
 import click
 import shutil
-from reckoner import Reckoner, call
+from reckoner import Reckoner
 import pkg_resources
 
 from meta import __version__

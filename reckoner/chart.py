@@ -24,8 +24,8 @@ from string import Template
 from exception import ReckonerCommandException
 from config import Config
 from repository import Repository
-from helm import Helm
-from . import call
+from helm.client import HelmClientException
+from command_line_caller import call
 
 default_repository = {'name': 'stable', 'url': 'https://kubernetes-charts.storage.googleapis.com'}
 
@@ -37,10 +37,10 @@ class Chart(object):
 
     Arguments:
     - chart (dict):
+    - helm: Instance of HelmClient()
 
     Attributes:
     - config: Instance of Config()
-    - helm: Instance of Helm()
     - release_name : String. Name of the release
     - name: String. Name of chart
     - files: List. Values files
@@ -51,12 +51,12 @@ class Chart(object):
     - Instance of Response() is falsey where Reponse.exitcode != 0
     """
 
-    def __init__(self, chart):
-        self.helm = Helm()
+    def __init__(self, chart, helm):
+        self.helm = helm
         self.config = Config()
         self._release_name = chart.keys()[0]
         self._chart = chart[self._release_name]
-        self._repository = Repository(self._chart.get('repository', default_repository))
+        self._repository = Repository(self._chart.get('repository', default_repository), self.helm)
         self._chart['values'] = self._chart.get('values', {})
 
         self._namespace = self._chart.get('namespace')
@@ -166,22 +166,22 @@ class Chart(object):
         logging.debug("Updating chart dependencies: {}".format(self.chart_path))
         if os.path.exists(self.chart_path):
             try:
+                # TODO This is actually broken - not implemented (even before refactor)
                 r = self.helm.dependency_update(self.chart_path)
             except ReckonerCommandException, e:
-                logging.warn("Unable to update chart dependancies: {}".format(e.stderr))
+                logging.warn("Unable to update chart dependencies: {}".format(e.stderr))
 
     def install(self, namespace=None, context=None):
         """
         Description:
-        - Uprade --install the course chart
+        - Upgrade --install the course chart
 
         Arguments:
-        - namespace (string). Passed in but will be overriddne by Chart().namespace if set
+        - namespace (string). Passed in but will be overridden by Chart().namespace if set
 
         Returns:
         - Bool
         """
-        helm = Helm()
 
         # Set the namespace
         if self.namespace is None:
@@ -198,6 +198,7 @@ class Chart(object):
         # Update the helm dependencies
 
         if self.repository.git is None:
+            # TODO this is broken
             self.update_dependencies()
 
         # Build the args for the chart installation
@@ -220,15 +221,15 @@ class Chart(object):
 
         for key, value in self.values_strings.iteritems():
             for k, v in self._format_set(key, value):
-                self.args.append("--set-string={}={}".format(k, v))
+                self.args.append("--set={}={}".format(k, v))
 
         self.__check_env_vars()
-        try:
-            r = helm.upgrade(self.args)
-            logging.info(r.stdout)
 
-        except ReckonerCommandException, e:
-            logging.error(e.stderr)
+        try:
+            r = self.helm.upgrade(self.args)
+            logging.info(r.stdout)
+        except HelmClientException, e:
+            logging.error(e)
             raise e
 
         self.post_install_hook()

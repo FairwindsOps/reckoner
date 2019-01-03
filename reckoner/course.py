@@ -25,7 +25,7 @@ from config import Config
 from chart import Chart
 from repository import Repository
 from exception import MinimumVersionException, ReckonerCommandException
-from helm import Helm
+from helm.client import HelmClient, HelmClientException
 
 from meta import __version__ as reckoner_version
 
@@ -41,7 +41,7 @@ class Course(object):
 
     Attributes:
     - config: Instance of Config()
-    - helm: Instance of Helm()
+    - helm: Instance of HelmClient()
     - charts: List of Chart() instances
     - repositories: List of Repository() instances
 
@@ -52,16 +52,18 @@ class Course(object):
         Parse course.yml contents into instances.
         """
         self.config = Config()
-        self.helm = Helm()
         self._dict = yaml.load(file)
+        if not self.config.helm_args:
+            self.config.helm_args = self._dict.get('helm_args')
+        self.helm = HelmClient(default_helm_arguments=self.config.helm_args)
         self._repositories = []
         self._charts = []
         for name, repository in self._dict.get('repositories', {}).iteritems():
             repository['name'] = name
-            self._repositories.append(Repository(repository))
+            self._repositories.append(Repository(repository, self.helm))
 
         for name, chart in self._dict.get('charts', {}).iteritems():
-            self._charts.append(Chart({name: chart}))
+            self._charts.append(Chart({name: chart}, self.helm))
 
         for repo in self._repositories:
             type(repo)
@@ -73,9 +75,6 @@ class Course(object):
 
         if not self.config.local_development:
             self._compare_required_versions()
-
-        if not self.config.helm_args:
-            self.config.helm_args = self._dict.get('helm_args')
 
     def __str__(self):
         return str(self._dict)

@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.10.0]
+
+Major-ish refactor to class structure and testing of independent classes in code. More work will be coming to make test coverage better.
+
+### Added
+- Default arguments for helm now do the right thing if using global flags for connecting to tiller (`tiller-namespace`, etc)
+
+### Fixed
+- Bubbled up actual error messages from Helm commands if they have a non-zero exit code
+
+### Breaking Changes
+- None expected but this is a refactor of the helm client interface
+
+### Notes
+Found several bugs that are noted in code and here. Fixes will be forthcoming.
+- Found that rollback functionality isn't operational
+- Found that dependency_update is non-operational
+- Found that kubectl context update isn't functional
+
 ## [0.9.1]
 
 ### Fixed

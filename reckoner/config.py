@@ -19,7 +19,7 @@ import os
 import sys
 import logging
 
-from . import call
+from command_line_caller import call
 from exception import ReckonerCommandException
 
 

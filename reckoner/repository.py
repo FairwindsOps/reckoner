@@ -20,10 +20,10 @@ import git
 import os
 import sys
 
-from . import call
 from config import Config
 from exception import ReckonerCommandException
 from git import GitCommandError
+from helm.client import HelmClientException
 
 
 class Repository(object):
@@ -38,10 +38,11 @@ class Repository(object):
     - path: path in git repository
     """
 
-    def __init__(self, repository):
+    def __init__(self, repository, helm_client):
         super(type(self), self).__init__()
         self.config = Config()
         self._repository = {}
+        self._helm_client = helm_client
         if type(repository) is str:
             self._repository['name'] = repository
         else:
@@ -69,15 +70,12 @@ class Repository(object):
 
     def install(self, chart_name=None, version=None):
         """ Install Helm repository """
-        from helm import Helm  # currently cheating to get around a circular import issue
-
-        helm = Helm()
         if self.git is None:
             self._chart_path = "{}/{}".format(self.name, chart_name)
-            if self.name not in [repository.name for repository in helm.repositories]:
+            if self.name not in self._helm_client.repositories:
                 try:
-                    return helm.repo_add(str(self.name), str(self.url))
-                except ReckonerCommandException, e:
+                    return self._helm_client.repo_add(str(self.name), str(self.url))
+                except HelmClientException, e:
                     logging.warn("Unable to install repository {}: {}".format(self.name, e.stderr))
                     return False
             else:

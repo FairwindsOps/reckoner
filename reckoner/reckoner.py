@@ -18,10 +18,9 @@
 import logging
 import sys
 
-from . import call
 from config import Config
 from course import Course
-from helm import Helm
+from helm.client import HelmClient, HelmClientException
 
 
 class Reckoner(object):
@@ -38,7 +37,7 @@ class Reckoner(object):
 
     Attributes:
     - config: Instance of Config()
-    - helm: Instance of Helm()
+    - helm: Instance of HelmClient()
     - course: Instance of Course()
 
     """
@@ -57,14 +56,18 @@ class Reckoner(object):
             logging.warn("Specifying --helm-args on the cli will override helm_args in the course file.")
 
         try:
-            self.helm = Helm()
+            self.helm = HelmClient(default_helm_arguments=self.config.helm_args)
         except Exception, e:
             logging.error(e)
             sys.exit(1)
 
-        if not self.config.local_development and not self.helm.server_version:
-            logging.error("Tiller not present in cluster. Have you run `helm init`?")
-            sys.exit(1)
+        if not self.config.local_development:
+            try:
+                self.helm.check_helm_command()
+                self.helm.server_version
+            except HelmClientException, e:
+                logging.error("Failed checking helm: See errors:\n{}".format(e))
+                sys.exit(1)
 
         self.course = Course(file)
 
@@ -84,6 +87,8 @@ class Reckoner(object):
         selected_charts = charts or [chart._release_name for chart in self.course.charts]
         return self.course.plot(selected_charts)
 
+    # TODO this doesn't actually work to update context - missing _context attribute.
+    #      also missing subprocess function
     def _update_context(self):
         """
         Description:
