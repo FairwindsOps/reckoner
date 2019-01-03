@@ -124,6 +124,15 @@ incubator       https://kubernetes-charts-incubator.storage.googleapis.com
         HelmClient(provider=self.dummy_provider).repo_update()
         self.dummy_provider.execute.assert_called_once
 
+    def test_verify_default_helm_args_intantiate(self):
+        # Should support instantiate with None
+        assert HelmClient(provider=self.dummy_provider, default_helm_arguments=None)
+
+        # Should raise errors on all other non iterators
+        for invalid in [str('invalid'), 1, 0.01, True]:
+            with self.assertRaises(ValueError):
+                HelmClient(default_helm_arguments=invalid)
+
     def test_repo_add(self):
         HelmClient(provider=self.dummy_provider).repo_add('new', 'url')
         self.dummy_provider.execute.assert_called_once

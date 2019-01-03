@@ -12,7 +12,7 @@ class HelmClient(object):
                          'tiller-connection_timeout', 'tiller-namespace']
 
     def __init__(self, default_helm_arguments=[], provider=HelmProvider):
-        self._default_helm_arguments = default_helm_arguments
+        self._default_helm_arguments = self._validate_default_helm_args(default_helm_arguments)
         self._provider = provider
 
     @property
@@ -125,7 +125,7 @@ class HelmClient(object):
             for valid in HelmClient.global_helm_flags:
                 if re.findall("--{}(\s|$)+".format(valid), arg):
                     known_global = True
-                    break # break out of loop and stop searching for valids for this one argument
+                    break  # break out of loop and stop searching for valids for this one argument
             if known_global:
                 logging.debug('This argument {} was found in valid arguments: {}, keeping in list.'.format(arg, ' '.join(HelmClient.global_helm_flags)))
             else:
@@ -153,6 +153,19 @@ class HelmClient(object):
             return ver.group(1)
         else:
             return None
+
+    @staticmethod
+    def _validate_default_helm_args(helm_args):
+        # Allow class to be instantiated with default_helm_arguments to be None
+        if helm_args is None:
+            helm_args = []
+
+        # Validate that we're providing an iterator for default helm args
+        if not hasattr(helm_args, '__iter__'):
+            logging.error("This class is being instantiated without an iterator for default_helm_args.")
+            raise ValueError('default_helm_arguments needs to be an iterator')
+
+        return helm_args
 
 
 class HelmClientException(Exception):
