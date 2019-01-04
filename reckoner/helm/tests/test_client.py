@@ -103,10 +103,10 @@ incubator       https://kubernetes-charts-incubator.storage.googleapis.com
     def test_upgrade(self):
         self.dummy_provider.execute.side_effect = [
             HelmCmdResponse(
-                0, '', 'pass', HelmCommand('help', ['--install'])
+                0, '', 'pass', HelmCommand('install', ['--install'])
             ),
             HelmCmdResponse(
-                0, '', 'pass', HelmCommand('help', [])
+                0, '', 'pass', HelmCommand('install', [])
             )
         ]
 
@@ -114,7 +114,9 @@ incubator       https://kubernetes-charts-incubator.storage.googleapis.com
         without_install = HelmClient(provider=self.dummy_provider).upgrade([], install=False)
 
         assert with_install.command.arguments == ['--install']
-        assert without_install.command.arguments == []
+        assert without_install.command.command == 'install'
+        assert with_install.command.arguments == ['--install']
+        assert without_install.command.command == 'install'
 
     def test_dependency_update(self):
         with self.assertRaises(NotImplementedError):
