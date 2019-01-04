@@ -4,3 +4,5 @@
 venvbuild
 dist
 venv
+.coverage
+htmlcov/
