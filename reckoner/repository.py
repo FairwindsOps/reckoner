@@ -76,7 +76,7 @@ class Repository(object):
                 try:
                     return self._helm_client.repo_add(str(self.name), str(self.url))
                 except HelmClientException, e:
-                    logging.warn("Unable to install repository {}: {}".format(self.name, e.stderr))
+                    logging.warn("Unable to install repository {}: {}".format(self.name, e))
                     return False
             else:
                 logging.debug("Chart repository {} already installed".format(self.name))
