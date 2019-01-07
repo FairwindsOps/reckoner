@@ -106,7 +106,7 @@ class Course(object):
         try:
             iter(charts_to_install)
         except TypeError:
-            charts_to_install = (charts_to_install)
+            charts_to_install = charts_to_install
 
         for chart in self.charts:
             if chart.release_name in charts_to_install:
@@ -119,6 +119,8 @@ class Course(object):
             except (Exception, ReckonerCommandException), e:
                 if type(e) == ReckonerCommandException:
                     logging.error(e.stderr)
+                if type(e) == Exception:
+                    logging.error(e)
                 logging.error('Helm upgrade failed. Rolling back {}'.format(chart.release_name))
                 logging.debug(traceback.format_exc())
                 chart.rollback

@@ -343,7 +343,7 @@ class TestChart(TestBase):
         for chart in self.charts:
             self.subprocess_mock.assert_called()
             os.environ[test_environ_var_name] = test_environ_var
-            assert chart.install(test_namespace) == None
+            assert chart.install(test_namespace) is None
             logging.debug(chart)
 
             # TODO - we really need to refactor this to be better about testing in the same layer
