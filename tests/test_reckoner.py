@@ -348,39 +348,62 @@ class TestChart(TestBase):
 
             # TODO - we really need to refactor this to be better about testing in the same layer
             #        this is traversing many layers in the code that could be better encapsulated
-            # COMMENTED OUT NICK HUANCA 2018-
-            # last_mock = self.subprocess_mock.call_args_list[-1][0][0]
-            # self.assertEqual(
-            #     last_mock[0:6],
-            #     ['helm', 'upgrade', '--install', chart.release_name, chart.chart_path,
-            #      '--namespace={}'.format(chart.namespace)]
-            # )
-            # if chart.name == test_environ_var_chart:
-            #     self.assertEqual(
-            #         last_mock,
-            #         ['helm', 'upgrade', '--install', chart.release_name, chart.chart_path,
-            #          '--namespace={}'.format(chart.namespace),
-            #          '--recreate-pods',
-            #          '--set={}={}'.format(test_environ_var_name, test_environ_var)]
-            #     )
-            # if chart.release_name == test_values_strings_chart:
-            #     self.assertEqual(
-            #         last_mock,
-            #         [
-            #             'helm', 'upgrade', '--install',
-            #             chart.release_name,
-            #             chart.chart_path,
-            #             '--namespace={}'.format(chart.namespace),
-            #             '--recreate-pods',
-            #             '--version=0.1.0',
-            #             '--set-string=string=string',
-            #             '--set-string=integer=10',
-            #             '--set-string=boolean=True'
-            #         ]
-            #     )
+
+            last_mock = self.subprocess_mock.call_args_list[-1][0][0]
+            logging.debug(last_mock)
+            self.assertEqual(
+                last_mock[0:6],
+                [
+                    'helm',
+                    'upgrade',
+                    '--recreate-pods',
+                    '--install',
+                    #'--namespace={}'.format(chart.namespace),
+                    chart.release_name,
+                    chart.chart_path,
+
+                ]
+            )
+            if chart.name == test_environ_var_chart:
+                logging.error(last_mock)
+                self.assertEqual(
+                    last_mock,
+                    [
+                        'helm',
+                        'upgrade',
+                        '--recreate-pods',
+                        '--install',
+                        chart.release_name,
+                        chart.chart_path,
+                        '--namespace={}'.format(chart.namespace),
+                        '--recreate-pods',
+                        '--set={}={}'.format(test_environ_var_name, test_environ_var)]
+                )
+            if chart.release_name == test_values_strings_chart:
+                self.assertEqual(
+                    last_mock,
+                    [
+                        'helm',
+                        'upgrade',
+                        '--recreate-pods',
+                        '--install',
+                        chart.release_name,
+                        chart.chart_path,
+                        '--namespace={}'.format(chart.namespace),
+                        '--recreate-pods',
+                        '--version=0.1.0',
+                        '--set-string=string=string',
+                        '--set-string=integer=10',
+                        '--set-string=boolean=True'
+                    ]
+
+
+
+                )
 
 
 class TestRepository(TestBase):
+
     def test_git_repository(self):
         self.configure_subprocess_mock('', '', 0)
         helm_mock = mock.Mock()
@@ -403,6 +426,7 @@ class TestRepository(TestBase):
 
 
 class TestConfig(TestBase):
+
     def setUp(self):
         super(type(self), self).setUp()
         self.c1 = Config()
