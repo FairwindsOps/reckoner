@@ -32,7 +32,7 @@ class Config(object):
     Arguments:
     - None
 
-    Atrributes:
+    Attributes:
     - home (String): Defaults to "$HOME/.helm" but is overridden by
       environment variable $HELM_HOME
     - archive (String): Interpolated path for the helm archive
