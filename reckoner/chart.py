@@ -84,7 +84,8 @@ class Chart(object):
     @property
     def files(self):
         """ List of values files from the course chart """
-        return dict(self._chart.get('files', []))
+        logging.debug(self)
+        return list(self._chart.get('files', []))
 
     @property
     def namespace(self):
@@ -229,7 +230,7 @@ class Chart(object):
             logging.info(r.stdout)
         except HelmClientException, e:
             logging.error(e)
-            raise e
+            return
 
         self.post_install_hook()
 
