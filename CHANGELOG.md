@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 - fixing error were value-strings from the course where not being set as set-string on the command line
 - improved output when a desired environment variable is not set
+- no longer adding the helm_args from course.yml twice
 
 ## [0.10.1]
 

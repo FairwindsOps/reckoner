@@ -361,7 +361,6 @@ class TestChart(TestBase):
                     #'--namespace={}'.format(chart.namespace),
                     chart.release_name,
                     chart.chart_path,
-
                 ]
             )
             if chart.name == test_environ_var_chart:
@@ -376,7 +375,6 @@ class TestChart(TestBase):
                         chart.release_name,
                         chart.chart_path,
                         '--namespace={}'.format(chart.namespace),
-                        '--recreate-pods',
                         '--set={}={}'.format(test_environ_var_name, test_environ_var)]
                 )
             if chart.release_name == test_values_strings_chart:
@@ -390,15 +388,11 @@ class TestChart(TestBase):
                         chart.release_name,
                         chart.chart_path,
                         '--namespace={}'.format(chart.namespace),
-                        '--recreate-pods',
                         '--version=0.1.0',
                         '--set-string=string=string',
                         '--set-string=integer=10',
                         '--set-string=boolean=True'
                     ]
-
-
-
                 )
 
 
