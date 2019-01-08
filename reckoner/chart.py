@@ -209,7 +209,6 @@ class Chart(object):
         if self.context is not None:
             self.args.append('--kube-context={}'.format(self.context))
         self.args.extend(self.debug_args)
-        self.args.extend(self.helm_args)
         if self.version:
             self.args.append('--version={}'.format(self.version))
         for file in self.files:
