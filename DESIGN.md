@@ -22,6 +22,7 @@ Reckoner is intended to provide a declarative synctax to install and manage mult
 * Replaceing Tiller
 * Creation or modification of Helm charts
 * Overwriting portions of a chart's output (eg Kustomize or Ship)
+* Managing installation versions of Helm and Tiller
 
 
 ## Architecture
