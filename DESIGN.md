@@ -1,7 +1,7 @@
 # Reckoner 
 
 ## Intent
-Reckoner is intended to provide a declarative synctax to install and manage multiple Helm releases. A primary additional feature is the ability to pull from a git repository instead of a local chart or chart repository.
+Reckoner is intended to provide a declarative syntax to install and manage multiple Helm releases. A primary additional feature is the ability to pull from a git repository instead of a local chart or chart repository.
 
 ## Key Design Features
 
@@ -19,7 +19,7 @@ Reckoner is intended to provide a declarative synctax to install and manage mult
 
 ### Out of Scope:
 * Direct interaction with the Tiller api
-* Replaceing Tiller
+* Replacing Tiller
 * Creation or modification of Helm charts
 * Overwriting portions of a chart's output (eg Kustomize or Ship)
 * Managing installation versions of Helm and Tiller
