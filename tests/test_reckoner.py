@@ -267,11 +267,6 @@ class TestCourse(TestBase):
         self.assertEqual(self.c.minimum_versions.keys(), test_minimum_versions)
         self.assertIsInstance(self.c.repositories, list)
 
-    def test_minimum_version(self):
-        self.configure_subprocess_mock(test_helm_version_return_string, '', 0)
-        self.c.minimum_versions['reckoner'] = test_reckoner_version
-        self.assertRaises(MinimumVersionException, self.c._compare_required_versions)
-
     def test_plot_course(self):
         self.configure_subprocess_mock('', '', 0)  # TODO: Lots of work do do here on installation of the list of charts
         self.c.plot(list(self.c._dict['charts']))

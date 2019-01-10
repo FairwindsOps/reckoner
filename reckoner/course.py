@@ -17,7 +17,7 @@
 import logging
 import semver
 import traceback
-import reckoner
+import sys
 
 import oyaml as yaml
 
@@ -74,7 +74,11 @@ class Course(object):
         self.helm.repo_update()
 
         if not self.config.local_development:
-            self._compare_required_versions()
+            try:
+                self._compare_required_versions()
+            except MinimumVersionException as e:
+                logging.error(e)
+                sys.exit(1)
 
     def __str__(self):
         return str(self._dict)
