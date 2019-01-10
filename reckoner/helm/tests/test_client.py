@@ -119,8 +119,8 @@ incubator       https://kubernetes-charts-incubator.storage.googleapis.com
         assert without_install.command.command == 'install'
 
     def test_dependency_update(self):
-        with self.assertRaises(NotImplementedError):
-            HelmClient(provider=self.dummy_provider).dependency_update('')
+        HelmClient(provider=self.dummy_provider).dependency_update('chart_path')
+        self.dummy_provider.execute.assert_called_once
 
     def test_repo_update(self):
         HelmClient(provider=self.dummy_provider).repo_update()

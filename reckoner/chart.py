@@ -167,7 +167,6 @@ class Chart(object):
         logging.debug("Updating chart dependencies: {}".format(self.chart_path))
         if os.path.exists(self.chart_path):
             try:
-                # TODO This is actually broken - not implemented (even before refactor)
                 r = self.helm.dependency_update(self.chart_path)
             except ReckonerCommandException, e:
                 logging.warn("Unable to update chart dependencies: {}".format(e.stderr))
@@ -196,11 +195,9 @@ class Chart(object):
         # TODO: Improve error handling of a repository installation
         self.repository.install(self.name, self.version)
         self.chart_path = self.repository.chart_path
-        # Update the helm dependencies
 
-        if self.repository.git is None:
-            # TODO this is broken
-            self.update_dependencies()
+        # Update the helm dependencies
+        self.update_dependencies()
 
         # Build the args for the chart installation
         # And add any extra arguments
