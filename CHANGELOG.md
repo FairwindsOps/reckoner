@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.11.0]
+
+### Added
+- Ensure chart dependencies are up to date with `helm dependency update` before installing it
+
+## [0.10.3]
+
+### Fixed
+- Issue preventing values files from working.  #43
+
 ## [0.10.2]
 
 ### Fixed

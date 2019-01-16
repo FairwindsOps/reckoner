@@ -90,7 +90,8 @@ class HelmClient(object):
         )
 
     def dependency_update(self, chart_path):
-        raise NotImplementedError('Sorry this feature has not yet been implemented.')
+        """Function to update chart dependencies"""
+        return self.execute('dependency', ['update', chart_path], filter_non_global_flags=True)
 
     def repo_update(self):
         """Function to update all the repositories"""
