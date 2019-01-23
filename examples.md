@@ -104,12 +104,12 @@ See the [Autoscaler Docs](https://github.com/helm/charts/tree/master/stable/clus
           enabled: true
 ```
 
-Enable Statsd Collection in Datadog.  This will create a deployment with a service on port 8125/UDP that you can send statsd metrics to.
+Enable Statsd Collection in Datadog.  This will create a deployment with a service on port 8125/UDP that you can send statsd metrics to. APM can be enabled on port 8126/TCP.
 
 ```
   datadog-statsd:
     chart: datadog
-    version: 1.0.1
+    version: 1.16.0
     repository: stable
     values:
       daemonset.enabled: "false"
@@ -118,6 +118,8 @@ Enable Statsd Collection in Datadog.  This will create a deployment with a servi
       kubeStateMetrics.enabled: "false"
       datadog:
         apiKey: "${DATADOG_API_KEY}"
+        nonLocalTraffic: true
+        apmEnabled: false
         resources:
           requests:
             cpu: 100m
@@ -125,16 +127,6 @@ Enable Statsd Collection in Datadog.  This will create a deployment with a servi
           limits:
             cpu: 200m
             memory: 256Mi
-        volumeMounts:
-          - name: confd
-            mountPath: /etc/datadog-agent/datadog.yaml
-            readOnly: true
-            subPath: datadog.yaml
-        confd:
-          datadog\.yaml: |
-            use_dogstatsd: true
-            dogstatsd_port: 8125
-            dogstatsd_non_local_traffic: true
 ```
 
 ## spotify-docker-gc
