@@ -425,3 +425,5 @@ class TestConfig(TestBase):
         self.assertEqual(self.c1.__dict__, self.c2.__dict__)
         self.c1.test = 'value'
         self.assertEqual(self.c1.__dict__, self.c2.__dict__)
+        self.assertIs(self.c1.test, self.c2.test)
+        self.assertIsNot(self.c1, self.c2)
