@@ -19,8 +19,6 @@ import unittest
 import coloredlogs
 import logging
 import os
-import git
-import subprocess
 import shutil
 import mock
 import reckoner
@@ -30,9 +28,7 @@ from reckoner.reckoner import Reckoner
 from reckoner.config import Config
 from reckoner.course import Course
 from reckoner.repository import Repository
-from reckoner.exception import MinimumVersionException, ReckonerCommandException
 from reckoner.helm.client import HelmClient
-from reckoner.helm.cmd_response import HelmCmdResponse
 
 
 class TestBase(unittest.TestCase):
@@ -353,7 +349,7 @@ class TestChart(TestBase):
                     'upgrade',
                     '--recreate-pods',
                     '--install',
-                    #'--namespace={}'.format(chart.namespace),
+                    # '--namespace={}'.format(chart.namespace),
                     chart.release_name,
                     chart.chart_path,
                 ]
