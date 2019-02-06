@@ -55,18 +55,6 @@ def plot(ctx, file=None, dry_run=False, debug=False, only=None, helm_args=None, 
 
 
 @cli.command()
-@click.pass_context
-def generate(ctx):
-    """ Takes no arguments, outputs an example plan """
-    logging.info('Generating example course as course.yml')
-    src = pkg_resources.resource_string("reckoner", "example-course.yml")
-    logging.debug(src)
-    with open("./course.yml", "w") as course_file:
-        course_file.write(src)
-
-
-@cli.command()
-@click.pass_context
-def version(ctx):
+def version():
     """ Takes no arguments, outputs version info"""
-    print(reckoner.__version__)
+    print(__version__)
