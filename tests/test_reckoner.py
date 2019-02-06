@@ -19,8 +19,6 @@ import unittest
 import coloredlogs
 import logging
 import os
-import git
-import subprocess
 import shutil
 import mock
 import reckoner
@@ -30,9 +28,7 @@ from reckoner.reckoner import Reckoner
 from reckoner.config import Config
 from reckoner.course import Course
 from reckoner.repository import Repository
-from reckoner.exception import MinimumVersionException, ReckonerCommandException
 from reckoner.helm.client import HelmClient
-from reckoner.helm.cmd_response import HelmCmdResponse
 
 
 class TestBase(unittest.TestCase):
@@ -353,9 +349,9 @@ class TestChart(TestBase):
                     'upgrade',
                     '--recreate-pods',
                     '--install',
-                    #'--namespace={}'.format(chart.namespace),
+                    # '--namespace={}'.format(chart.namespace),
                     chart.release_name,
-                    chart.chart_path,
+                    chart.repository.chart_path,
                 ]
             )
             if chart.name == test_environ_var_chart:
@@ -368,7 +364,7 @@ class TestChart(TestBase):
                         '--recreate-pods',
                         '--install',
                         chart.release_name,
-                        chart.chart_path,
+                        chart.repository.chart_path,
                         '--namespace={}'.format(chart.namespace),
                         '--set={}={}'.format(test_environ_var_name, test_environ_var)]
                 )
@@ -381,7 +377,7 @@ class TestChart(TestBase):
                         '--recreate-pods',
                         '--install',
                         chart.release_name,
-                        chart.chart_path,
+                        chart.repository.chart_path,
                         '--namespace={}'.format(chart.namespace),
                         '--version=0.1.0',
                         '--set-string=string=string',
@@ -429,3 +425,5 @@ class TestConfig(TestBase):
         self.assertEqual(self.c1.__dict__, self.c2.__dict__)
         self.c1.test = 'value'
         self.assertEqual(self.c1.__dict__, self.c2.__dict__)
+        self.assertIs(self.c1.test, self.c2.test)
+        self.assertIsNot(self.c1, self.c2)

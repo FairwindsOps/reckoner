@@ -16,11 +16,9 @@
 
 
 import os
-import sys
 import logging
 
-from command_line_caller import call
-from exception import ReckonerCommandException
+from .command_line_caller import call
 
 
 class Config(object):
