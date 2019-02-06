@@ -31,6 +31,9 @@ from meta import __version__
 @click.pass_context
 def cli(ctx, log_level, *args, **kwargs):
     coloredlogs.install(level=log_level)
+    if ctx.invoked_subcommand is None:
+        click.echo(ctx.get_help())
+        ctx.exit(1)
     pass
 
 
