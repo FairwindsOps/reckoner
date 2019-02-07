@@ -8,20 +8,15 @@ This utility adds to the functionality of [Helm](https://github.com/kubernetes/h
 
 ## Requirements
 - python >= 2.7
-- helm: installed and inited
-- $INFRASTRUCTURE_REPO
+- helm: installed and initialized
 
-## Installation
 ### As standalone shell command
 ```sh
-pip install git+https://github.com/reactiveops/reckoner
+pip install reckoner
 ```
-### As Helm plugin
-```sh
-pip install git+https://github.com/reactiveops/reckoner
-helm plugin install https://github.com/reactiveops/reckoner
-```
+
 ## Usage
+
 ### As standalone shell command
 - Usage: reckoner [OPTIONS] COMMAND [ARGS]...
 - Options:
@@ -38,19 +33,8 @@ helm plugin install https://github.com/reactiveops/reckoner
         `--helm-args --set=foo=toast`, or `--helm-args --recreate-pods`.
         Multiples are supported but only one parameter per `--helm-args` is
         supported. Note that specifying this flag will override `helm_args`
-        in the course.yml file. WARNING: This cannot be used for arguments that specify
-        how Helm connects to tiller such as `tiller-namespace`
+        in the course.yml file.
       * `--local-development`: Run `reckoner` in local-development mode where Tiller is not required and no helm commands are run. Useful for rapid or offline development.
-  * `generate`: Generates example file `course.yml` with extensive descriptions
-  * `version`: Output reckoner version
-### As helm plugin
-- Usage: helm reckoner [OPTIONS] COMMAND [ARGS]...
-- Options:
-    --help  Show this message and exit.
-- Commands:
-  * `plot`: Runs helm based on yaml file descriptors
-  * Argument:
-    - file: YAML file with description of charts to load
   * `generate`: Generates example file `course.yml` with extensive descriptions
   * `version`: Output reckoner version
 

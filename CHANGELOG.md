@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.12.0]
+
+### Deprecated
+
+Removing support for use as a helm plugin.
+
 ## [0.11.1]
 
 ### Fixed
@@ -75,7 +81,7 @@ Found several bugs that are noted in code and here. Fixes will be forthcoming.
 
 ## [0.8.4]
 
-### Fixed 
+### Fixed
 - better logging output for hooks
 - added standard out logging for all helm commands
 
