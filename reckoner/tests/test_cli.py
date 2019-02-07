@@ -35,7 +35,7 @@ class TestCli(unittest.TestCase):
         self.assertEqual(0, result.exit_code)
         self.assertNotEqual('', result.output)
 
-    def test_exits_without_subcommad(self):
+    def test_exits_without_subcommand(self):
         '''Assure we fail when run without subcommands and show some info'''
         runner = CliRunner()
         result = runner.invoke(cli.cli)
