@@ -57,7 +57,7 @@ class Chart(object):
         self._chart = chart[self._release_name]
         self._repository = Repository(self._chart.get('repository', default_repository), self.helm)
         self._chart['values'] = self._chart.get('values', {})
-        self._chart['sets'] = self._chart.get('sets', {})
+        self._chart['set_values'] = self._chart.get('set-values', {})
 
         self._namespace = self._chart.get('namespace')
         self._context = self._chart.get('context')
@@ -217,6 +217,9 @@ class Chart(object):
         # Fire the post_install_hook
         self.post_install_hook()
 
+        if self._deprecation_messages:
+            [logging.warning(msg) for msg in self._deprecation_messages]
+
     def build_helm_arguments_for_chart(self):
         '''
         This method builds all the arguments we'll pass along to the helm
@@ -271,7 +274,7 @@ class Chart(object):
 
         NOTE ONLY RUN THIS ONCE BECAUSE IT'S NOT IDEMPOTENT
         '''
-        if self.__already_merged:
+        if self._hack_set_values_already_merged:
             raise StandardError('This method cannot be called twice. '
                                 'If you are seeing this please open an '
                                 'issue in github.')
@@ -283,10 +286,10 @@ class Chart(object):
             return new_dict
 
         logging.debug('Merging values: into sets: - sets: take precedence.')
-        logging.debug('Original value of sets: {}'.format(self.sets))
-        self.sets = merge_dicts(self.values, self.sets)
-        logging.debug('New value of sets: {}'.format(self.sets))
-        self.__already_merged = True
+        logging.debug('Original value of sets: {}'.format(self.set_values))
+        self.set_values = merge_dicts(self.values, self.set_values)
+        logging.debug('New value of sets: {}'.format(self.set_values))
+        self._hack_set_values_already_merged = True
 
     def build_temp_values_files(self):
         '''
@@ -295,14 +298,17 @@ class Chart(object):
         between the course.yml and what is passed to helm. If you use set:
         value arguments then you can lose types like int, float and true/false
         '''
-        logging.warning(
-            "DEPRECATION NOTICE: The behavior of `values: {}` will change in "
-            "v0.14+. Currently values: are set as --set arguments for the "
-            "helm command. This behavior makes all values: you set in the "
-            "course.yml lose type fidelity, true becomes string(\"true\") "
-            "and all int values become a string of the integer. See "
-            "https://github.com/reactiveops/reckoner/issues/7 for details."
-        )
+        if self.values:
+            self._deprecation_messages = [
+                "DEPRECATION NOTICE: The behavior of `values: {}` will change in "
+                "v0.14+. Currently values: are set as --set arguments for the "
+                "helm command. This behavior makes all `values: {}` you set in "
+                "the course.yml lose type fidelity, true becomes string(\"true\") "
+                "and all int values become a string of the integer. See "
+                "https://github.com/reactiveops/reckoner/issues/7 for details. ",
+                "To avoid any unexpected changes in behavior, change your "
+                "`values: {}` configuration to `set-values: {}`."
+            ]
         for value in self.values.keys():
             logging.debug(
                 "Settings value({}) as a --set argument. "
@@ -338,7 +344,7 @@ class Chart(object):
 
         Note running this multiple times will provide duplicate arguments
         '''
-        for key, value in self.sets.iteritems():
+        for key, value in self.set_values.iteritems():
             for k, v in self._format_set(key, value):
                 self.args.append("--set={}={}".format(k, v))
 
