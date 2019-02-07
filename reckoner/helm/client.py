@@ -137,7 +137,7 @@ class HelmClient(object):
         get_ver = self.execute("version", arguments=['--short', kind], filter_non_global_flags=True)
         ver = self._find_version(get_ver.stdout)
 
-        if ver == None:
+        if ver is None:
             raise HelmClientException(
                 """Could not find version!! Could the helm response format have changed?
                 STDOUT: {}

@@ -351,7 +351,7 @@ class TestChart(TestBase):
                     '--install',
                     # '--namespace={}'.format(chart.namespace),
                     chart.release_name,
-                    chart.chart_path,
+                    chart.repository.chart_path,
                 ]
             )
             if chart.name == test_environ_var_chart:
@@ -364,7 +364,7 @@ class TestChart(TestBase):
                         '--recreate-pods',
                         '--install',
                         chart.release_name,
-                        chart.chart_path,
+                        chart.repository.chart_path,
                         '--namespace={}'.format(chart.namespace),
                         '--set={}={}'.format(test_environ_var_name, test_environ_var)]
                 )
@@ -377,7 +377,7 @@ class TestChart(TestBase):
                         '--recreate-pods',
                         '--install',
                         chart.release_name,
-                        chart.chart_path,
+                        chart.repository.chart_path,
                         '--namespace={}'.format(chart.namespace),
                         '--version=0.1.0',
                         '--set-string=string=string',
