@@ -1,6 +1,0 @@
-name: "reckoner"
-version: "0.1.0"
-usage: "helm reckoner plot <course.yml>"
-description: |-
-  This plugin provides a way to manage and install several helm charts from a single declarative file
-command: "reckoner"

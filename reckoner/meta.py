@@ -1,5 +1,6 @@
 # -- coding: utf-8 --
 
+# pylint: skip-file
 # Copyright 2017 Reactive Ops Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the “License”);
@@ -14,5 +15,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = '0.11.1'
+__version__ = '0.12.0'
 __author__ = 'ReactiveOps, Inc.'
