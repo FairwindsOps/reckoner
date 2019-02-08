@@ -86,7 +86,7 @@ class HelmClient(object):
 
     def rollback(self, release):
         raise NotImplementedError(
-            '''This is known bad. If you see this error then you are likely implementing the solution :)'''
+            """This is known bad. If you see this error then you are likely implementing the solution :)"""
         )
 
     def dependency_update(self, chart_path):

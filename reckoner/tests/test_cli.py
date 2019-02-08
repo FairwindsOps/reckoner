@@ -1,4 +1,4 @@
-'''Testing of CLI commands in click, contract tests'''
+"""Testing of CLI commands in click, contract tests"""
 
 import unittest
 import mock
@@ -7,14 +7,14 @@ from reckoner import cli
 
 
 class TestCli(unittest.TestCase):
-    '''
+    """
     Test all the contracts of the command line tool.
     If something changes in here than you should consider that in your version
     bumping scheme.
-    '''
+    """
 
     def test_version(self):
-        '''Assure version subcommand exists'''
+        """Assure version subcommand exists"""
         runner = CliRunner()
         result = runner.invoke(cli.version)
 
@@ -27,7 +27,7 @@ class TestCli(unittest.TestCase):
         self.assertNotEqual('', result.output)
 
     def test_supports_loglevel(self):
-        '''assure we have a global command for --log-level'''
+        """assure we have a global command for --log-level"""
         runner = CliRunner()
         result = runner.invoke(
             cli.cli, args=['--log-level', 'DEBUG', 'version'])
@@ -36,7 +36,7 @@ class TestCli(unittest.TestCase):
         self.assertNotEqual('', result.output)
 
     def test_exits_without_subcommand(self):
-        '''Assure we fail when run without subcommands and show some info'''
+        """Assure we fail when run without subcommands and show some info"""
         runner = CliRunner()
         result = runner.invoke(cli.cli)
 
@@ -45,7 +45,7 @@ class TestCli(unittest.TestCase):
 
     @mock.patch('reckoner.cli.Reckoner', autospec=True)
     def test_plot_exists(self, reckoner_mock):
-        '''Assure we have a plot command and it calls reckoner install'''
+        """Assure we have a plot command and it calls reckoner install"""
         reckoner_instance = reckoner_mock()
         reckoner_instance.install.side_effect = [None]
         runner = CliRunner()

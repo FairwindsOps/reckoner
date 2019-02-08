@@ -221,10 +221,10 @@ class Chart(object):
             [logging.warning(msg) for msg in self._deprecation_messages]
 
     def build_helm_arguments_for_chart(self):
-        '''
+        """
         This method builds all the arguments we'll pass along to the helm
         client once we need to run the install
-        '''
+        """
 
         # Set Default args (release name and chart path)
         self.args = [
@@ -268,19 +268,19 @@ class Chart(object):
         self.build_set_string_arguments()
 
     def _merge_set_and_values(self):
-        '''
+        """
         This is a temporary method that will be gone once the values: vs set:
         debacle has been resolved. (See https://github.com/reactiveops/reckoner/issues/7)
 
         NOTE ONLY RUN THIS ONCE BECAUSE IT'S NOT IDEMPOTENT
-        '''
+        """
         if self._hack_set_values_already_merged:
             raise StandardError('This method cannot be called twice. '
                                 'If you are seeing this please open an '
                                 'issue in github.')
 
         def merge_dicts(values, sets):
-            '''This does a dict merge and prefers "sets" values'''
+            """This does a dict merge and prefers "sets" values"""
             new_dict = values.copy()
             new_dict.update(sets)
             return new_dict
@@ -292,12 +292,12 @@ class Chart(object):
         self._hack_set_values_already_merged = True
 
     def build_temp_values_files(self):
-        '''
+        """
         This method builds temporary files based on the values: settings
         provided in the course.yml. This effectively keeps type persistence
         between the course.yml and what is passed to helm. If you use set:
         value arguments then you can lose types like int, float and true/false
-        '''
+        """
         if self.values:
             self._deprecation_messages = [
                 "DEPRECATION NOTICE: The behavior of `values: {}` will change in "
@@ -317,33 +317,33 @@ class Chart(object):
             )
 
     def build_files_list(self):
-        '''
+        """
         This method builds the files list for all
         files specified in the course.yml
-        '''
+        """
         for values_file in self.files:
             self.args.append("-f={}".format(values_file))
 
     def build_set_string_arguments(self):
-        '''
+        """
         Builder for "set-string" arguments in helm command line
         This method specifically modifies the Chart object to
         prepare the command line arguments.
 
         Note running this multiple times will provide duplicate arguments
-        '''
+        """
         for key, value in self.values_strings.iteritems():
             for k, v in self._format_set(key, value):
                 self.args.append("--set-string={}={}".format(k, v))
 
     def build_set_arguments(self):
-        '''
+        """
         Builder for "set" arguments in helm command line
         This method specifically modifies the Chart object to
         prepare the command line arguments.
 
         Note running this multiple times will provide duplicate arguments
-        '''
+        """
         for key, value in self.set_values.iteritems():
             for k, v in self._format_set(key, value):
                 self.args.append("--set={}={}".format(k, v))
