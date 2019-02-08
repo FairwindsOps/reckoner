@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [0.13.0] UNRELEASED
+## [1.0.0-rc1]
 
 ### Fixed
 - `version` command is fixed
@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - This will translate all elements into `--set key=value` for the helm run
   - Current behavior actually does this for `values: {}`
   - All `values:` uses will warn that future versions will be type strong
+- More testing for CLI contract options
 
 ## [0.12.0]
 

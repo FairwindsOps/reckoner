@@ -67,6 +67,8 @@ class Chart(object):
         if value_strings != {}:
             del(self._chart['values-strings'])
 
+        self._deprecation_messages = []
+
     @property
     def helm_args(self):
         """ Returns list of extra options/args for the helm command """
@@ -299,21 +301,10 @@ class Chart(object):
         value arguments then you can lose types like int, float and true/false
         """
         if self.values:
-            self._deprecation_messages = [
-                "DEPRECATION NOTICE: The behavior of `values: {}` will change in "
-                "v0.14+. Currently values: are set as --set arguments for the "
-                "helm command. This behavior makes all `values: {}` you set in "
-                "the course.yml lose type fidelity, true becomes string(\"true\") "
-                "and all int values become a string of the integer. See "
-                "https://github.com/reactiveops/reckoner/issues/7 for details. ",
-                "To avoid any unexpected changes in behavior, change your "
-                "`values: {}` configuration to `set-values: {}`."
-            ]
-        for value in self.values.keys():
-            logging.debug(
-                "Settings value({}) as a --set argument. "
-                "Type of the value may not be what you expect. "
-                "This is a deprecation method.".format(value)
+            self._deprecation_messages.append(
+                "DEPRECATION NOTICE: Change 'values: {}' to 'set-values: {}' "
+                "to keep consistent behavior beyond v1.1+. Details: "
+                "https://github.com/reactiveops/reckoner/issues/7"
             )
 
     def build_files_list(self):
