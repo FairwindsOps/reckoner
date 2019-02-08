@@ -15,7 +15,6 @@
 # limitations under the License.
 
 import logging
-import subprocess
 import os
 
 from collections import OrderedDict
@@ -47,8 +46,8 @@ class Chart(object):
     - namespace
 
     Returns:
-    - Instance of Response() is truthy where Reponse.exitcode == 0
-    - Instance of Response() is falsey where Reponse.exitcode != 0
+    - Instance of Response() is truthy where Response.exitcode == 0
+    - Instance of Response() is falsey where Response.exitcode != 0
     """
 
     def __init__(self, chart, helm):
@@ -58,6 +57,7 @@ class Chart(object):
         self._chart = chart[self._release_name]
         self._repository = Repository(self._chart.get('repository', default_repository), self.helm)
         self._chart['values'] = self._chart.get('values', {})
+        self._chart['set_values'] = self._chart.get('set-values', {})
 
         self._namespace = self._chart.get('namespace')
         self._context = self._chart.get('context')
@@ -66,6 +66,15 @@ class Chart(object):
 
         if value_strings != {}:
             del(self._chart['values-strings'])
+
+        self._deprecation_messages = []
+
+    @property
+    def helm_args(self):
+        """ Returns list of extra options/args for the helm command """
+        if self.config.helm_args is not None:
+            return self.config.helm_args
+        return []
 
     @property
     def release_name(self):
@@ -80,6 +89,17 @@ class Chart(object):
         Returns chart name of course chart
         """
         return self._chart.get('chart', self._release_name)
+
+    @property
+    def debug_args(self):
+        """ Returns list of Helm debug arguments """
+
+        if self.config.dryrun:
+            return ['--dry-run', '--debug']
+        if self.config.debug:
+            return ['--debug']
+
+        return []
 
     @property
     def files(self):
@@ -97,32 +117,10 @@ class Chart(object):
         """ Namespace to install the course chart """
         return self._context
 
-    def __check_env_vars(self):
-        """
-        accepts list of args
-        if any of those appear to be env vars
-        and are missing from the environment
-        an exception is raised
-        """
-        try:
-            self.args = [Template(arg).substitute(os.environ) for arg in self.args]
-        except KeyError, e:
-            raise Exception("Missing requirement environment variable: {}".format(e.args[0]))
-
     @property
     def repository(self):
         """ Repository object parsed from course chart """
         return self._repository
-
-    def __getattr__(self, key):
-        return self._chart.get(key)
-
-    def __str__(self):
-        return str(dict(self._chart))
-
-    def __get_hook(self, hook_type):
-        if self.hooks is not None:
-            return self.hooks.get(hook_type)
 
     def pre_install_hook(self):
         self.run_hook('pre_install')
@@ -132,13 +130,13 @@ class Chart(object):
 
     def run_hook(self, hook_type):
         """ Hook Type. Runs the commands defined by the hook """
-        coms = self.__get_hook(hook_type)
-        if coms is None:
-            return coms
-        if type(coms) == str:
-            coms = [coms]
+        commands = self.__get_hook(hook_type)
+        if commands is None:
+            return commands
+        if type(commands) == str:
+            commands = [commands]
 
-        for com in coms:
+        for com in commands:
             if self.config.local_development or self.config.dryrun:
                 logging.info("Hook not run due to --dry-run: {}".format(com))
                 continue
@@ -164,12 +162,13 @@ class Chart(object):
         """ Update the course chart dependencies """
         if self.config.local_development or self.config.dryrun:
             return True
-        logging.debug("Updating chart dependencies: {}".format(self.chart_path))
-        if os.path.exists(self.chart_path):
+        logging.debug("Updating chart dependencies: {}".format(self.repository.chart_path))
+        if os.path.exists(self.repository.chart_path):
             try:
-                r = self.helm.dependency_update(self.chart_path)
-            except ReckonerCommandException, e:
-                logging.warn("Unable to update chart dependencies: {}".format(e.stderr))
+                response = self.helm.dependency_update(self.repository.chart_path)
+                logging.debug(response.stderr + "\n" + response.stdout)
+            except ReckonerCommandException, error:
+                logging.warn("Unable to update chart dependencies: {}".format(error.stderr))
 
     def install(self, namespace=None, context=None):
         """
@@ -178,9 +177,6 @@ class Chart(object):
 
         Arguments:
         - namespace (string). Passed in but will be overridden by Chart().namespace if set
-
-        Returns:
-        - Bool
         """
 
         # Set the namespace
@@ -191,63 +187,157 @@ class Chart(object):
         if self.context is None:
             self._context = context
 
+        # Fire the pre_install_hook
         self.pre_install_hook()
+
         # TODO: Improve error handling of a repository installation
+        #       Thoughts here, perhaps it would be better to install the
+        #       repositories *before* trying to install the chart. This
+        #       way we could find out earlier our course is wrong.
         self.repository.install(self.name, self.version)
-        self.chart_path = self.repository.chart_path
 
         # Update the helm dependencies
         self.update_dependencies()
 
         # Build the args for the chart installation
         # And add any extra arguments
+        self.build_helm_arguments_for_chart()
 
-        self.args = ['{}'.format(self._release_name), self.chart_path, ]
+        # Check and Error if we're missing required env vars
+        self.__check_env_vars()
+
+        # Perform the upgrade with the arguments
+        try:
+            # Try to run helm upgrade
+            helm_command_response = self.helm.upgrade(self.args)
+            # Log the stdout response in info
+            logging.info(helm_command_response.stdout)
+        except HelmClientException, error:
+            logging.error(error)
+            return
+
+        # Fire the post_install_hook
+        self.post_install_hook()
+
+        if self._deprecation_messages:
+            [logging.warning(msg) for msg in self._deprecation_messages]
+
+    def build_helm_arguments_for_chart(self):
+        """
+        This method builds all the arguments we'll pass along to the helm
+        client once we need to run the install
+        """
+
+        # Set Default args (release name and chart path)
+        self.args = [
+            '{}'.format(self._release_name),
+            self.repository.chart_path,
+        ]
+
+        # Add namespace to args
         self.args.append('--namespace={}'.format(self.namespace))
+
+        # Add kubecfg context
         if self.context is not None:
             self.args.append('--kube-context={}'.format(self.context))
+
+        # Add debug arguments
         self.args.extend(self.debug_args)
+
+        # Add the version arguments
         if self.version:
             self.args.append('--version={}'.format(self.version))
-        for file in self.files:
-            self.args.append("-f={}".format(file))
 
-        for key, value in self.values.iteritems():
-            for k, v in self._format_set(key, value):
-                self.args.append("--set={}={}".format(k, v))
+        # HACK: This is in place until we can fully deprecate the usage of set
+        #       in place of values. Currently values: gets translated into
+        #       --set commands to the helm command line run. This should be
+        #       changed so that set: goes to command line args and values: goes
+        #       to temporary values files, to keep strong types in yaml.
+        #       This will go away once we fully change the functionality of
+        #       values: vs sets: settings in course.yml
+        self._merge_set_and_values()
 
+        # Build the list of existing yaml files to use for the helm command
+        self.build_files_list()
+
+        # Build the file arguments from the `values: {}` in course.yml
+        self.build_temp_values_files()
+
+        # Build the list of --set arguments
+        self.build_set_arguments()
+
+        # Build the list of --set-string arguments
+        self.build_set_string_arguments()
+
+    def _merge_set_and_values(self):
+        """
+        This is a temporary method that will be gone once the values: vs set:
+        debacle has been resolved. (See https://github.com/reactiveops/reckoner/issues/7)
+
+        NOTE ONLY RUN THIS ONCE BECAUSE IT'S NOT IDEMPOTENT
+        """
+        if self._hack_set_values_already_merged:
+            raise StandardError('This method cannot be called twice. '
+                                'If you are seeing this please open an '
+                                'issue in github.')
+
+        def merge_dicts(values, sets):
+            """This does a dict merge and prefers "sets" values"""
+            new_dict = values.copy()
+            new_dict.update(sets)
+            return new_dict
+
+        logging.debug('Merging values: into sets: - sets: take precedence.')
+        logging.debug('Original value of sets: {}'.format(self.set_values))
+        self.set_values = merge_dicts(self.values, self.set_values)
+        logging.debug('New value of sets: {}'.format(self.set_values))
+        self._hack_set_values_already_merged = True
+
+    def build_temp_values_files(self):
+        """
+        This method builds temporary files based on the values: settings
+        provided in the course.yml. This effectively keeps type persistence
+        between the course.yml and what is passed to helm. If you use set:
+        value arguments then you can lose types like int, float and true/false
+        """
+        if self.values:
+            self._deprecation_messages.append(
+                "DEPRECATION NOTICE: Change 'values: {}' to 'set-values: {}' "
+                "to keep consistent behavior beyond v1.1+. Details: "
+                "https://github.com/reactiveops/reckoner/issues/7"
+            )
+
+    def build_files_list(self):
+        """
+        This method builds the files list for all
+        files specified in the course.yml
+        """
+        for values_file in self.files:
+            self.args.append("-f={}".format(values_file))
+
+    def build_set_string_arguments(self):
+        """
+        Builder for "set-string" arguments in helm command line
+        This method specifically modifies the Chart object to
+        prepare the command line arguments.
+
+        Note running this multiple times will provide duplicate arguments
+        """
         for key, value in self.values_strings.iteritems():
             for k, v in self._format_set(key, value):
                 self.args.append("--set-string={}={}".format(k, v))
 
-        self.__check_env_vars()
+    def build_set_arguments(self):
+        """
+        Builder for "set" arguments in helm command line
+        This method specifically modifies the Chart object to
+        prepare the command line arguments.
 
-        try:
-            r = self.helm.upgrade(self.args)
-            logging.info(r.stdout)
-        except HelmClientException, e:
-            logging.error(e)
-            return
-
-        self.post_install_hook()
-
-    @property
-    def debug_args(self):
-        """ Returns list of Helm debug arguments """
-
-        if self.config.dryrun:
-            return ['--dry-run', '--debug']
-        if self.config.debug:
-            return ['--debug']
-
-        return []
-
-    @property
-    def helm_args(self):
-        """ Returns list of extra options/args for the helm command """
-        if self.config.helm_args is not None:
-            return self.config.helm_args
-        return []
+        Note running this multiple times will provide duplicate arguments
+        """
+        for key, value in self.set_values.iteritems():
+            for k, v in self._format_set(key, value):
+                self.args.append("--set={}={}".format(k, v))
 
     def _format_set(self, key, value):
         """
@@ -278,3 +368,25 @@ class Chart(object):
                     yield "{}[{}]".format(key, index), item
         else:
             yield key, value
+
+    def __getattr__(self, key):
+        return self._chart.get(key)
+
+    def __str__(self):
+        return str(dict(self._chart))
+
+    def __get_hook(self, hook_type):
+        if self.hooks is not None:
+            return self.hooks.get(hook_type)
+
+    def __check_env_vars(self):
+        """
+        accepts list of args
+        if any of those appear to be env vars
+        and are missing from the environment
+        an exception is raised
+        """
+        try:
+            self.args = [Template(arg).substitute(os.environ) for arg in self.args]
+        except KeyError, e:
+            raise Exception("Missing requirement environment variable: {}".format(e.args[0]))

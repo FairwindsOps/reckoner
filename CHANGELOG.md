@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-rc1]
+
+### Fixed
+- `version` command is fixed
+- `generate` command is removed (was broken for several versions)
+
+### Changes
+- Adjusted schema to support `set` option for charts
+  - This will translate all elements into `--set key=value` for the helm run
+  - Current behavior actually does this for `values: {}`
+  - All `values:` uses will warn that future versions will be type strong
+- More testing for CLI contract options
+
+### Deprecation Notice
+In the future, the `values: {}` configuration of a chart will change it's
+behavior (see Issue #7). The current behavior translates any `values:{}` into
+`--set` for the command line helm. This makes certain object types lose their
+type fidelity. This means `true` becomes `string("true")` when pushed through
+`--set values=true`. To maintain the same behavior for your settings please
+change `values:{}` to `set-values:{}`. This behavior deprecaton will start to
+be enforces in later versions of Reckoner.
+
 ## [0.12.0]
 
 ### Deprecated
