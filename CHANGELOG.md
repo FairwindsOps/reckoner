@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [1.0.1]
 
 ### Fixed
-* 
+* Reckoner would silently fail when a --only or --heading was defined for a
+  chart that didn't exist in your course.  
+  This behavior will still succeed if you provide at least one valid --heading
+  value. If no values are in your course then this bubbles up an error
+* Internal Fix: Reckoner Errors now are a single parent exception class
 
 ## [1.0.0]
 

@@ -21,6 +21,7 @@ import sys
 from .config import Config
 from .course import Course
 from .helm.client import HelmClient, HelmClientException
+from .exception import NoChartsToInstall, ReckonerCommandException
 
 
 class Reckoner(object):
@@ -85,7 +86,23 @@ class Reckoner(object):
 
         """
         selected_charts = charts or [chart._release_name for chart in self.course.charts]
-        return self.course.plot(selected_charts)
+        try:
+            self.course.plot(selected_charts)
+        except NoChartsToInstall as error:
+            logging.error(error)
+            raise ReckonerCommandException('Failed to find any valid charts to install.')
+
+        # HACK - Nick Huanca
+        # This is to satisfy a test requirement but the bool contract is a
+        # farse. The called plot command only ever raised an error or returned
+        # True. Having this always return True doesn't make sense and needs to
+        # be refactored to either have logic for WHY you want True or False.
+        # The upstream use of this code doesn't do anything with the return
+        # values of this function. (reckoner.cli.plot)
+        # The Tests:
+        #   - TestReckonerMethods.test_install_succeeds
+        #   - TestReckoner.test_install
+        return True
 
     # TODO this doesn't actually work to update context - missing _context attribute.
     #      also missing subprocess function
