@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   This behavior will still succeed if you provide at least one valid --heading
   value. If no values are in your course then this bubbles up an error
 * Internal Fix: Reckoner Errors now are a single parent exception class
+* Fixed hook output to user instead of hidden only in debug (#59)
 
 ## [1.0.0]
 
