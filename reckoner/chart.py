@@ -138,10 +138,10 @@ class Chart(object):
 
         for command in commands:
             if self.config.local_development or self.config.dryrun:
-                logging.info("Hook not run due to --dry-run: {}".format(command))
+                logging.warning("Hook not run due to --dry-run: {}".format(command))
                 continue
             else:
-                logging.info("Running {} hook.".format(hook_type))
+                logging.info("Running {} hook...".format(hook_type))
 
             try:
                 result = call(command, shell=True, executable="/bin/bash")
@@ -153,6 +153,8 @@ class Chart(object):
                 )
 
             logging.info("Ran Hook: '{}'".format(result.command_string))
+            _output_level = logging.INFO  # The level to log the command output
+
             # HACK We're not relying opon the truthiness of this object due to
             # the inability to mock is well in code
             # Python 3 may have better mocking functionality or we should
@@ -163,12 +165,16 @@ class Chart(object):
             else:
                 logging.error("{} hook failed to run".format(hook_type))
                 logging.error("Returned exit code: {}".format(result.exitcode))
+                # Override message level response to bubble up error visibility
+                _output_level = logging.ERROR
             # only print stdout if there is content
             if result.stdout:
-                logging.info("Returned stdout: {}".format(result.stdout))
+                logging.log(_output_level,
+                            "Returned stdout: {}".format(result.stdout))
             # only print stderr if there is content
             if result.stderr:
-                logging.info("Returned stderr: {}".format(result.stderr))
+                logging.log(_output_level,
+                            "Returned stderr: {}".format(result.stderr))
 
     def rollback(self):
         """ Rollsback most recent release of the course chart """

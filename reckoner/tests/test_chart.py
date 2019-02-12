@@ -36,9 +36,14 @@ class TestChartHooks(unittest.TestCase):
         with self.assertRaises(ReckonerCommandException):
             self._chart.run_hook('pre_install')
 
-    @mock.patch('reckoner.chart.logging')
+    @mock.patch('reckoner.chart.logging', autospec=True)
     def test_logging_info_and_errors(self, mock_logging, mock_cmd_call, *args):
         """Verify we log the right info when call() fails and succeeds"""
+        # This is actually not a good test because it tightly couples the
+        # implementation of logging to the test. Not sure how to do this any
+        # better.
+        # What I really want to test is that we're sending our info to the cli
+        # user when hooks run.
         bad_response = mock.Mock(Response,
                                  exitcode=1,
                                  stderr='some error',
@@ -51,11 +56,12 @@ class TestChartHooks(unittest.TestCase):
                                   command_string='my --command')
         mock_cmd_call.side_effect = [good_response]
         self._chart.run_hook('pre_install')
-        self.assertEqual(mock_logging.error.call_count, 0)
-        self.assertTrue(mock_logging.info.call_count > 0)
+        mock_logging.error.assert_not_called()
+        mock_logging.info.assert_called()
 
         mock_cmd_call.side_effect = [bad_response, good_response]
         mock_logging.reset_mock()
         self._chart.run_hook('post_install')
-        self.assertTrue(mock_logging.error.call_count > 0)
-        self.assertTrue(mock_logging.info.call_count > 0)
+        mock_logging.error.assert_called()
+        mock_logging.info.assert_called()
+        mock_logging.log.assert_called()
