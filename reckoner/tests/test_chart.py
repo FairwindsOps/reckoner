@@ -66,13 +66,13 @@ class TestChartHooks(unittest.TestCase):
         mock_logging.info.assert_called()
         mock_logging.log.assert_called()
 
-    def test_skipping_due_to_local_development(self, mock_cmd_call, mock_config, *args):
-        """Verify that we do NOT run the actual calls when in local_development"""
+    def test_skipping_due_to_local_development(self, mock_cmd_call, *args):
+        """Verify skipping call() when in local_development"""
         self._chart.config.local_development = True
         self._chart.run_hook('pre_install')
         mock_cmd_call.assert_not_called()
 
-    def test_skipping_due_to_dryrun(self, mock_cmd_call, mock_config, *args):
+    def test_skipping_due_to_dryrun(self, mock_cmd_call, *args):
         """Verify that we do NOT run the actual calls when dryrun is enabled"""
         self._chart.config.dryrun = True
         self._chart.run_hook('pre_install')
