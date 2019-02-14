@@ -144,7 +144,12 @@ class Chart(object):
                 logging.info("Running {} hook...".format(hook_type))
 
             try:
-                result = call(command, shell=True, executable="/bin/bash")
+                result = call(
+                    command,
+                    shell=True,
+                    executable="/bin/bash",
+                    path=self.config.course_base_directory
+                )
             except Exception as error:
                 logging.error(error)
                 raise ReckonerCommandException(

@@ -47,12 +47,12 @@ class Course(object):
 
     """
 
-    def __init__(self, file):
+    def __init__(self, course_file):
         """
         Parse course.yml contents into instances.
         """
         self.config = Config()
-        self._dict = yaml.load(file)
+        self._dict = yaml.load(course_file)
         if not self.config.helm_args:
             self.config.helm_args = self._dict.get('helm_args')
         self.helm = HelmClient(default_helm_arguments=self.config.helm_args)

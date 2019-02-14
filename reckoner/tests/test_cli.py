@@ -57,10 +57,10 @@ class TestCliPlot(unittest.TestCase):
         reckoner_instance.install.side_effect = [None]
         runner = CliRunner()
         with runner.isolated_filesystem():
-            with open('nonexistant.file', 'w') as fake_file:
+            with open('nonexistent.file', 'wb') as fake_file:
                 fake_file.write('')
 
-            result = runner.invoke(cli.plot, args=['nonexistant.file'])
+            result = runner.invoke(cli.plot, args=['nonexistent.file'])
 
         self.assertEqual(0, result.exit_code, result.output)
         reckoner_instance.install.assert_called_once()
@@ -76,7 +76,7 @@ class TestCliPlot(unittest.TestCase):
                 '--local-development',
             ],
             'argument': [
-                'file',
+                'course_file',
             ]
         }
 

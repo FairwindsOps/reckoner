@@ -43,13 +43,14 @@ class Reckoner(object):
 
     """
 
-    def __init__(self, file=None, dryrun=False, debug=False, helm_args=None, local_development=False):
-
+    def __init__(self, course_file=None, dryrun=False, debug=False, helm_args=None, local_development=False):
         self.config = Config()
         self.config.dryrun = dryrun
         self.config.debug = debug
         self.config.local_development = local_development
         self.config.helm_args = helm_args
+        if course_file:
+            self.config.course_path = course_file.name
 
         if self.config.debug:
             logging.warn("The --debug flag will be deprecated.  Please use --helm-args or --dry-run instead.")
@@ -70,7 +71,7 @@ class Reckoner(object):
                 logging.error("Failed checking helm: See errors:\n{}".format(e))
                 sys.exit(1)
 
-        self.course = Course(file)
+        self.course = Course(course_file)
 
     def install(self, charts=[]):
         """

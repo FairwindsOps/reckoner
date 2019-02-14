@@ -13,8 +13,8 @@ from reckoner.exception import ReckonerCommandException
 # would be more easily mockable
 @mock.patch('reckoner.chart.call')
 class TestChartHooks(unittest.TestCase):
-    def setUp(self):
-        self._chart = Chart(
+    def get_chart(self, *args):
+        chart = Chart(
             {'name': {
                 'hooks': {
                     'pre_install': [
@@ -29,16 +29,37 @@ class TestChartHooks(unittest.TestCase):
             },
             None,
         )
+        chart.config.dryrun = False
+        chart.config.local_development = False
+
+        return chart
+
+    def test_execution_directory(self, mock_cmd_call, *args):
+        """Assert that we're executing in the same directory as the course yml"""
+        _path = '/path/where/course/lives/'
+        _fake_command = 'fake --command'
+        chart = self.get_chart()
+        chart.hooks = {
+            'pre_install': [
+                _fake_command
+            ]
+        }
+        chart.config.course_base_directory = _path
+        chart.run_hook('pre_install')
+        mock_cmd_call.assert_called_with(_fake_command, shell=True, executable='/bin/bash', path=_path)
 
     def test_caught_exceptions(self, mock_cmd_call, *args):
         """Assert that we raise the correct error if call() blows up"""
+        chart = self.get_chart()
         mock_cmd_call.side_effect = [Exception('holy smokes, an error!')]
         with self.assertRaises(ReckonerCommandException):
-            self._chart.run_hook('pre_install')
+            chart.run_hook('pre_install')
 
     @mock.patch('reckoner.chart.logging', autospec=True)
     def test_logging_info_and_errors(self, mock_logging, mock_cmd_call, *args):
         """Verify we log the right info when call() fails and succeeds"""
+        chart = self.get_chart()
+
         # This is actually not a good test because it tightly couples the
         # implementation of logging to the test. Not sure how to do this any
         # better.
@@ -55,25 +76,51 @@ class TestChartHooks(unittest.TestCase):
                                   stdout='some info',
                                   command_string='my --command')
         mock_cmd_call.side_effect = [good_response]
-        self._chart.run_hook('pre_install')
+        chart.run_hook('pre_install')
         mock_logging.error.assert_not_called()
         mock_logging.info.assert_called()
 
         mock_cmd_call.side_effect = [bad_response, good_response]
         mock_logging.reset_mock()
-        self._chart.run_hook('post_install')
+        chart.run_hook('post_install')
         mock_logging.error.assert_called()
         mock_logging.info.assert_called()
         mock_logging.log.assert_called()
 
     def test_skipping_due_to_local_development(self, mock_cmd_call, *args):
         """Verify skipping call() when in local_development"""
-        self._chart.config.local_development = True
-        self._chart.run_hook('pre_install')
+        chart = self.get_chart()
+
+        chart.config.local_development = True
+        chart.run_hook('pre_install')
         mock_cmd_call.assert_not_called()
 
     def test_skipping_due_to_dryrun(self, mock_cmd_call, *args):
         """Verify that we do NOT run the actual calls when dryrun is enabled"""
-        self._chart.config.dryrun = True
-        self._chart.run_hook('pre_install')
+        chart = self.get_chart()
+        chart.config.dryrun = True
+        chart.run_hook('pre_install')
         mock_cmd_call.assert_not_called()
+
+    def test_hooks_support_list(self, mock_cmd_call, *args):
+        """Assert that hooks can be defined as lists"""
+        chart = self.get_chart()
+        chart.hooks = {
+            'pre_install': [
+                'works',
+                'twice works',
+            ]
+        }
+
+        chart.run_hook('pre_install')
+        self.assertTrue(mock_cmd_call.call_count == 2)
+
+    def test_hooks_support_strings(self, mock_cmd_call, *args):
+        """Assert that hooks can be defined as a string"""
+        chart = self.get_chart()
+        chart.hooks = {
+            'pre_install': 'works'
+        }
+
+        chart.run_hook('pre_install')
+        mock_cmd_call.assert_called_once()

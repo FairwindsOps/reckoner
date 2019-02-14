@@ -269,7 +269,7 @@ class TestReckoner(TestBase):
         # os.chdir("../")
         self.configure_subprocess_mock(test_tiller_present_return_string, '', 0)
         with open(test_course) as f:
-            self.a = Reckoner(file=f, local_development=True)
+            self.a = Reckoner(course_file=f, local_development=True)
 
     # def tearDown(self):
     #     self.a = None
@@ -321,7 +321,7 @@ class TestChart(TestBase):
         super(type(self), self).setUp()
         self.configure_subprocess_mock(test_tiller_present_return_string, '', 0)
         with open(test_course) as f:
-            self.a = Reckoner(file=f, local_development=True)
+            self.a = Reckoner(course_file=f, local_development=True)
         self.charts = self.a.course.charts
 
     def test_releasename_is_different_than_chart_name(self):
