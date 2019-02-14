@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   value. If no values are in your course then this bubbles up an error
 * Internal Fix: Reckoner Errors now are a single parent exception class
 * Fixed hook output to user instead of hidden only in debug (#59)
+* Fixed hooks to run from the same path as course.yml. This makes PWD relative
+  to course.yml for easier groking of paths for hook pre/post install.
 
 ## [1.0.0]
 
