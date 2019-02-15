@@ -34,16 +34,17 @@ class Response(object):
     - exitcode
 
     Returns:
-    - Instance of Response() is truthy where Reponse.exitcode == 0
-    - Instance Response() is falsey where Reponse.exitcode != 0
+    - Instance of Response() is truthy where Response.exitcode == 0
+    - Instance Response() is falsey where Response.exitcode != 0
     """
 
-    def __init__(self, stdout, stderr, exitcode):
+    def __init__(self, stdout, stderr, exitcode, command_string):
 
         self._dict = {}
         self._dict['stdout'] = stdout
         self._dict['stderr'] = stderr
         self._dict['exitcode'] = exitcode
+        self._dict['command_string'] = command_string
 
     def __getattr__(self, name):
         return self._dict.get(name)
@@ -51,7 +52,8 @@ class Response(object):
     def __str__(self):
         return str(self._dict)
 
-    def __bool__(self):
+    # TODO Python3 candidate for migration to __bool__()
+    def __nonzero__(self):
         return not self._dict['exitcode']
 
     def __eq__(self, other):
@@ -79,4 +81,4 @@ def call(args, shell=False, executable=None):
     stdout, stderr = p.communicate()
     exitcode = p.returncode
 
-    return Response(stdout, stderr, exitcode)
+    return Response(stdout, stderr, exitcode, args_string)
