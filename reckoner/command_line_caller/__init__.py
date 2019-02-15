@@ -60,7 +60,7 @@ class Response(object):
         return self._dict == other._dict
 
 
-def call(args, shell=False, executable=None):
+def call(args, shell=False, executable=None, path=None):
     """
     Description:
     - Wrapper for subprocess.Popen. Joins `args` and passes
@@ -77,7 +77,7 @@ def call(args, shell=False, executable=None):
     else:
         args_string = ' '.join(args)
     logging.debug(args_string)
-    p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=shell, executable=executable)
+    p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=shell, executable=executable, cwd=path)
     stdout, stderr = p.communicate()
     exitcode = p.returncode
 

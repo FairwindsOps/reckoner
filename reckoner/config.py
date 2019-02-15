@@ -17,6 +17,7 @@
 
 import os
 import logging
+from os.path import dirname
 
 from .command_line_caller import call
 
@@ -66,6 +67,13 @@ class Config(object):
             self._config['archive'] = archive
 
         return self._config['archive']
+
+    @property
+    def course_base_directory(self):
+        if self.course_path:
+            return dirname(self.course_path)
+        else:
+            return None
 
     def __setattr__(self, name, value):
         object.__setattr__(self, name, value)

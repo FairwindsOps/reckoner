@@ -36,7 +36,7 @@ def cli(ctx, log_level, *args, **kwargs):
 
 @cli.command()
 @click.pass_context
-@click.argument('file', type=click.File('rb'))
+@click.argument('course_file', type=click.File('rb'))
 @click.option("--dry-run", is_flag=True, help='Pass --dry-run to helm so no action is taken. Implies --debug and '
                                               'skips hooks.')
 @click.option("--debug", is_flag=True, help='DEPRECATED - use --dry-run instead, or pass to --helm-args')
@@ -48,10 +48,10 @@ def cli(ctx, log_level, *args, **kwargs):
                                                                        'where Tiller is not required and no helm '
                                                                        'commands are run. Useful for rapid or offline '
                                                                        'development.')
-def plot(ctx, file=None, dry_run=False, debug=False, only=None, helm_args=None, local_development=False):
+def plot(ctx, course_file=None, dry_run=False, debug=False, only=None, helm_args=None, local_development=False):
     """ Install charts with given arguments as listed in yaml file argument """
     try:
-        h = Reckoner(file=file, dryrun=dry_run, debug=debug, helm_args=helm_args, local_development=local_development)
+        h = Reckoner(course_file=course_file, dryrun=dry_run, debug=debug, helm_args=helm_args, local_development=local_development)
         # Convert tuple to list
         only = list(only)
         h.install(only)
