@@ -19,11 +19,15 @@ class ReckonerException(Exception):
     pass
 
 
+class NoChartsToInstall(ReckonerException):
+    pass
+
+
 class MinimumVersionException(ReckonerException):
     pass
 
 
-class ReckonerCommandException(Exception):
+class ReckonerCommandException(ReckonerException):
 
     def __init__(self, msg, stdout=None, stderr=None, exitcode=None):
         self.message = msg
