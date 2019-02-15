@@ -19,7 +19,7 @@ class TestAllProviders(unittest.TestCase):
         for provider in self._list_of_providers:
             helm_cmd = HelmCommand('mocking-helm', ['--debug'])
             call_mock.side_effect = [
-                Response('stdout', 'stderr', 0)
+                Response('stdout', 'stderr', 0, None)
             ]
             inst = provider.execute(helm_cmd)
             assert call_mock.assert_called_once

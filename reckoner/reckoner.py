@@ -48,8 +48,8 @@ class Reckoner(object):
         self.config = Config()
         self.config.dryrun = dryrun
         self.config.debug = debug
-        self.config.helm_args = helm_args
         self.config.local_development = local_development
+        self.config.helm_args = helm_args
 
         if self.config.debug:
             logging.warn("The --debug flag will be deprecated.  Please use --helm-args or --dry-run instead.")
