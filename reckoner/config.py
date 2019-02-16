@@ -70,10 +70,7 @@ class Config(object):
 
     @property
     def course_base_directory(self):
-        if self.course_path:
-            return dirname(self.course_path)
-        else:
-            return None
+        return dirname(self.course_path) or None
 
     def __setattr__(self, name, value):
         object.__setattr__(self, name, value)
