@@ -21,11 +21,11 @@ import sys
 
 import oyaml as yaml
 
-from config import Config
-from chart import Chart
-from repository import Repository
-from exception import MinimumVersionException, ReckonerCommandException
-from helm.client import HelmClient, HelmClientException
+from .config import Config
+from .chart import Chart
+from .repository import Repository
+from .exception import MinimumVersionException, ReckonerCommandException, NoChartsToInstall
+from .helm.client import HelmClient, HelmClientException
 
 from meta import __version__ as reckoner_version
 
@@ -47,12 +47,12 @@ class Course(object):
 
     """
 
-    def __init__(self, file):
+    def __init__(self, course_file):
         """
         Parse course.yml contents into instances.
         """
         self.config = Config()
-        self._dict = yaml.load(file)
+        self._dict = yaml.load(course_file)
         if not self.config.helm_args:
             self.config.helm_args = self._dict.get('helm_args')
         self.helm = HelmClient(default_helm_arguments=self.config.helm_args)
@@ -103,7 +103,6 @@ class Course(object):
         charts in the course and calls Chart.install()
 
         """
-        _charts = []
         _failed_charts = []
         self._charts_to_install = []
 
@@ -115,6 +114,19 @@ class Course(object):
         for chart in self.charts:
             if chart.release_name in charts_to_install:
                 self._charts_to_install.append(chart)
+                charts_to_install.remove(chart.release_name)
+            else:
+                logging.debug(
+                    'Skipping {} in course.yml, not found '
+                    'in your requested charts list'.format(chart.release_name)
+                )
+
+        if len(self._charts_to_install) == 0:
+            raise NoChartsToInstall(
+                'No charts found from requested list ({}). They do not exist '
+                'in the course.yml. Verify you are using the release-name '
+                'and not the chart name.'.format(', '.join(charts_to_install))
+            )
 
         for chart in self._charts_to_install:
             logging.info("Installing {}".format(chart.release_name))
@@ -125,15 +137,24 @@ class Course(object):
                     logging.error(e.stderr)
                 if type(e) == Exception:
                     logging.error(e)
-                logging.error('Helm upgrade failed. Rolling back {}'.format(chart.release_name))
+                logging.error('Helm upgrade failed on {}'.format(chart.release_name))
                 logging.debug(traceback.format_exc())
-                chart.rollback
+                # chart.rollback #TODO Fix this - it doesn't actually fire or work
                 _failed_charts.append(chart)
 
         if _failed_charts:
-            logging.error("ERROR: Some charts failed to install and were rolled back")
+            logging.error("ERROR: Some charts failed to install.")
             for chart in _failed_charts:
                 logging.error(" - {}".format(chart.release_name))
+
+        if charts_to_install:
+            for missing_chart in charts_to_install:
+                logging.warning(
+                    'Could not find {} in course.yml'.format(missing_chart)
+                )
+            logging.warning('Some of the requested charts were not found in '
+                            'your course.yml')
+
         return True
 
     def _compare_required_versions(self):

@@ -15,14 +15,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
 import coloredlogs
 import click
-import shutil
-from reckoner import Reckoner
-import pkg_resources
-
-from meta import __version__
+from .reckoner import Reckoner
+import exception
+from .meta import __version__
 
 
 @click.group(invoke_without_command=True)
@@ -39,7 +36,7 @@ def cli(ctx, log_level, *args, **kwargs):
 
 @cli.command()
 @click.pass_context
-@click.argument('file', type=click.File('rb'))
+@click.argument('course_file', type=click.File('rb'))
 @click.option("--dry-run", is_flag=True, help='Pass --dry-run to helm so no action is taken. Implies --debug and '
                                               'skips hooks.')
 @click.option("--debug", is_flag=True, help='DEPRECATED - use --dry-run instead, or pass to --helm-args')
@@ -51,10 +48,16 @@ def cli(ctx, log_level, *args, **kwargs):
                                                                        'where Tiller is not required and no helm '
                                                                        'commands are run. Useful for rapid or offline '
                                                                        'development.')
-def plot(ctx, file=None, dry_run=False, debug=False, only=None, helm_args=None, local_development=False):
+def plot(ctx, course_file=None, dry_run=False, debug=False, only=None, helm_args=None, local_development=False):
     """ Install charts with given arguments as listed in yaml file argument """
-    h = Reckoner(file=file, dryrun=dry_run, debug=debug, helm_args=helm_args, local_development=local_development)
-    h.install(only)
+    try:
+        h = Reckoner(course_file=course_file, dryrun=dry_run, debug=debug, helm_args=helm_args, local_development=local_development)
+        # Convert tuple to list
+        only = list(only)
+        h.install(only)
+    except exception.ReckonerException:
+        # This handles exceptions cleanly, no expected stack traces from reckoner code
+        ctx.exit(1)
 
 
 @cli.command()

@@ -130,30 +130,59 @@ class Chart(object):
 
     def run_hook(self, hook_type):
         """ Hook Type. Runs the commands defined by the hook """
-        commands = self.__get_hook(hook_type)
+        commands = self._get_hook(hook_type)
         if commands is None:
             return commands
         if type(commands) == str:
             commands = [commands]
 
-        for com in commands:
+        for command in commands:
             if self.config.local_development or self.config.dryrun:
-                logging.info("Hook not run due to --dry-run: {}".format(com))
+                logging.warning("Hook not run due to --dry-run: {}".format(command))
                 continue
             else:
-                logging.info("Running {} hook.".format(hook_type))
+                logging.info("Running {} hook...".format(hook_type))
 
             try:
-                r = call(com, shell=True, executable="/bin/bash")
-                logging.debug(r)
-            except ReckonerCommandException, e:
+                result = call(
+                    command,
+                    shell=True,
+                    executable="/bin/bash",
+                    path=self.config.course_base_directory
+                )
+            except Exception as error:
+                logging.error(error)
+                raise ReckonerCommandException(
+                    "Uncaught exception while running hook "
+                    "'{}'".format(command)
+                )
+
+            logging.info("Ran Hook: '{}'".format(result.command_string))
+            _output_level = logging.INFO  # The level to log the command output
+
+            # HACK We're not relying opon the truthiness of this object due to
+            # the inability to mock is well in code
+            # Python 3 may have better mocking functionality or we should
+            # refactor to leverage more method on the function for .succeeded()
+            # or something similar.
+            if result.exitcode == 0:
+                logging.info("{} hook ran successfully".format(hook_type))
+            else:
                 logging.error("{} hook failed to run".format(hook_type))
-                logging.debug('Hook stderr {}'.format(e.stderr))
-                raise e
+                logging.error("Returned exit code: {}".format(result.exitcode))
+                # Override message level response to bubble up error visibility
+                _output_level = logging.ERROR
+            # only print stdout if there is content
+            if result.stdout:
+                logging.log(_output_level,
+                            "Returned stdout: {}".format(result.stdout))
+            # only print stderr if there is content
+            if result.stderr:
+                logging.log(_output_level,
+                            "Returned stderr: {}".format(result.stderr))
 
     def rollback(self):
         """ Rollsback most recent release of the course chart """
-
         release = [release for release in self.helm.releases.deployed if release.name == self._release_name][0]
         if release:
             release.rollback()
@@ -204,7 +233,7 @@ class Chart(object):
         self.build_helm_arguments_for_chart()
 
         # Check and Error if we're missing required env vars
-        self.__check_env_vars()
+        self._check_env_vars()
 
         # Perform the upgrade with the arguments
         try:
@@ -268,30 +297,6 @@ class Chart(object):
 
         # Build the list of --set-string arguments
         self.build_set_string_arguments()
-
-    def _merge_set_and_values(self):
-        """
-        This is a temporary method that will be gone once the values: vs set:
-        debacle has been resolved. (See https://github.com/reactiveops/reckoner/issues/7)
-
-        NOTE ONLY RUN THIS ONCE BECAUSE IT'S NOT IDEMPOTENT
-        """
-        if self._hack_set_values_already_merged:
-            raise StandardError('This method cannot be called twice. '
-                                'If you are seeing this please open an '
-                                'issue in github.')
-
-        def merge_dicts(values, sets):
-            """This does a dict merge and prefers "sets" values"""
-            new_dict = values.copy()
-            new_dict.update(sets)
-            return new_dict
-
-        logging.debug('Merging values: into sets: - sets: take precedence.')
-        logging.debug('Original value of sets: {}'.format(self.set_values))
-        self.set_values = merge_dicts(self.values, self.set_values)
-        logging.debug('New value of sets: {}'.format(self.set_values))
-        self._hack_set_values_already_merged = True
 
     def build_temp_values_files(self):
         """
@@ -372,14 +377,38 @@ class Chart(object):
     def __getattr__(self, key):
         return self._chart.get(key)
 
+    def _merge_set_and_values(self):
+        """
+        This is a temporary method that will be gone once the values: vs set:
+        debacle has been resolved. (See https://github.com/reactiveops/reckoner/issues/7)
+
+        NOTE ONLY RUN THIS ONCE BECAUSE IT'S NOT IDEMPOTENT
+        """
+        if self._hack_set_values_already_merged:
+            raise StandardError('This method cannot be called twice. '
+                                'If you are seeing this please open an '
+                                'issue in github.')
+
+        def merge_dicts(values, sets):
+            """This does a dict merge and prefers "sets" values"""
+            new_dict = values.copy()
+            new_dict.update(sets)
+            return new_dict
+
+        logging.debug('Merging values: into sets: - sets: take precedence.')
+        logging.debug('Original value of sets: {}'.format(self.set_values))
+        self.set_values = merge_dicts(self.values, self.set_values)
+        logging.debug('New value of sets: {}'.format(self.set_values))
+        self._hack_set_values_already_merged = True
+
     def __str__(self):
         return str(dict(self._chart))
 
-    def __get_hook(self, hook_type):
+    def _get_hook(self, hook_type):
         if self.hooks is not None:
             return self.hooks.get(hook_type)
 
-    def __check_env_vars(self):
+    def _check_env_vars(self):
         """
         accepts list of args
         if any of those appear to be env vars

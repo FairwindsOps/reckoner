@@ -29,6 +29,7 @@ from reckoner.config import Config
 from reckoner.course import Course
 from reckoner.repository import Repository
 from reckoner.helm.client import HelmClient
+from reckoner import exception
 
 
 class TestBase(unittest.TestCase):
@@ -93,6 +94,51 @@ class TestReckonerMethods(TestBase):
         install_response = reckoner_instance.install()
         self.assertIsInstance(install_response, bool)
         self.assertTrue(install_response)
+
+
+class TestCourseMocks(unittest.TestCase):
+    @mock.patch('reckoner.course.yaml', autospec=True)
+    @mock.patch('reckoner.course.HelmClient', autospec=True)
+    def test_raises_errors_when_missing_heading(self, mock_helm, mock_yaml):
+        course_yml = {
+            'namespace': 'fake',
+            'charts': {
+                'fake-chart': {
+                    'chart': 'none',
+                    'version': 'none',
+                    'repository': 'none',
+                }
+            }
+        }
+
+        mock_yaml.load.side_effect = [course_yml]
+        helm_instance = mock_helm()
+        helm_instance.client_version = '0.0.0'
+
+        instance = reckoner.course.Course(None)
+        with self.assertRaises(exception.NoChartsToInstall):
+            instance.plot(['a-chart-that-is-not-defined'])
+
+    @mock.patch('reckoner.course.yaml', autospec=True)
+    @mock.patch('reckoner.course.HelmClient', autospec=True)
+    def test_passes_if_any_charts_exist(self, mock_helm, mock_yaml):
+        course_yml = {
+            'namespace': 'fake',
+            'charts': {
+                'fake-chart': {
+                    'chart': 'none',
+                    'version': 'none',
+                    'repository': 'none',
+                }
+            }
+        }
+
+        mock_yaml.load.side_effect = [course_yml]
+        helm_instance = mock_helm()
+        helm_instance.client_version = '0.0.0'
+
+        instance = reckoner.course.Course(None)
+        self.assertTrue(instance.plot(['a-chart-that-is-not-defined', 'fake-chart']))
 
 
 test_course = "./tests/test_course.yml"
@@ -223,7 +269,7 @@ class TestReckoner(TestBase):
         # os.chdir("../")
         self.configure_subprocess_mock(test_tiller_present_return_string, '', 0)
         with open(test_course) as f:
-            self.a = Reckoner(file=f, local_development=True)
+            self.a = Reckoner(course_file=f, local_development=True)
 
     # def tearDown(self):
     #     self.a = None
@@ -275,7 +321,7 @@ class TestChart(TestBase):
         super(type(self), self).setUp()
         self.configure_subprocess_mock(test_tiller_present_return_string, '', 0)
         with open(test_course) as f:
-            self.a = Reckoner(file=f, local_development=True)
+            self.a = Reckoner(course_file=f, local_development=True)
         self.charts = self.a.course.charts
 
     def test_releasename_is_different_than_chart_name(self):

@@ -34,16 +34,17 @@ class Response(object):
     - exitcode
 
     Returns:
-    - Instance of Response() is truthy where Reponse.exitcode == 0
-    - Instance Response() is falsey where Reponse.exitcode != 0
+    - Instance of Response() is truthy where Response.exitcode == 0
+    - Instance Response() is falsey where Response.exitcode != 0
     """
 
-    def __init__(self, stdout, stderr, exitcode):
+    def __init__(self, stdout, stderr, exitcode, command_string):
 
         self._dict = {}
         self._dict['stdout'] = stdout
         self._dict['stderr'] = stderr
         self._dict['exitcode'] = exitcode
+        self._dict['command_string'] = command_string
 
     def __getattr__(self, name):
         return self._dict.get(name)
@@ -51,14 +52,15 @@ class Response(object):
     def __str__(self):
         return str(self._dict)
 
-    def __bool__(self):
+    # TODO Python3 candidate for migration to __bool__()
+    def __nonzero__(self):
         return not self._dict['exitcode']
 
     def __eq__(self, other):
         return self._dict == other._dict
 
 
-def call(args, shell=False, executable=None):
+def call(args, shell=False, executable=None, path=None):
     """
     Description:
     - Wrapper for subprocess.Popen. Joins `args` and passes
@@ -75,8 +77,8 @@ def call(args, shell=False, executable=None):
     else:
         args_string = ' '.join(args)
     logging.debug(args_string)
-    p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=shell, executable=executable)
+    p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=shell, executable=executable, cwd=path)
     stdout, stderr = p.communicate()
     exitcode = p.returncode
 
-    return Response(stdout, stderr, exitcode)
+    return Response(stdout, stderr, exitcode, args_string)
