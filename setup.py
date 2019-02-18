@@ -39,7 +39,7 @@ setup(name='reckoner',
       license='Apache2.0',
       include_package_data=True,
       data_files=[],
-      packages=find_packages(exclude=['test']),
+      packages=find_packages(exclude=('tests','*.tests')),
       install_requires=[
         "click==6.7",
         "PyYAML==4.2b1",
