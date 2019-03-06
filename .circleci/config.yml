@@ -79,7 +79,7 @@ jobs:
             cd installer
             pyinstaller -y -p .:../ -F -n reckoner cli.py
       - store_artifacts:
-        path: installer/dist/reckoner
+          path: installer/dist/reckoner
 
 workflows:
   version: 2
