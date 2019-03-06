@@ -76,6 +76,7 @@ jobs:
           name: build binary for linux
           command: |
             sudo pip install pyinstaller
+            sudo pip install .
             cd installer
             pyinstaller -y -p .:../ -F -n reckoner cli.py
       - store_artifacts:
