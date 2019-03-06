@@ -66,6 +66,21 @@ jobs:
             python setup.py sdist bdist_wheel
             twine upload dist/*
 
+  compile:
+    docker:
+      - image: circleci/python:2
+    working_directory: ~/reckoner
+    steps:
+      - checkout
+      - run:
+          name: build binary for linux
+          command: |
+            sudo pip install pyinstaller
+            cd installer
+            pyinstaller -y -p .:../ -F -n reckoner cli.py
+      - store_artifacts:
+        path: installer/dist/reckoner
+
 workflows:
   version: 2
   build:
@@ -84,5 +99,12 @@ workflows:
               only: /.*/
             branches:
               ignore: /.*/
-
-
+      - compile:
+          requires:
+            - release
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              only:
+              - nh/adding-pyinstaller
