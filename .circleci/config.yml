@@ -83,6 +83,27 @@ jobs:
           path: installer/dist/reckoner
           destination: reckoner_linux_amd64
 
+  mac-compile:
+    macos:
+      xcode: "10.2.0"
+    working_directory: ~/reckoner
+    steps:
+      - checkout
+      - run:
+          name: build binary for os x
+          command: |
+            which python || echo no python
+            python --version || echo no python cmd
+            python3 --version || echo no python3 cmd
+            which pip || echo no pip
+            sudo pip install pyinstaller
+            sudo pip install .
+            cd installer
+            pyinstaller -y -p .:../ -F -n reckoner cli.py
+      - store_artifacts:
+          path: installer/dist/reckoner
+          destination: reckoner_linux_amd64
+
 workflows:
   version: 2
   build:
@@ -102,6 +123,15 @@ workflows:
             branches:
               ignore: /.*/
       - compile:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              only:
+              - nh/adding-pyinstaller
+      - mac-compile:
           requires:
             - build
           filters:
