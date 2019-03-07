@@ -37,8 +37,6 @@ setup(name='reckoner',
       author_email='service@reactiveops.com',
       url='http://reactiveops.com/',
       license='Apache2.0',
-      include_package_data=True,
-      data_files=[],
       packages=find_packages(exclude=('tests','*.tests')),
       install_requires=[
         "click==6.7",
