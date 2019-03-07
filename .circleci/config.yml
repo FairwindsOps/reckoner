@@ -81,6 +81,7 @@ jobs:
             pyinstaller -y -p .:../ -F -n reckoner cli.py
       - store_artifacts:
           path: installer/dist/reckoner
+          destination: reckoner_linux_amd64
 
 workflows:
   version: 2
