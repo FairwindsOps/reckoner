@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.0.2]
+
+### Fixed
+* Fixed hook runner behavior: Previous to v1.0.0, the hooks would stop running
+  after the first non-zero exit code. This behavior broke with some refactoring
+* Added tests to catch run-hook behavior
+
 ## [1.0.1]
 
 ### Fixed

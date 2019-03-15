@@ -151,27 +151,30 @@ class Chart(object):
                     path=self.config.course_base_directory
                 )
             except Exception as error:
+                # NOTE This block is only used when we cannot send the call or
+                #      have other unexpected errors running the command.
+                #      The call()->Response should pass a Response object back
+                #      even when the exit code != 0.
+                logging.error("Critical Error running the command hook.")
                 logging.error(error)
                 raise ReckonerCommandException(
                     "Uncaught exception while running hook "
                     "'{}'".format(command)
                 )
 
+            command_successful = result.exitcode == 0
+
             logging.info("Ran Hook: '{}'".format(result.command_string))
             _output_level = logging.INFO  # The level to log the command output
 
-            # HACK We're not relying opon the truthiness of this object due to
-            # the inability to mock is well in code
-            # Python 3 may have better mocking functionality or we should
-            # refactor to leverage more method on the function for .succeeded()
-            # or something similar.
-            if result.exitcode == 0:
+            if command_successful:
                 logging.info("{} hook ran successfully".format(hook_type))
             else:
                 logging.error("{} hook failed to run".format(hook_type))
                 logging.error("Returned exit code: {}".format(result.exitcode))
                 # Override message level response to bubble up error visibility
                 _output_level = logging.ERROR
+
             # only print stdout if there is content
             if result.stdout:
                 logging.log(_output_level,
@@ -180,6 +183,14 @@ class Chart(object):
             if result.stderr:
                 logging.log(_output_level,
                             "Returned stderr: {}".format(result.stderr))
+
+            # Always raise an error after failures
+            if not command_successful:
+                raise ReckonerCommandException(
+                    "Hook ({}) failed to run".format(result.command_string),
+                    stdout=result.stdout,
+                    stderr=result.stderr,
+                )
 
     def rollback(self):
         """ Rollsback most recent release of the course chart """
