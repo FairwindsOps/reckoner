@@ -59,6 +59,7 @@ class Course(object):
         self.helm = HelmClient(default_helm_arguments=self.config.helm_args)
         self._repositories = []
         self._charts = []
+        self._failed_charts = []
         for name, repository in self._dict.get('repositories', {}).iteritems():
             repository['name'] = name
             self._repositories.append(Repository(repository, self.helm))
@@ -97,6 +98,10 @@ class Course(object):
         """ List of Chart() instances """
         return self._charts
 
+    @property
+    def failed_charts(self):
+        return self._failed_charts
+
     def plot(self, charts_to_install):
         """
         Accepts charts_to_install, an interable of the names of the charts
@@ -104,7 +109,6 @@ class Course(object):
         charts in the course and calls Chart.install()
 
         """
-        _failed_charts = []
         self._charts_to_install = []
 
         try:
@@ -141,11 +145,11 @@ class Course(object):
                 logging.error('Helm upgrade failed on {}'.format(chart.release_name))
                 logging.debug(traceback.format_exc())
                 # chart.rollback #TODO Fix this - it doesn't actually fire or work
-                _failed_charts.append(chart)
+                self.failed_charts.append(chart)
 
-        if _failed_charts:
+        if self.failed_charts:
             logging.error("ERROR: Some charts failed to install.")
-            for chart in _failed_charts:
+            for chart in self.failed_charts:
                 logging.error(" - {}".format(chart.release_name))
 
         if charts_to_install:

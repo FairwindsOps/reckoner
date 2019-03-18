@@ -14,8 +14,8 @@
 
 import mock
 import unittest
-from reckoner.exception import MinimumVersionException
 from reckoner.course import Course
+from reckoner.command_line_caller import Response
 
 
 @mock.patch('reckoner.repository.Repository', autospec=True)
@@ -73,3 +73,40 @@ class TestMinVersion(unittest.TestCase):
 
         sysMock.exit.assert_called_once
         return True
+
+
+@mock.patch('reckoner.chart.call', autospec=True)
+@mock.patch('reckoner.repository.Repository', autospec=True)
+@mock.patch('reckoner.course.sys')
+@mock.patch('reckoner.course.yaml', autospec=True)
+@mock.patch('reckoner.course.HelmClient', autospec=True)
+@mock.patch('reckoner.course.Config', autospec=True)
+class TestIntegrationWithChart(unittest.TestCase):
+    def test_failed_pre_install_hooks_fail_chart_installation(self, configMock, helmClientMock, yamlLoadMock, sysMock, repoMock, chartCallMock):
+        """Test that the chart isn't installed when the pre_install hooks return any non-zero responses. This also assures we don't raise python errors with hook errors."""
+        c = configMock()
+        c.helm_args = ['provided args']
+        c.local_development = False
+
+        h = helmClientMock()
+        h.client_version = '0.0.1'
+
+        yamlLoadMock.load.return_value = {
+            'charts': {
+                'first-chart': {
+                    'hooks': {
+                        'pre_install': [
+                            'run a failed command here',
+                        ]
+                    }
+                }
+            }
+        }
+
+        chartCallMock.return_value = Response(exitcode=1, command_string='mocked', stderr=' ', stdout=' ')
+
+        course = Course(None)
+        course.plot(['first-chart'])
+
+        self.assertEqual(chartCallMock.call_count, 1)
+        self.assertEqual(len(course.failed_charts), 1, "We should have only one failed chart install due to hook failure.")

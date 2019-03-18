@@ -59,6 +59,7 @@ class TestChartHooks(unittest.TestCase):
             ]
         }
         chart.config.course_base_directory = _path
+        mock_cmd_call.side_effect = [Response(command_string=_fake_command, stderr='err-output', stdout='output', exitcode=0)]
         chart.run_hook('pre_install')
         mock_cmd_call.assert_called_with(_fake_command, shell=True, executable='/bin/bash', path=_path)
 
@@ -68,6 +69,31 @@ class TestChartHooks(unittest.TestCase):
         mock_cmd_call.side_effect = [Exception('holy smokes, an error!')]
         with self.assertRaises(ReckonerCommandException):
             chart.run_hook('pre_install')
+
+    def test_raises_error_when_any_hook_fails(self, mock_cmd_call, *args):
+        """Assert that we raise an error when commands fail and we don't run subsequent commands."""
+        good_response = Response(
+            exitcode=0,
+            stderr='',
+            stdout='some info',
+            command_string='my --command',
+        )
+        bad_response = Response(
+            exitcode=127,
+            stderr='found exit code 127 set in test mock',
+            stdout='here would be stdout',
+            command_string='mock --command',
+        )
+
+        chart = self.get_chart()
+        chart.hooks['pre_install'] = ['', '', '']
+
+        mock_cmd_call.side_effect = [good_response, bad_response, good_response]
+
+        with self.assertRaises(ReckonerCommandException):
+            chart.run_hook('pre_install')
+
+        self.assertEqual(mock_cmd_call.call_count, 2, "Call two should fail and not run the third hook.")
 
     @mock.patch('reckoner.chart.logging', autospec=True)
     def test_logging_info_and_errors(self, mock_logging, mock_cmd_call, *args):
@@ -94,9 +120,10 @@ class TestChartHooks(unittest.TestCase):
         mock_logging.error.assert_not_called()
         mock_logging.info.assert_called()
 
-        mock_cmd_call.side_effect = [bad_response, good_response]
+        mock_cmd_call.side_effect = [good_response, bad_response]
         mock_logging.reset_mock()
-        chart.run_hook('post_install')
+        with self.assertRaises(ReckonerCommandException):
+            chart.run_hook('post_install')
         mock_logging.error.assert_called()
         mock_logging.info.assert_called()
         mock_logging.log.assert_called()
@@ -126,6 +153,10 @@ class TestChartHooks(unittest.TestCase):
             ]
         }
 
+        mock_cmd_call.side_effect = [
+            Response(command_string='command', stderr='err-output', stdout='output', exitcode=0),
+            Response(command_string='command', stderr='err-output', stdout='output', exitcode=0),
+        ]
         chart.run_hook('pre_install')
         self.assertTrue(mock_cmd_call.call_count == 2)
 
@@ -136,5 +167,6 @@ class TestChartHooks(unittest.TestCase):
             'pre_install': 'works'
         }
 
+        mock_cmd_call.side_effect = [Response(command_string='command', stderr='err-output', stdout='output', exitcode=0)]
         chart.run_hook('pre_install')
         mock_cmd_call.assert_called_once()
