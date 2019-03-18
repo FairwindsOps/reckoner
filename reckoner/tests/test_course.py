@@ -103,9 +103,10 @@ class TestIntegrationWithChart(unittest.TestCase):
             }
         }
 
-        chartCallMock.side_effects = [Response(exitcode=1, command_string='mocked', stderr=' ', stdout=' ')]
+        chartCallMock.return_value = Response(exitcode=1, command_string='mocked', stderr=' ', stdout=' ')
 
         course = Course(None)
         course.plot(['first-chart'])
 
+        self.assertEqual(chartCallMock.call_count, 1)
         self.assertEqual(len(course.failed_charts), 1, "We should have only one failed chart install due to hook failure.")
