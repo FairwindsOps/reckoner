@@ -28,7 +28,7 @@ jobs:
             sudo pip install .
             reckoner --version
             sudo pip install -r tests/requirements.txt
-            nose2
+            pytest
       - setup_remote_docker
       - run:
           name: Build Docker Image
@@ -84,5 +84,3 @@ workflows:
               only: /.*/
             branches:
               ignore: /.*/
-
-
