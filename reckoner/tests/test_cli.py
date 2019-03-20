@@ -72,7 +72,7 @@ class TestCliPlot(unittest.TestCase):
         runner = CliRunner()
         with runner.isolated_filesystem():
             with open('nonexistent.file', 'wb') as fake_file:
-                fake_file.write('')
+                fake_file.write(''.encode())
 
             result = runner.invoke(cli.plot, args=['nonexistent.file'])
 

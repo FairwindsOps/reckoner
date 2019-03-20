@@ -17,7 +17,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/python:2
+      - image: circleci/python:3
     environment: ~
     working_directory: ~/reckoner
     steps:
@@ -38,7 +38,7 @@ jobs:
             
   release:
     docker:
-      - image: circleci/python:2
+      - image: circleci/python:3
     environment:
       PYPI_USERNAME: ReactiveOps
       GITHUB_ORGANIZATION: $CIRCLE_PROJECT_USERNAME

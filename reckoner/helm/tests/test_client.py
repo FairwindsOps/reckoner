@@ -192,10 +192,10 @@ incubator       https://kubernetes-charts-incubator.storage.googleapis.com
              'expected': []}
         ]
 
-        filter = HelmClient._clean_non_global_flags
+        helm_filter = HelmClient._clean_non_global_flags
         for example in examples:
-            list(filter(example['original']))
-            self.assertItemsEqual(example['expected'], example['original'])
+            helm_filter(example['original'])
+            self.assertEqual(example['expected'], example['original'])
 
     def test_rollback(self):
         with self.assertRaises(NotImplementedError):
