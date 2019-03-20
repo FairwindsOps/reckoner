@@ -28,7 +28,7 @@ from .repository import Repository
 from .exception import MinimumVersionException, ReckonerCommandException, NoChartsToInstall
 from .helm.client import HelmClient, HelmClientException
 
-from meta import __version__ as reckoner_version
+from .meta import __version__ as reckoner_version
 
 
 class Course(object):
@@ -60,11 +60,11 @@ class Course(object):
         self._repositories = []
         self._charts = []
         self._failed_charts = []
-        for name, repository in self._dict.get('repositories', {}).iteritems():
+        for name, repository in self._dict.get('repositories', {}).items():
             repository['name'] = name
             self._repositories.append(Repository(repository, self.helm))
 
-        for name, chart in self._dict.get('charts', {}).iteritems():
+        for name, chart in self._dict.get('charts', {}).items():
             self._charts.append(Chart({name: chart}, self.helm))
 
         for repo in self._repositories:
@@ -137,7 +137,7 @@ class Course(object):
             logging.info("Installing {}".format(chart.release_name))
             try:
                 chart.install(namespace=self.namespace, context=self.context)
-            except (Exception, ReckonerCommandException), e:
+            except (Exception, ReckonerCommandException) as e:
                 if type(e) == ReckonerCommandException:
                     logging.error(e.stderr)
                 if type(e) == Exception:

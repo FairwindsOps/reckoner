@@ -60,7 +60,7 @@ class TestCli(unittest.TestCase):
         result = runner.invoke(cli.cli)
 
         self.assertEqual(1, result.exit_code)
-        self.assertNotEqual(u'', result.output)
+        self.assertNotEqual('', result.output)
 
 
 class TestCliPlot(unittest.TestCase):
@@ -100,12 +100,12 @@ class TestCliPlot(unittest.TestCase):
 def assert_required_params(required_options, list_of_cli_params):
     all_params = {}
     for param in list_of_cli_params:
-        if param.param_type_name not in all_params.keys():
+        if param.param_type_name not in list(all_params.keys()):
             all_params[param.param_type_name] = []
         [all_params[param.param_type_name].append(opt) for opt in param.opts]
 
-    for opt_type, opt_type_list in required_options.items():
-        assert opt_type in all_params.keys(), "Missing option type '{}' from cli params. Check if an argument or option was removed.".format(opt_type)
+    for opt_type, opt_type_list in list(required_options.items()):
+        assert opt_type in list(all_params.keys()), "Missing option type '{}' from cli params. Check if an argument or option was removed.".format(opt_type)
         for opt in opt_type_list:
             assert opt in all_params[opt_type], "Option '{}' of type '{}' may be missing. Consider this contract broken and version bumping if you intend to remove the param.".format(
                 opt, opt_type)

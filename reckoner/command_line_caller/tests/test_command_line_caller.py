@@ -25,7 +25,7 @@ class TestResponse(unittest.TestCase):
             'command_string': 'command -that -ran',
         }
         response = Response(**required_attrs)
-        for attr, value in required_attrs.items():
+        for attr, value in list(required_attrs.items()):
             self.assertEqual(getattr(response, attr), value)
 
     def test_bool(self):

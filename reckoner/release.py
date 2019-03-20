@@ -15,7 +15,7 @@
 # NOTE This isn't actually used afaik - it's brought over from original helm.py
 # The only functionality that is referenced is rollback. I am keeping it in here
 # for later refactor when we address Rollback functionality again
-from helm.client import HelmClient
+from .helm.client import HelmClient
 
 
 class Releases(object):

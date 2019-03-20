@@ -20,11 +20,11 @@ import os
 from collections import OrderedDict
 from string import Template
 
-from exception import ReckonerCommandException
-from config import Config
-from repository import Repository
-from helm.client import HelmClientException
-from command_line_caller import call
+from .exception import ReckonerCommandException
+from .config import Config
+from .repository import Repository
+from .helm.client import HelmClientException
+from .command_line_caller import call
 
 default_repository = {'name': 'stable', 'url': 'https://kubernetes-charts.storage.googleapis.com'}
 
@@ -53,7 +53,7 @@ class Chart(object):
     def __init__(self, chart, helm):
         self.helm = helm
         self.config = Config()
-        self._release_name = chart.keys()[0]
+        self._release_name = list(chart.keys())[0]
         self._chart = chart[self._release_name]
         self._repository = Repository(self._chart.get('repository', default_repository), self.helm)
         self._chart['values'] = self._chart.get('values', {})
@@ -207,7 +207,7 @@ class Chart(object):
             try:
                 response = self.helm.dependency_update(self.repository.chart_path)
                 logging.debug(response.stderr + "\n" + response.stdout)
-            except ReckonerCommandException, error:
+            except ReckonerCommandException as error:
                 logging.warn("Unable to update chart dependencies: {}".format(error.stderr))
 
     def install(self, namespace=None, context=None):
@@ -252,7 +252,7 @@ class Chart(object):
             helm_command_response = self.helm.upgrade(self.args)
             # Log the stdout response in info
             logging.info(helm_command_response.stdout)
-        except HelmClientException, error:
+        except HelmClientException as error:
             logging.error(error)
             return
 
@@ -339,7 +339,7 @@ class Chart(object):
 
         Note running this multiple times will provide duplicate arguments
         """
-        for key, value in self.values_strings.iteritems():
+        for key, value in self.values_strings.items():
             for k, v in self._format_set(key, value):
                 self.args.append("--set-string={}={}".format(k, v))
 
@@ -351,7 +351,7 @@ class Chart(object):
 
         Note running this multiple times will provide duplicate arguments
         """
-        for key, value in self.set_values.iteritems():
+        for key, value in self.set_values.items():
             for k, v in self._format_set(key, value):
                 self.args.append("--set={}={}".format(k, v))
 
@@ -362,7 +362,7 @@ class Chart(object):
         formats the string properly
         """
         if type(value) in [dict, OrderedDict]:
-            for new_key, new_value in value.iteritems():
+            for new_key, new_value in value.items():
                 for k, v in self._format_set("{}.{}".format(key, new_key), new_value):
                     for a, b in self._format_set_list(k, v):
                         yield a, b
@@ -396,7 +396,7 @@ class Chart(object):
         NOTE ONLY RUN THIS ONCE BECAUSE IT'S NOT IDEMPOTENT
         """
         if self._hack_set_values_already_merged:
-            raise StandardError('This method cannot be called twice. '
+            raise Exception('This method cannot be called twice. '
                                 'If you are seeing this please open an '
                                 'issue in github.')
 
@@ -428,5 +428,5 @@ class Chart(object):
         """
         try:
             self.args = [Template(arg).substitute(os.environ) for arg in self.args]
-        except KeyError, e:
+        except KeyError as e:
             raise Exception("Missing requirement environment variable: {}".format(e.args[0]))

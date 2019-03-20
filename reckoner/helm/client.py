@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from provider import HelmProvider
-from command import HelmCommand
+from .provider import HelmProvider
+from .command import HelmCommand
 from reckoner.command_line_caller import Response
 import re
 import logging
@@ -78,7 +78,7 @@ class HelmClient(object):
         raw_repositories = self.execute('repo', ['list'], filter_non_global_flags=True).stdout
         for line in raw_repositories.splitlines():
             # Try to filter out the header line as a viable repo name
-            if HelmClient.repository_header_regex.match(line):
+            if HelmClient.repository_header_regex.match(str(line)):
                 continue
             # If the line is blank
             if not line:
@@ -163,7 +163,7 @@ class HelmClient(object):
 
     @staticmethod
     def _find_version(raw_version):
-        ver = HelmClient.version_regex.search(raw_version)
+        ver = HelmClient.version_regex.search(str(raw_version))
         if ver:
             return ver.group(1)
         else:

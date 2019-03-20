@@ -60,7 +60,7 @@ class Reckoner(object):
 
         try:
             self.helm = HelmClient(default_helm_arguments=self.config.helm_args)
-        except Exception, e:
+        except Exception as e:
             logging.error(e)
             sys.exit(1)
 
@@ -68,7 +68,7 @@ class Reckoner(object):
             try:
                 self.helm.check_helm_command()
                 self.helm.server_version
-            except HelmClientException, e:
+            except HelmClientException as e:
                 logging.error("Failed checking helm: See errors:\n{}".format(e))
                 sys.exit(1)
 
