@@ -126,6 +126,7 @@ Hooks are run locally. For complex hooks, use an external script or Runner task.
 ```
 charts:
   chart_name:
+    hooks:
       pre_install:
         - ls
         - env
