@@ -40,7 +40,6 @@ setup(name='reckoner',
       packages=find_packages(exclude=('tests','*.tests')),
       install_requires=[
         "click==6.7",
-        "PyYAML>=5.0",
         "GitPython==2.1.3",
         "oyaml>=0.8",
         "coloredlogs==9.0",
