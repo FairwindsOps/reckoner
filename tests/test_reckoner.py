@@ -145,7 +145,7 @@ class TestCourseMocks(unittest.TestCase):
 test_course = "./tests/test_course.yml"
 git_repo_path = "./test"
 
-course_yaml_dict = yaml.load(file(test_course, 'r'))
+course_yaml_dict = yaml.load(file(test_course, 'r'), Loader=yaml.loader.FullLoader)
 test_release_names = course_yaml_dict['charts'].keys()
 test_repositories = ['stable', 'incubator'],
 test_minimum_versions = ['helm', 'reckoner']
