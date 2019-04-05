@@ -53,7 +53,7 @@ class Course(object):
         Parse course.yml contents into instances.
         """
         self.config = Config()
-        self._dict = yaml.load(course_file)
+        self._dict = yaml.load(course_file, Loader=yaml.loader.FullLoader)
         if not self.config.helm_args:
             self.config.helm_args = self._dict.get('helm_args')
         self.helm = HelmClient(default_helm_arguments=self.config.helm_args)
