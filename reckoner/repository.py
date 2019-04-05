@@ -138,7 +138,7 @@ class Repository(object):
         if self.path not in ['', '/', './', None]:
             self._chart_path = "{}/{}\n".format(self.path, chart_name)
             repo.git.config('core.sparseCheckout', 'true')
-            with open(sparse_checkout_file_path, "ab+") as scf:
+            with open(sparse_checkout_file_path, "a+") as scf:
                 if self.path not in scf.readlines():
                     scf.write(self._chart_path)
             logging.debug("Configuring sparse checkout for path: {}".format(self.path))
