@@ -15,9 +15,49 @@
 version: 2
 
 jobs:
-  build:
+  build-2.7:
     docker:
-      - image: circleci/python:3
+      - image: circleci/python:2.7
+    environment: ~
+    working_directory: ~/reckoner
+    steps:
+      - checkout
+      - run:
+          name: Unit Tests
+          command: |
+            sudo pip install .
+            reckoner --version
+            sudo pip install -r tests/requirements.txt
+            pytest
+      - setup_remote_docker
+      - run:
+          name: Build Docker Image
+          command: |
+            docker build -t reckoner .
+            docker run --rm reckoner --version
+  build-3.6:
+    docker:
+      - image: circleci/python:3.6
+    environment: ~
+    working_directory: ~/reckoner
+    steps:
+      - checkout
+      - run:
+          name: Unit Tests
+          command: |
+            sudo pip install .
+            reckoner --version
+            sudo pip install -r tests/requirements.txt
+            pytest
+      - setup_remote_docker
+      - run:
+          name: Build Docker Image
+          command: |
+            docker build -t reckoner .
+            docker run --rm reckoner --version
+  build-3.7:
+    docker:
+      - image: circleci/python:3.7
     environment: ~
     working_directory: ~/reckoner
     steps:
@@ -70,7 +110,19 @@ workflows:
   version: 2
   build:
     jobs:
-      - build:
+      - build-2.7:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              only: /.*/
+      - build-3.6:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              only: /.*/
+      - build-3.7:
           filters:
             tags:
               only: /.*/
