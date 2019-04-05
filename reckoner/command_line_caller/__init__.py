@@ -52,7 +52,10 @@ class Response(object):
     def __str__(self):
         return str(self._dict)
 
-    # TODO Python3 candidate for migration to __bool__()
+    # Python 2.7 support
+    def __nonzero__(self):
+        return not self._dict['exitcode']
+
     def __bool__(self):
         return not self._dict['exitcode']
 
