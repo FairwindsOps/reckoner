@@ -130,7 +130,9 @@ workflows:
               only: /.*/
       - release:
           requires:
-            - build
+            - build-2.7
+            - build-3.6
+            - build-3.7
           filters:
             tags:
               only: /.*/
