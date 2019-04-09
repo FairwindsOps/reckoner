@@ -26,7 +26,7 @@ from .config import Config
 from .chart import Chart
 from .repository import Repository
 from .exception import MinimumVersionException, ReckonerCommandException, NoChartsToInstall
-from .helm.client import HelmClient, HelmClientException
+from .helm.client import HelmClient
 
 from .meta import __version__ as reckoner_version
 

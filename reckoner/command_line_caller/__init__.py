@@ -82,6 +82,10 @@ def call(args, shell=False, executable=None, path=None):
     logging.debug(args_string)
     p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=shell, executable=executable, cwd=path)
     stdout, stderr = p.communicate()
+    if type(stderr) is bytes:
+        stderr = stderr.decode('utf-8')
+    if type(stdout) is bytes:
+        stdout = stdout.decode('utf-8')
     exitcode = p.returncode
 
     return Response(stdout, stderr, exitcode, args_string)

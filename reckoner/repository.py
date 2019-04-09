@@ -19,10 +19,8 @@ import logging
 import re
 import git
 import os
-import sys
 
 from .config import Config
-from .exception import ReckonerCommandException
 from git import GitCommandError
 from .helm.client import HelmClientException
 
