@@ -19,7 +19,7 @@
 import coloredlogs
 import click
 from .reckoner import Reckoner
-import exception
+from . import exception
 from .meta import __version__
 
 

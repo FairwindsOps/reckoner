@@ -43,7 +43,7 @@ class TestMinVersion(unittest.TestCase):
 
         sysMock.exit.return_value = None
 
-        course = Course(None)
+        Course(None)
 
         sysMock.exit.assert_called_once
         return True
@@ -69,7 +69,7 @@ class TestMinVersion(unittest.TestCase):
 
         sysMock.exit.return_value = None
 
-        course = Course(None)
+        Course(None)
 
         sysMock.exit.assert_called_once
         return True

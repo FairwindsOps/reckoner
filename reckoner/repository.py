@@ -19,12 +19,10 @@ import logging
 import re
 import git
 import os
-import sys
 
-from config import Config
-from exception import ReckonerCommandException
+from .config import Config
 from git import GitCommandError
-from helm.client import HelmClientException
+from .helm.client import HelmClientException
 
 
 class Repository(object):
@@ -76,7 +74,7 @@ class Repository(object):
             if self.name not in self._helm_client.repositories:
                 try:
                     return self._helm_client.repo_add(str(self.name), str(self.url))
-                except HelmClientException, e:
+                except HelmClientException as e:
                     logging.warn("Unable to install repository {}: {}".format(self.name, e))
                     return False
             else:
@@ -138,7 +136,7 @@ class Repository(object):
         if self.path not in ['', '/', './', None]:
             self._chart_path = "{}/{}\n".format(self.path, chart_name)
             repo.git.config('core.sparseCheckout', 'true')
-            with open(sparse_checkout_file_path, "ab+") as scf:
+            with open(sparse_checkout_file_path, "a+") as scf:
                 if self.path not in scf.readlines():
                     scf.write(self._chart_path)
             logging.debug("Configuring sparse checkout for path: {}".format(self.path))
@@ -155,7 +153,7 @@ class Repository(object):
 
             try:
                 fetch_pull(version)
-            except GitCommandError, e:
+            except GitCommandError as e:
                 logging.warn(e)
                 if 'Sparse checkout leaves no entry on working directory' in str(e):
                     logging.warn("Error with path \"{}\"! Remove path when chart exists at the repository root".format(self.path))
@@ -168,7 +166,7 @@ class Repository(object):
                 else:
                     logging.error(e)
                     raise e
-            except Exception, e:
+            except Exception as e:
                 logging.error(e)
                 raise e
             finally:
