@@ -1,2 +1,6 @@
 pytest
 pytest-cov
+wheel
+mock
+autopep8
+flake8

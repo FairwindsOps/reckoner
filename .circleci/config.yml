@@ -61,20 +61,51 @@ jobs:
     environment: ~
     working_directory: ~/reckoner
     steps:
+      - run:
+          name: Setup PATH to support pip user installs
+          command: echo 'export PATH=$PATH:/home/circleci/.local/bin' >> $BASH_ENV
       - checkout
       - run:
           name: Unit Tests
           command: |
-            sudo pip install .
+            pip install --user -r development-requirements.txt
+            pip install --user -e .
             reckoner --version
-            sudo pip install -r tests/requirements.txt
             pytest
-      - setup_remote_docker
+  build-3.6:
+    docker:
+      - image: circleci/python:3.6
+    environment: ~
+    working_directory: ~/reckoner
+    steps:
       - run:
-          name: Build Docker Image
+          name: Setup PATH to support pip user installs
+          command: echo 'export PATH=$PATH:/home/circleci/.local/bin' >> $BASH_ENV
+      - checkout
+      - run:
+          name: Unit Tests
           command: |
-            docker build -t reckoner .
-            docker run --rm reckoner --version
+            pip install --user -r development-requirements.txt
+            pip install --user -e .
+            reckoner --version
+            pytest
+  build-3.7:
+    docker:
+      - image: circleci/python:3.7
+    environment: ~
+    working_directory: ~/reckoner
+    steps:
+      - run:
+          name: Setup PATH to support pip user installs
+          command: echo 'export PATH=$PATH:/home/circleci/.local/bin' >> $BASH_ENV
+      - checkout
+      - run:
+          name: Unit Tests
+          command: |
+            pip install --user -r development-requirements.txt
+            pip install --user -e .
+            reckoner --version
+            pytest
             
   release:
     docker:
@@ -92,13 +123,6 @@ jobs:
             echo -e "[pypi]" >> ~/.pypirc
             echo -e "username = $PYPI_USERNAME" >> ~/.pypirc
             echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
-      - run:
-          name: create release
-          command: |
-            echo "Using Repo:$GITHUB_REPOSITORY and Org:$GITHUB_ORGANIZATION"
-            git fetch --tags
-            curl -O https://raw.githubusercontent.com/reactiveops/release.sh/v0.0.2/release
-            /bin/bash release
       - run:
           name: package and upload
           command: |
