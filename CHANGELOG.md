@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changes
 - Adjusted versioning to be based on git tag
 - Added support for python 3.6 & 3.7 with CI checks
+- Added end-to-end basic tests for CI (invocation regression testing)
 
 ## [1.1.0]
 
