@@ -15,12 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import sys
-
-from setuptools import setup, find_packages
-
-from reckoner.meta import __version__, __author__
+from reckoner.meta import __author__
 
 try:
     from setuptools import setup, find_packages
@@ -31,19 +27,20 @@ except ImportError:
 
 
 setup(name='reckoner',
-      version=__version__,
+      use_scm_version=True,
+      setup_requires=['setuptools_scm'],
       description='Declarative Helm configuration with Git capability',
       author=__author__,
       author_email='service@reactiveops.com',
       url='http://reactiveops.com/',
       license='Apache2.0',
-      packages=find_packages(exclude=('tests','*.tests')),
+      packages=find_packages(exclude=('tests', '*.tests')),
       install_requires=[
-        "click==6.7",
-        "GitPython==2.1.3",
-        "oyaml>=0.8",
-        "coloredlogs==9.0",
-        "semver==2.8.0"
+          "click==6.7",
+          "GitPython==2.1.3",
+          "oyaml>=0.8",
+          "coloredlogs==9.0",
+          "semver==2.8.0"
       ],
       entry_points=''' #for click integration
           [console_scripts]
