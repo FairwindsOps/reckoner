@@ -61,7 +61,7 @@ jobs:
             docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"nginx-ingress\")|.Status == \"DEPLOYED\"'"
             docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"go-harbor\")|.Status == \"DEPLOYED\"'"
             docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"redis-env\")|.Status == \"DEPLOYED\"'"
-            docker exec kube-access sh -c "helm list --output json | jq -e '[.Releases[].Name] | contains([\"redis-hook\"])'
+            docker exec kube-access sh -c "helm list --output json | jq -e '[.Releases[].Name] | contains([\"redis-hook\"])|not'
   end-to-end-3.7:
     docker:
       # NOTE: This image isn't actually used since we're mostly working in docker
@@ -108,7 +108,7 @@ jobs:
             docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"nginx-ingress\")|.Status == \"DEPLOYED\"'"
             docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"go-harbor\")|.Status == \"DEPLOYED\"'"
             docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"redis-env\")|.Status == \"DEPLOYED\"'"
-            docker exec kube-access sh -c "helm list --output json | jq -e '[.Releases[].Name] | contains([\"redis-hook\"])'
+            docker exec kube-access sh -c "helm list --output json | jq -e '[.Releases[].Name] | contains([\"redis-hook\"])|not'
   build-2.7:
     docker:
       - image: circleci/python:2.7
