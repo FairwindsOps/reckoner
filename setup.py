@@ -40,7 +40,8 @@ setup(name='reckoner',
           "GitPython==2.1.3",
           "oyaml>=0.8",
           "coloredlogs==9.0",
-          "semver==2.8.0"
+          "semver==2.8.0",
+          "PyYAML>=5.1",
       ],
       entry_points=''' #for click integration
           [console_scripts]
