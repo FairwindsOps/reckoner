@@ -19,12 +19,17 @@ charts:
     repository:
       git: https://github.com/goharbor/harbor-helm.git
     version: master
-  redis:
+  redis-env:
+    chart: redis
+    namespace: redis-test-namespace
+    repository: stable
+    values:
+      test_environ_var: ${test_environ_var}
+  redis-hook:
+    chart: redis
     namespace: redis-test-namespace
     repository: stable
     hooks:
       pre_install:
         - whoami
       post_install: nonexistant command here
-    values:
-      test_environ_var: ${test_environ_var}

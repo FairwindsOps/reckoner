@@ -54,10 +54,14 @@ jobs:
             docker exec kube-access reckoner --version
             docker exec -e test_environ_var=testing kube-access reckoner plot /app/reckoner/end_to_end_testing/basic.yml
             docker exec kube-access sh -c "helm list --output json | jq . -C"
+
             docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"nginx-ingress\")|.Namespace == \"infra\"'"
             docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"go-harbor\")|.Namespace == \"test\"'"
-            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"redis\")|.Namespace == \"redis-test-namespace\"'"
-            docker exec kube-access sh -c "helm list --output json | jq -e '[.Releases[]|select(.Status == \"DEPLOYED\")] | length == 3'"
+            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"redis-env\")|.Namespace == \"redis-test-namespace\"'"
+            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"nginx-ingress\")|.Status == \"DEPLOYED\"'"
+            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"go-harbor\")|.Status == \"DEPLOYED\"'"
+            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"redis-env\")|.Status == \"DEPLOYED\"'"
+            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"redis-hook\")|.Status != \"DEPLOYED\"'"
   end-to-end-3.7:
     docker:
       # NOTE: This image isn't actually used since we're mostly working in docker
@@ -97,10 +101,14 @@ jobs:
             docker exec kube-access reckoner --version
             docker exec -e test_environ_var=testing kube-access reckoner plot /app/reckoner/end_to_end_testing/basic.yml
             docker exec kube-access sh -c "helm list --output json | jq . -C"
+
             docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"nginx-ingress\")|.Namespace == \"infra\"'"
             docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"go-harbor\")|.Namespace == \"test\"'"
-            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"redis\")|.Namespace == \"redis-test-namespace\"'"
-            docker exec kube-access sh -c "helm list --output json | jq -e '[.Releases[]|select(.Status == \"DEPLOYED\")] | length == 3'"
+            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"redis-env\")|.Namespace == \"redis-test-namespace\"'"
+            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"nginx-ingress\")|.Status == \"DEPLOYED\"'"
+            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"go-harbor\")|.Status == \"DEPLOYED\"'"
+            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"redis-env\")|.Status == \"DEPLOYED\"'"
+            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"redis-hook\")|.Status != \"DEPLOYED\"'"
   build-2.7:
     docker:
       - image: circleci/python:2.7
