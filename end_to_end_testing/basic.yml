@@ -22,5 +22,9 @@ charts:
   redis:
     namespace: redis-test-namespace
     repository: stable
+    hooks:
+      pre_install:
+        - whoami
+      post_install: nonexistant command here
     values:
       test_environ_var: ${test_environ_var}
