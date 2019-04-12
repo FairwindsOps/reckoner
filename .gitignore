@@ -8,3 +8,5 @@ venv
 .venv-*
 .coverage
 htmlcov/
+build/
+reckoner/version.txt

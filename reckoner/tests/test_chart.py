@@ -170,3 +170,50 @@ class TestChartHooks(unittest.TestCase):
         mock_cmd_call.side_effect = [Response(command_string='command', stderr='err-output', stdout='output', exitcode=0)]
         chart.run_hook('pre_install')
         mock_cmd_call.assert_called_once()
+
+
+# @mock.patch('reckoner.chart.Repository')
+# @mock.patch('reckoner.chart.Config')
+# # I have to strictly design the mock for Reckoner due to the nature of the
+# # key/val class setup. If the class actually had attributes then this
+# # would be more easily mockable
+# @mock.patch('reckoner.chart.call')
+class TestCharts(unittest.TestCase):
+    """Test charts"""
+
+    @mock.patch('reckoner.chart.os')
+    def test_interpolation_of_env_vars(self, environMock):
+        chart = Chart({'name': {'values': {}}}, None)
+        chart.config.dryrun = False
+        chart.config.local_development = False
+
+        chart.args = ['thing=${environVar}', 'another=$environVar']
+        environMock.environ = {'environVar': 'asdf'}
+
+        chart._check_env_vars()
+        self.assertEqual(chart.args[0], 'thing=asdf')
+        self.assertEqual(chart.args[1], 'another=asdf')
+
+    @mock.patch('reckoner.chart.os')
+    def test_interpolation_of_missing_env_vars(self, environMock):
+        chart = Chart({'name': {'values': {}}}, None)
+        chart.config.dryrun = False
+        chart.config.local_development = False
+
+        chart.args = ['thing=${environVar}']
+        environMock.environ = {}
+
+        with self.assertRaises(Exception):
+            chart._check_env_vars()
+
+    @mock.patch('reckoner.chart.os')
+    def test_interpolation_of_env_vars_kube_deploy_spec(self, environMock):
+        chart = Chart({'name': {'values': {}}}, None)
+        chart.config.dryrun = False
+        chart.config.local_development = False
+
+        chart.args = ['thing=$(environVar)']
+        environMock.environ = {}
+
+        chart._check_env_vars()
+        self.assertEqual(chart.args[0], 'thing=$(environVar)')

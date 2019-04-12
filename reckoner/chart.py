@@ -397,8 +397,8 @@ class Chart(object):
         """
         if self._hack_set_values_already_merged:
             raise Exception('This method cannot be called twice. '
-                                'If you are seeing this please open an '
-                                'issue in github.')
+                            'If you are seeing this please open an '
+                            'issue in github.')
 
         def merge_dicts(values, sets):
             """This does a dict merge and prefers "sets" values"""
@@ -426,7 +426,12 @@ class Chart(object):
         and are missing from the environment
         an exception is raised
         """
-        try:
-            self.args = [Template(arg).substitute(os.environ) for arg in self.args]
-        except KeyError as e:
-            raise Exception("Missing requirement environment variable: {}".format(e.args[0]))
+        for idx in range(len(self.args)):
+            try:
+                self.args[idx] = Template(self.args[idx]).substitute(os.environ)
+            except ValueError:
+                logging.debug("Could not replace Variable {} with an Env Var: Formatting Error.".format(self.args[idx]))
+                logging.debug("This generally happens if you use $(THING) instead of $THING or ${THING}.")
+                continue
+            except KeyError:
+                raise Exception("Missing requirement environment variable: {}".format(self.args[idx]))

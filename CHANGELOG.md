@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.1.2]
+
+### Changes
+- Added fix for interpolated variables in kube specs (see #82)
+- Adjusted help for plot (--heading / --only also accepts -o now)
+- Updated underlying dependencies (click, semver, GitPython)
+
 ## [1.1.1]
 
 ### Changes

@@ -23,5 +23,7 @@ __distribution_name__ = 'reckoner'
 try:
     __version__ = re.sub(__version_modifier__, r'\g<1>-\g<2>', get_distribution(__distribution_name__).version)
 except DistributionNotFound:
-    pass
+    import pkgutil
+    _raw_ver = pkgutil.get_data('reckoner', 'version.txt').decode('UTF-8', 'ignore').rstrip("\r\n")
+    __version__ = re.sub(__version_modifier__, r'\g<1>-\g<2>', _raw_ver)
 __author__ = 'ReactiveOps, Inc.'

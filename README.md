@@ -7,13 +7,21 @@ This utility adds to the functionality of [Helm](https://github.com/kubernetes/h
 * Allows installation of charts from a git commit/branch/release
 
 ## Requirements
-- python >= 2.7
+- python 3
 - helm: installed and initialized
 
-### As standalone shell command
-```sh
+### Installation
+Via pip:
+```shell
 pip install reckoner
 ```
+
+Via Git
+```shell
+pip install git+https://github.com/reactiveops/reckoner@master
+```
+
+For development see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## Usage
 
