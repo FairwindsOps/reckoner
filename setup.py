@@ -37,10 +37,10 @@ setup(name='reckoner',
       packages=find_packages(exclude=('tests', '*.tests')),
       install_requires=[
           "click==6.7",
-          "GitPython==2.1.3",
+          "GitPython>=2.1.11",
           "oyaml>=0.8",
-          "coloredlogs==9.0",
-          "semver==2.8.0",
+          "coloredlogs>=9.0",
+          "semver>=2.8.1",
           "PyYAML>=5.1",
       ],
       entry_points=''' #for click integration
