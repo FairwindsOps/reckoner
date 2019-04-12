@@ -88,6 +88,7 @@ class TestCliPlot(unittest.TestCase):
                 '--heading',
                 '--only',
                 '--local-development',
+                '-o',
             ],
             'argument': [
                 'course_file',
