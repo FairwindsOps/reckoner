@@ -1,7 +1,3 @@
-# -- coding: utf-8 --
-
-# pylint: skip-file
-
 # Copyright 2019 ReactiveOps Inc
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,13 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from pkg_resources import get_distribution, DistributionNotFound
-import re
 
-__version_modifier__ = re.compile(r'^([0-9]+\.[0-9]+\.[0-9]+)\.(.*)$')
-__distribution_name__ = 'reckoner'
-try:
-    __version__ = re.sub(__version_modifier__, r'\g<1>-\g<2>', get_distribution(__distribution_name__).version)
-except DistributionNotFound:
-    pass
-__author__ = 'ReactiveOps, Inc.'
+import unittest
+from reckoner.meta import __version__ as reckoner_version
+import semver
+
+
+class TestValidVersionName(unittest.TestCase):
+    """Always make sure whatever the version is will be compatible with semver parseing"""
+
+    def test_version_is_valid(self):
+        """Load the reckoner version and parse with semver"""
+        assert semver.parse_version_info(reckoner_version)

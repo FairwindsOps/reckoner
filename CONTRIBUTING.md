@@ -4,8 +4,8 @@
 ## Installation for Local Development
 
 Requirements
-* Python 2.7
-* pip
+* Python 3.7
+* pip3
 * VirtualEnv
 
 ```

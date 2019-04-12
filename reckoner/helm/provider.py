@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from reckoner.command_line_caller import call
-from cmd_response import HelmCmdResponse
+from .cmd_response import HelmCmdResponse
 
 
 class HelmProvider(object):

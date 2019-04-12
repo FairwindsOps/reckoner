@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from provider import HelmProvider
-from command import HelmCommand
+from .provider import HelmProvider
+from .command import HelmCommand
 from reckoner.command_line_caller import Response
 import re
 import logging
@@ -78,7 +78,7 @@ class HelmClient(object):
         raw_repositories = self.execute('repo', ['list'], filter_non_global_flags=True).stdout
         for line in raw_repositories.splitlines():
             # Try to filter out the header line as a viable repo name
-            if HelmClient.repository_header_regex.match(line):
+            if HelmClient.repository_header_regex.match(str(line)):
                 continue
             # If the line is blank
             if not line:
@@ -138,7 +138,7 @@ class HelmClient(object):
             logging.debug('Processing {} argument'.format(arg))
             known_global = False
             for valid in HelmClient.global_helm_flags:
-                if re.findall("--{}(\s|$)+".format(valid), arg):
+                if re.findall(r"--{}(\s|$)+".format(valid), arg):
                     known_global = True
                     break  # break out of loop and stop searching for valids for this one argument
             if known_global:
@@ -163,7 +163,7 @@ class HelmClient(object):
 
     @staticmethod
     def _find_version(raw_version):
-        ver = HelmClient.version_regex.search(raw_version)
+        ver = HelmClient.version_regex.search(str(raw_version))
         if ver:
             return ver.group(1)
         else:
@@ -174,9 +174,9 @@ class HelmClient(object):
         # Allow class to be instantiated with default_helm_arguments to be None
         if helm_args is None:
             helm_args = []
-
         # Validate that we're providing an iterator for default helm args
-        if not hasattr(helm_args, '__iter__'):
+        # also check for type string, python3 strings contain __iter__
+        if not hasattr(helm_args, '__iter__') or isinstance(helm_args, str):
             logging.error("This class is being instantiated without an iterator for default_helm_args.")
             raise ValueError('default_helm_arguments needs to be an iterator')
 

@@ -145,8 +145,9 @@ class TestCourseMocks(unittest.TestCase):
 test_course = "./tests/test_course.yml"
 git_repo_path = "./test"
 
-course_yaml_dict = yaml.load(file(test_course, 'r'))
-test_release_names = course_yaml_dict['charts'].keys()
+with open(test_course, 'r') as yaml_stream:
+    course_yaml_dict = yaml.load(yaml_stream, Loader=yaml.loader.FullLoader)
+test_release_names = list(course_yaml_dict['charts'].keys())
 test_repositories = ['stable', 'incubator'],
 test_minimum_versions = ['helm', 'reckoner']
 test_repository_dict = {'name': 'test_repo', 'url': 'https://kubernetes-charts.storage.googleapis.com'}
@@ -307,7 +308,7 @@ class TestCourse(TestBase):
                                 "test_course.yml and not provided an example with a different chart_name and chart.")
         self.assertEqual(self.c.repositories[0].name, test_repository_dict['name'])
         self.assertEqual(self.c.repositories[0].url, test_repository_dict['url'])
-        self.assertEqual(self.c.minimum_versions.keys(), test_minimum_versions)
+        self.assertEqual(list(self.c.minimum_versions.keys()), test_minimum_versions)
         self.assertIsInstance(self.c.repositories, list)
 
     def test_plot_course(self):

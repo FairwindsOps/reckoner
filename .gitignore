@@ -1,8 +1,10 @@
-
+.eggs
 *egg-info
 *.pyc
 venvbuild
 dist
 venv
+.venv
+.venv-*
 .coverage
 htmlcov/

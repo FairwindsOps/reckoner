@@ -26,9 +26,9 @@ from .config import Config
 from .chart import Chart
 from .repository import Repository
 from .exception import MinimumVersionException, ReckonerCommandException, NoChartsToInstall
-from .helm.client import HelmClient, HelmClientException
+from .helm.client import HelmClient
 
-from meta import __version__ as reckoner_version
+from .meta import __version__ as reckoner_version
 
 
 class Course(object):
@@ -53,17 +53,18 @@ class Course(object):
         Parse course.yml contents into instances.
         """
         self.config = Config()
-        self._dict = yaml.load(course_file)
+        self._dict = yaml.load(course_file, Loader=yaml.loader.FullLoader)
         if not self.config.helm_args:
             self.config.helm_args = self._dict.get('helm_args')
         self.helm = HelmClient(default_helm_arguments=self.config.helm_args)
         self._repositories = []
         self._charts = []
-        for name, repository in self._dict.get('repositories', {}).iteritems():
+        self._failed_charts = []
+        for name, repository in self._dict.get('repositories', {}).items():
             repository['name'] = name
             self._repositories.append(Repository(repository, self.helm))
 
-        for name, chart in self._dict.get('charts', {}).iteritems():
+        for name, chart in self._dict.get('charts', {}).items():
             self._charts.append(Chart({name: chart}, self.helm))
 
         for repo in self._repositories:
@@ -97,6 +98,10 @@ class Course(object):
         """ List of Chart() instances """
         return self._charts
 
+    @property
+    def failed_charts(self):
+        return self._failed_charts
+
     def plot(self, charts_to_install):
         """
         Accepts charts_to_install, an interable of the names of the charts
@@ -104,7 +109,6 @@ class Course(object):
         charts in the course and calls Chart.install()
 
         """
-        _failed_charts = []
         self._charts_to_install = []
 
         try:
@@ -133,7 +137,7 @@ class Course(object):
             logging.info("Installing {}".format(chart.release_name))
             try:
                 chart.install(namespace=self.namespace, context=self.context)
-            except (Exception, ReckonerCommandException), e:
+            except (Exception, ReckonerCommandException) as e:
                 if type(e) == ReckonerCommandException:
                     logging.error(e.stderr)
                 if type(e) == Exception:
@@ -141,11 +145,11 @@ class Course(object):
                 logging.error('Helm upgrade failed on {}'.format(chart.release_name))
                 logging.debug(traceback.format_exc())
                 # chart.rollback #TODO Fix this - it doesn't actually fire or work
-                _failed_charts.append(chart)
+                self.failed_charts.append(chart)
 
-        if _failed_charts:
+        if self.failed_charts:
             logging.error("ERROR: Some charts failed to install.")
-            for chart in _failed_charts:
+            for chart in self.failed_charts:
                 logging.error(" - {}".format(chart.release_name))
 
         if charts_to_install:
