@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changes
 - Added fix for interpolated variables in kube specs (see #82)
+- Adjusted help for plot (--heading / --only also accepts -o now)
+- Updated underlying dependencies (click, semver, GitPython)
 
 ## [1.1.1]
 
