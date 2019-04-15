@@ -88,7 +88,6 @@ class TestCliPlot(unittest.TestCase):
                 '--heading',
                 '--only',
                 '--local-development',
-                '-o',
             ],
             'argument': [
                 'course_file',
@@ -104,8 +103,6 @@ def assert_required_params(required_options, list_of_cli_params):
         if param.param_type_name not in list(all_params.keys()):
             all_params[param.param_type_name] = []
         [all_params[param.param_type_name].append(opt) for opt in param.opts]
-        if param.secondary_opts:
-            [all_params[param.param_type_name].append(opt) for opt in param.secondary_opts]
 
     for opt_type, opt_type_list in list(required_options.items()):
         assert opt_type in list(all_params.keys()), "Missing option type '{}' from cli params. Check if an argument or option was removed.".format(opt_type)
