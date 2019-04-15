@@ -9,7 +9,7 @@ Requirements
 
 ```shell
 %> python -V                   # Check your version of python
-%> python -m venv .venv        # setup a virtual env in your cloned repo
+%> python -m venv venv        # setup a virtual env in your cloned repo
 %> source ./venv/bin/activate  # use the virtual env
 (venv) %> pip install -e .     # Installs reckoner as locally linked folders
 (venv) %> reckoner --version   # Check the version you're running in the virtualenv
