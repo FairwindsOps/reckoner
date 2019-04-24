@@ -32,4 +32,11 @@ charts:
     hooks:
       pre_install:
         - whoami
-      post_install: nonexistant command here
+      post_install: nonexistent command here
+  redis-failed-hook:
+    chart: redis
+    namespace: redis-test-namespace
+    repository: stable
+    hooks:
+      pre_install:
+        - non-existent command here

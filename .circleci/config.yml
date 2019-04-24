@@ -12,126 +12,28 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-version: 2
+version: 2.1
 
-jobs:
-  end-to-end-2.7:
-    docker:
-      # NOTE: This image isn't actually used since we're mostly working in docker
-      - image: circleci/python:2.7
-    working_directory: ~/reckoner
-    resource_class: small
-    steps:
-      - setup_remote_docker
-      - checkout
-      - run:
-          name: Setup Kube Cluster
-          command: |
-            wget https://github.com/kubernetes-sigs/kind/releases/download/0.2.1/kind-linux-amd64
-            mv kind-linux-amd64 kind
-            chmod 0755 kind
-
-            ./kind create cluster --wait=90s
-
-            docker run -d --name kube-access --network container:kind-control-plane gcr.io/kubernetes-charts-ci/test-image:v3.2.0 tail -f /dev/null
-            docker exec kube-access mkdir /root/.kube /app/
-            docker cp $(./kind get kubeconfig-path --name=kind) kube-access:/root/.kube/config
-            docker exec kube-access sed -i 's/localhost:.*/localhost:6443/' /root/.kube/config
-            docker exec -it kube-access kubectl version
-
-            docker exec kube-access apk update
-            docker exec kube-access apk add jq
-            docker cp ~/reckoner/ kube-access:/app/.
-            docker exec kube-access pip install /app/reckoner/
-            docker exec kube-access pip list
-
-            docker exec kube-access kubectl -n kube-system create serviceaccount tiller
-            docker exec kube-access kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount kube-system:tiller
-            docker exec kube-access helm init --service-account tiller --wait
-      - run:
-          name: Run Tests
-          command: |
-            docker exec kube-access reckoner --version
-            docker exec -e test_environ_var=testing kube-access reckoner plot /app/reckoner/end_to_end_testing/basic.yml
-            docker exec kube-access sh -c "helm list --output json | jq . -C"
-
-            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"nginx-ingress\")|.Namespace == \"infra\"'"
-            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"go-harbor\")|.Namespace == \"test\"'"
-            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"redis-env\")|.Namespace == \"redis-test-namespace\"'"
-            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"nginx-ingress\")|.Status == \"DEPLOYED\"'"
-            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"go-harbor\")|.Status == \"DEPLOYED\"'"
-            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"redis-env\")|.Status == \"DEPLOYED\"'"
-            docker exec kube-access sh -c "helm list --output json | jq -e '[.Releases[].Name] | contains([\"redis-hook\"])|not'"
-            docker exec kube-access reckoner plot --only nginx-ingress /app/reckoner/end_to_end_testing/basic.yml
-            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"nginx-ingress\")|.Revision == 2'"
-  end-to-end-3.7:
-    docker:
-      # NOTE: This image isn't actually used since we're mostly working in docker
-      - image: circleci/python:3.7
-    working_directory: ~/reckoner
-    resource_class: small
-    steps:
-      - setup_remote_docker
-      - checkout
-      - run:
-          name: Setup Kube Cluster
-          command: |
-            wget https://github.com/kubernetes-sigs/kind/releases/download/0.2.1/kind-linux-amd64
-            mv kind-linux-amd64 kind
-            chmod 0755 kind
-
-            ./kind create cluster --wait=90s
-
-            docker run -d --name kube-access --network container:kind-control-plane gcr.io/kubernetes-charts-ci/test-image:v3.2.0 tail -f /dev/null
-            docker exec kube-access mkdir /root/.kube /app/
-            docker cp $(./kind get kubeconfig-path --name=kind) kube-access:/root/.kube/config
-            docker exec kube-access sed -i 's/localhost:.*/localhost:6443/' /root/.kube/config
-            docker exec -it kube-access kubectl version
-
-            docker exec kube-access apk update
-            docker exec kube-access apk add python3 jq
-            docker cp ~/reckoner/ kube-access:/app/.
-            docker exec kube-access pip3 install /app/reckoner/
-            docker exec kube-access pip3 list
-
-            docker exec kube-access kubectl -n kube-system create serviceaccount tiller
-            docker exec kube-access kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount kube-system:tiller
-            docker exec kube-access helm init --service-account tiller --wait
-      - run:
-          name: Run Tests
-          command: |
-            docker exec kube-access reckoner --version
-            docker exec -e test_environ_var=testing kube-access reckoner plot /app/reckoner/end_to_end_testing/basic.yml
-            docker exec kube-access sh -c "helm list --output json | jq . -C"
-
-            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"nginx-ingress\")|.Namespace == \"infra\"'"
-            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"go-harbor\")|.Namespace == \"test\"'"
-            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"redis-env\")|.Namespace == \"redis-test-namespace\"'"
-            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"nginx-ingress\")|.Status == \"DEPLOYED\"'"
-            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"go-harbor\")|.Status == \"DEPLOYED\"'"
-            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"redis-env\")|.Status == \"DEPLOYED\"'"
-            docker exec kube-access sh -c "helm list --output json | jq -e '[.Releases[].Name] | contains([\"redis-hook\"])|not'"
-            docker exec kube-access reckoner plot --only nginx-ingress /app/reckoner/end_to_end_testing/basic.yml
-            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"nginx-ingress\")|.Revision == 2'"
-  build-2.7:
+executors:
+  python-2-7:
     docker:
       - image: circleci/python:2.7
-    working_directory: ~/reckoner
-    steps:
-      - run:
-          name: Setup PATH to support pip user installs
-          command: echo 'export PATH=$PATH:/home/circleci/.local/bin' >> $BASH_ENV
-      - checkout
-      - run:
-          name: Unit Tests
-          command: |
-            pip install --user -r development-requirements.txt
-            pip install --user -e .
-            reckoner --version
-            pytest
-  build-3.6:
+  python-3-6:
     docker:
       - image: circleci/python:3.6
+  python-3-7:
+    docker:
+      - image: circleci/python:3.7
+  vm:
+    machine:
+      enabled: true
+  darwin:
+    macos:
+      xcode: 10.2.0
+
+jobs:
+  build-2-7:
+    executor: python-2-7
     working_directory: ~/reckoner
     steps:
       - run:
@@ -145,9 +47,23 @@ jobs:
             pip install --user -e .
             reckoner --version
             pytest
-  build-3.7:
-    docker:
-      - image: circleci/python:3.7
+  build-3-6:
+    executor: python-3-6
+    working_directory: ~/reckoner
+    steps:
+      - run:
+          name: Setup PATH to support pip user installs
+          command: echo 'export PATH=$PATH:/home/circleci/.local/bin' >> $BASH_ENV
+      - checkout
+      - run:
+          name: Unit Tests
+          command: |
+            pip install --user -r development-requirements.txt
+            pip install --user -e .
+            reckoner --version
+            pytest
+  build-3-7:
+    executor: python-3-7
     working_directory: ~/reckoner
     steps:
       - run:
@@ -162,8 +78,7 @@ jobs:
             reckoner --version
             pytest
   release:
-    docker:
-      - image: circleci/python:3
+    executor: python-3-7
     environment:
       PYPI_USERNAME: ReactiveOps
       GITHUB_ORGANIZATION: $CIRCLE_PROJECT_USERNAME
@@ -183,49 +98,164 @@ jobs:
             sudo pip install twine
             python setup.py sdist bdist_wheel
             twine upload dist/*
+  compile:
+    executor: python-3-7
+    working_directory: ~/reckoner
+    steps:
+      - run:
+          name: Setup PATH to support pip user installs
+          command: echo 'export PATH=$PATH:/home/circleci/.local/bin' >> $BASH_ENV
+      - checkout
+      - run:
+          name: build binary for linux
+          command: |
+            pip install --user pyinstaller setuptools-scm
+            pip install --user .
+            cd installer
+            python -c 'from setuptools_scm import get_version; get_version(root="..", write_to="reckoner/version.txt")'
+            pyinstaller --noconfirm --paths .:../ --onefile --add-data ../reckoner/version.txt:reckoner --name reckoner cli.py
+      - run:
+          name: persist binaries
+          command: |
+            sudo mkdir /tmp/binaries/
+            sudo cp installer/dist/reckoner /tmp/binaries/reckoner-linux-amd64
+      - persist_to_workspace:
+          root: /tmp/binaries
+          paths:
+            - reckoner-linux-amd64
+      - store_artifacts:
+          path: installer/dist/reckoner
+          destination: reckoner-linux-amd64
+  compile-darwin:
+    executor: darwin
+    working_directory: ~/reckoner
+    steps:
+      - checkout
+      - run:
+          name: build binary for os x
+          command: |
+            echo "Setting Up environment"
+            pip3 install pyinstaller setuptools-scm
+            pip3 install .
+            cd installer
+
+            echo "Building the version.txt from git"
+            python3 -c 'from setuptools_scm import get_version; get_version(root="..", write_to="reckoner/version.txt")'
+
+            echo "Running the binary compiler"
+            pyinstaller --noconfirm --paths .:../ --onefile --add-data ../reckoner/version.txt:reckoner --name reckoner cli.py
+
+            echo "Running the new Binary"
+            ./dist/reckoner version
+      - run:
+          name: persist binaries
+          command: |
+            sudo mkdir /tmp/binaries/
+            sudo cp installer/dist/reckoner /tmp/binaries/reckoner-darwin
+      - persist_to_workspace:
+          root: /tmp/binaries
+          paths:
+            - reckoner-darwin
+      - store_artifacts:
+          path: installer/dist/reckoner
+          destination: reckoner-darwin
+  end-to-end:
+    executor: vm
+    working_directory: ~/reckoner
+    resource_class: medium
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/binaries
+      - run:
+          name: Setup Testing Environment
+          command: |
+            echo "Installing git and jq"
+            sudo apt-get install -yqq jq git
+
+            echo "Installing Reckoner"
+            sudo cp /tmp/binaries/reckoner-linux-amd64 /usr/local/bin/reckoner
+            reckoner version
+
+            echo "Installing Kind"
+            curl -sLO https://github.com/kubernetes-sigs/kind/releases/download/0.2.1/kind-linux-amd64
+            chmod 0755 kind-linux-amd64
+            sudo mv kind-linux-amd64 /usr/local/bin/kind
+            kind version
+
+            echo "Installing Kubectl"
+            curl -sLO https://storage.googleapis.com/kubernetes-release/release/v1.12.7/bin/linux/amd64/kubectl
+            chmod 0755 kubectl
+            sudo mv kubectl /usr/local/bin/
+            kubectl version --client
+
+            echo "Installing Helm"
+            curl -sL https://storage.googleapis.com/kubernetes-helm/helm-v2.13.1-linux-amd64.tar.gz | tar xzv linux-amd64/helm
+            sudo mv linux-amd64/helm /usr/local/bin/helm
+            rm -rf linux-amd64
+            helm version --client
+
+            echo "Creating Kubernetes Cluster with Kind"
+            kind create cluster --wait=90s
+            docker ps -a
+
+            echo "Setting up kubecfg"
+            cp $(kind get kubeconfig-path --name=kind) ~/.kube/config
+            kubectl version
+
+            echo "Setting up Helm on Kubernetes"
+            kubectl -n kube-system create serviceaccount tiller
+            kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount kube-system:tiller
+            helm init --service-account tiller --wait
+      - run:
+          name: basic.yml Test Running Whole Course
+          command: |
+            test_environ_var=testing reckoner plot end_to_end_testing/basic.yml
+            helm list --output json | jq . -C
+      - run:
+          name: basic.yml Check reckoner run for installed services
+          command: |
+            helm list --output json | jq -e '.Releases[]|select(.Name == "nginx-ingress")|.Namespace == "infra"'
+            helm list --output json | jq -e '.Releases[]|select(.Name == "go-harbor")|.Namespace == "test"'
+            helm list --output json | jq -e '.Releases[]|select(.Name == "redis-env")|.Namespace == "redis-test-namespace"'
+            helm list --output json | jq -e '.Releases[]|select(.Name == "nginx-ingress")|.Status == "DEPLOYED"'
+            helm list --output json | jq -e '.Releases[]|select(.Name == "go-harbor")|.Status == "DEPLOYED"'
+            helm list --output json | jq -e '.Releases[]|select(.Name == "redis-env")|.Status == "DEPLOYED"'
+            helm list --output json | jq -e '[.Releases[].Name] | contains(["redis-hook"])'
+            helm list --output json | jq -e '[.Releases[].Name] | contains(["redis-failed-hook"])|not'
+      - run:
+          name: basic.yml Test Running Only One Chart
+          command: |
+            reckoner plot --only nginx-ingress end_to_end_testing/basic.yml
+            helm list --output json | jq -e '.Releases[]|select(.Name == "nginx-ingress")|.Status == "DEPLOYED"'
+
+            reckoner plot --only nginx-ingress --only redis-env end_to_end_testing/basic.yml
+            helm list --output json | jq -e '.Releases[]|select(.Name == "nginx-ingress")|.Status == "DEPLOYED"'
+            helm list --output json | jq -e '.Releases[]|select(.Name == "redis-env")|.Status == "DEPLOYED"'
 
 workflows:
   version: 2
   build:
     jobs:
-      - build-2.7:
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              only: /.*/
-      - build-3.6:
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              only: /.*/
-      - build-3.7:
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              only: /.*/
-      - end-to-end-2.7:
+      - build-2-7
+      - build-3-6
+      - build-3-7
+      - compile-darwin:
           requires:
-            - build-2.7
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              only: /.*/
-      - end-to-end-3.7:
+            - build-2-7
+            - build-3-6
+            - build-3-7
+      - compile:
           requires:
-            - build-3.7
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              only: /.*/
+            - build-2-7
+            - build-3-6
+            - build-3-7
+      - end-to-end:
+          requires:
+            - compile
       - release:
           requires:
-            - end-to-end-2.7
-            - end-to-end-3.7
+            - end-to-end
           filters:
             tags:
               only: /.*/

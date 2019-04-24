@@ -16,7 +16,6 @@
 # limitations under the License.
 
 import sys
-from reckoner.meta import __author__
 
 try:
     from setuptools import setup, find_packages
@@ -30,7 +29,7 @@ setup(name='reckoner',
       use_scm_version=True,
       setup_requires=['setuptools_scm'],
       description='Declarative Helm configuration with Git capability',
-      author=__author__,
+      author='ReactiveOps Inc.',
       author_email='service@reactiveops.com',
       url='http://reactiveops.com/',
       license='Apache2.0',
