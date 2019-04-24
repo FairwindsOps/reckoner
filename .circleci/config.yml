@@ -137,7 +137,7 @@ jobs:
       - run:
           name: build binary for os x
           command: |
-            echo $SHELL
+            echo $PATH
             which python
             which brew
             python3 -V
