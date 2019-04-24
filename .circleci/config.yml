@@ -142,10 +142,9 @@ jobs:
             reckoner version
 
             echo "Installing Kind"
-            wget https://github.com/kubernetes-sigs/kind/releases/download/0.2.1/kind-linux-amd64
-            mv kind-linux-amd64 kind
-            chmod 0755 kind
-            sudo mv kind /usr/local/bin/kind
+            curl -sLO https://github.com/kubernetes-sigs/kind/releases/download/0.2.1/kind-linux-amd64
+            chmod 0755 kind-linux-amd64
+            sudo mv kind-linux-amd64 /usr/local/bin/kind
             kind version
 
             echo "Installing Kubectl"
@@ -165,7 +164,8 @@ jobs:
             docker ps -a
 
             echo "Setting up kubecfg"
-            echo $(kind get kubeconfig-path --name=kind) ~/.kube/config
+            mkdir ~/.kube/
+            cat $(kind get kubeconfig-path --name=kind) > ~/.kube/config
             kubectl version
 
             echo "Setting up Helm on Kubernetes"
