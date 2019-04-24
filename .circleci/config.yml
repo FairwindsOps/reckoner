@@ -162,7 +162,7 @@ jobs:
   end-to-end:
     executor: vm
     working_directory: ~/reckoner
-    resource_class: small
+    resource_class: medium
     steps:
       - checkout
       - attach_workspace:
