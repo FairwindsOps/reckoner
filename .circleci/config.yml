@@ -138,6 +138,7 @@ jobs:
             wget https://github.com/kubernetes-sigs/kind/releases/download/0.2.1/kind-linux-amd64
             mv kind-linux-amd64 kind
             chmod 0755 kind
+            mv kind /usr/local/bin/kind
             kind version
 
             echo "Installing Reckoner"
@@ -160,7 +161,7 @@ jobs:
             helm version --client
 
             echo "Creating Kubernetes Cluster with Kind"
-            ./kind create cluster --wait=90s
+            kind create cluster --wait=90s
             docker ps -a
 
             echo "Setting up kubecfg"
