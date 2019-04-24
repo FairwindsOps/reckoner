@@ -140,37 +140,42 @@ jobs:
 
             ./kind create cluster --wait=90s
 
-            docker run -d --name kube-access --network container:kind-control-plane gcr.io/kubernetes-charts-ci/test-image:v3.2.0 tail -f /dev/null
-            docker exec kube-access mkdir /root/.kube /app/
-            docker cp $(./kind get kubeconfig-path --name=kind) kube-access:/root/.kube/config
-            docker exec kube-access sed -i 's/localhost:.*/localhost:6443/' /root/.kube/config
-            docker exec -it kube-access kubectl version
+            echo $(./kind get kubeconfig-path --name=kind) ~/.kube/config
 
-            docker cp /tmp/binaries/reckoner kube-access:/usr/local/bin/
-            docker exec kube-access reckoner version
+            sudo cp /tmp/binaries/reckoner /usr/local/bin/
+            sudo apt-get install jq
 
-            docker exec kube-access apk update
-            docker exec kube-access apk add jq
+            curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.12.7/bin/linux/amd64/kubectl
+            chmod 0755 kubectl
+            sudo mv kubectl /usr/local/bin/
+            kubectl version
 
-            docker exec kube-access kubectl -n kube-system create serviceaccount tiller
-            docker exec kube-access kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount kube-system:tiller
-            docker exec kube-access helm init --service-account tiller --wait
+            curl -LO https://storage.googleapis.com/kubernetes-helm/helm-v2.13.1-linux-amd64.tar.gz
+            tar xzvf helm-v2.13.1-linux-amd64.tar.gz linux_amd64/helm
+            sudo mv helm /usr/local/bin/helm
+            rm -rf helm linux_amd64
+            helm version --client
+
+            kubectl version
+            kubectl -n kube-system create serviceaccount tiller
+            kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount kube-system:tiller
+            helm init --service-account tiller --wait
       - run:
           name: Run Tests
           command: |
-            docker exec kube-access reckoner --version
-            docker exec -e test_environ_var=testing kube-access reckoner plot /app/reckoner/end_to_end_testing/basic.yml
-            docker exec kube-access sh -c "helm list --output json | jq . -C"
+            reckoner --version
+            test_environ_var=testing reckoner plot /app/reckoner/end_to_end_testing/basic.yml
+            helm list --output json | jq . -C
 
-            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"nginx-ingress\")|.Namespace == \"infra\"'"
-            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"go-harbor\")|.Namespace == \"test\"'"
-            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"redis-env\")|.Namespace == \"redis-test-namespace\"'"
-            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"nginx-ingress\")|.Status == \"DEPLOYED\"'"
-            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"go-harbor\")|.Status == \"DEPLOYED\"'"
-            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"redis-env\")|.Status == \"DEPLOYED\"'"
-            docker exec kube-access sh -c "helm list --output json | jq -e '[.Releases[].Name] | contains([\"redis-hook\"])|not'"
-            docker exec kube-access reckoner plot --only nginx-ingress /app/reckoner/end_to_end_testing/basic.yml
-            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"nginx-ingress\")|.Revision == 2'"
+            helm list --output json | jq -e '.Releases[]|select(.Name == "nginx-ingress")|.Namespace == "infra"'
+            helm list --output json | jq -e '.Releases[]|select(.Name == "go-harbor")|.Namespace == "test"'
+            helm list --output json | jq -e '.Releases[]|select(.Name == "redis-env")|.Namespace == "redis-test-namespace"'
+            helm list --output json | jq -e '.Releases[]|select(.Name == "nginx-ingress")|.Status == "DEPLOYED"'
+            helm list --output json | jq -e '.Releases[]|select(.Name == "go-harbor")|.Status == "DEPLOYED"'
+            helm list --output json | jq -e '.Releases[]|select(.Name == "redis-env")|.Status == "DEPLOYED"'
+            helm list --output json | jq -e '[.Releases[].Name] | contains(["redis-hook"])|not'
+            reckoner plot --only nginx-ingress /app/reckoner/end_to_end_testing/basic.yml
+            helm list --output json | jq -e '.Releases[]|select(.Name == "nginx-ingress")|.Revision == 2'
 
 workflows:
   version: 2
