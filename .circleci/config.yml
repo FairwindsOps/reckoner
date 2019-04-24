@@ -134,15 +134,18 @@ jobs:
       - run:
           name: build binary for os x
           command: |
-            git describe --tags --always --dirty
+            echo "Setting Up environment"
             pip3 install pyinstaller setuptools-scm
             pip3 install .
-            pip3 list
             cd installer
+
+            echo "Building the version.txt from git"
             python3 -c 'from setuptools_scm import get_version; get_version(root="..", write_to="reckoner/version.txt")'
-            cat ../reckoner/version.txt
-            git describe --tags --always --dirty
+
+            echo "Running the binary compiler"
             pyinstaller --noconfirm --paths .:../ --onefile --add-data ../reckoner/version.txt:reckoner --name reckoner cli.py
+
+            echo "Running the new Binary"
             ./dist/reckoner version
       - run:
           name: persist binaries
