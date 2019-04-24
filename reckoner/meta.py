@@ -25,6 +25,6 @@ try:
 except DistributionNotFound:
     # Attempt to discover Version from pyinstaller data
     from pkgutil import get_data
-    _raw_ver = get_data('reckoner', 'version.txt').decode('UTF-8', 'ignore').rstrip("\r\n")
+    _raw_ver = get_data(__distribution_name__, 'version.txt').decode('UTF-8', 'ignore').rstrip("\r\n")
     __version__ = re.sub(__version_modifier__, r'\g<1>-\g<2>', _raw_ver)
 __author__ = 'ReactiveOps, Inc.'
