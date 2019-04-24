@@ -164,7 +164,7 @@ jobs:
             docker ps -a
 
             echo "Setting up kubecfg"
-            cp -r $(kind get kubeconfig-path --name=kind) ~/.kube/
+            cp -r $(kind get kubeconfig-path --name=kind)/config ~/.kube/config
             kubectl version
 
             echo "Setting up Helm on Kubernetes"
