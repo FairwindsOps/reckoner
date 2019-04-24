@@ -29,7 +29,7 @@ executors:
       enabled: true
 
 jobs:
-  build-2.7:
+  build-2-7:
     executor: python-2-7
     working_directory: ~/reckoner
     steps:
@@ -44,7 +44,7 @@ jobs:
             pip install --user -e .
             reckoner --version
             pytest
-  build-3.6:
+  build-3-6:
     executor: python-3-6
     working_directory: ~/reckoner
     steps:
@@ -59,7 +59,7 @@ jobs:
             pip install --user -e .
             reckoner --version
             pytest
-  build-3.7:
+  build-3-7:
     executor: python-3-7
     working_directory: ~/reckoner
     steps:
@@ -177,46 +177,20 @@ workflows:
   version: 2
   build:
     jobs:
-      # - build-2.7:
-      #     filters:
-      #       tags:
-      #         only: /.*/
-      #       branches:
-      #         only: /.*/
-      # - build-3.6:
-      #     filters:
-      #       tags:
-      #         only: /.*/
-      #       branches:
-      #         only: /.*/
-      # - build-3.7:
-      #     filters:
-      #       tags:
-      #         only: /.*/
-      #       branches:
-      #         only: /.*/
+      # - build-2-7
+      # - build-3-6
+      # - build-3-7
       - compile:
           # requires:
-          #   - build-2.7
-          #   - build-3.6
-          #   - build-3.7
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              only: /.*/
+          #   - build-2-7
+          #   - build-3-6
+          #   - build-3-7
       - end-to-end:
           requires:
             - compile
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              only: /.*/
       # - release:
       #     requires:
-      #       - end-to-end-2.7
-      #       - end-to-end-3.7
+      #       - end-to-end
       #     filters:
       #       tags:
       #         only: /.*/
