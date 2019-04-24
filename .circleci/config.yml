@@ -132,12 +132,15 @@ jobs:
     steps:
       - run:
           name: Setup PATH to support pip user installs
-          command: echo 'export PATH=$PATH:/home/circleci/.local/bin' >> $BASH_ENV
+          command: echo 'export PATH=$PATH:$HOME/.local/bin' >> $BASH_ENV
       - checkout
       - run:
           name: build binary for linux
           command: |
+            echo $SHELL
             which python
+            which brew
+            python3 -V
             python -V
             pip list
             pip install --user pyinstaller setuptools-scm
@@ -236,22 +239,22 @@ workflows:
   build:
     jobs:
       - compile-darwin
-      - build-2-7
-      - build-3-6
-      - build-3-7
-      - compile:
-          requires:
-            - build-2-7
-            - build-3-6
-            - build-3-7
-      - end-to-end:
-          requires:
-            - compile
-      - release:
-          requires:
-            - end-to-end
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
+      # - build-2-7
+      # - build-3-6
+      # - build-3-7
+      # - compile:
+      #     requires:
+      #       - build-2-7
+      #       - build-3-6
+      #       - build-3-7
+      # - end-to-end:
+      #     requires:
+      #       - compile
+      # - release:
+      #     requires:
+      #       - end-to-end
+      #     filters:
+      #       tags:
+      #         only: /.*/
+      #       branches:
+      #         ignore: /.*/
