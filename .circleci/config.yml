@@ -16,11 +16,11 @@ version: 2.1
 
 executors:
   python-2-7:
-    docker: circleci/python:2.7
+    - docker: circleci/python:2.7
   python-3-6:
-    docker: circleci/python:3.6
+    - docker: circleci/python:3.6
   python-3-7:
-    docker: circleci/python:3.7
+    - docker: circleci/python:3.7
   vm:
     machine:
       enabled: true
