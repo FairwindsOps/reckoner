@@ -132,7 +132,7 @@ jobs:
       - attach_workspace:
           at: /tmp/binaries
       - run:
-          name: Setup Kube Cluster
+          name: Setup Testing Environment
           command: |
             echo "Installing git and jq"
             sudo apt-get install -yqq jq git
@@ -172,12 +172,13 @@ jobs:
             kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount kube-system:tiller
             helm init --service-account tiller --wait
       - run:
-          name: Run Tests
+          name: basic.yml Test Running Whole Course
           command: |
-            reckoner --version
             test_environ_var=testing reckoner plot end_to_end_testing/basic.yml
             helm list --output json | jq . -C
-
+      - run:
+          name: basic.yml Check reckoner run for installed services
+          command: |
             helm list --output json | jq -e '.Releases[]|select(.Name == "nginx-ingress")|.Namespace == "infra"'
             helm list --output json | jq -e '.Releases[]|select(.Name == "go-harbor")|.Namespace == "test"'
             helm list --output json | jq -e '.Releases[]|select(.Name == "redis-env")|.Namespace == "redis-test-namespace"'
@@ -185,8 +186,15 @@ jobs:
             helm list --output json | jq -e '.Releases[]|select(.Name == "go-harbor")|.Status == "DEPLOYED"'
             helm list --output json | jq -e '.Releases[]|select(.Name == "redis-env")|.Status == "DEPLOYED"'
             helm list --output json | jq -e '[.Releases[].Name] | contains(["redis-hook"])|not'
+      - run:
+          name: basic.yml Test Running Only One Chart
+          command: |
             reckoner plot --only nginx-ingress end_to_end_testing/basic.yml
-            helm list --output json | jq -e '.Releases[]|select(.Name == "nginx-ingress")|.Revision == 2'
+            helm list --output json | jq -e '.Releases[]|select(.Name == "nginx-ingress")|.Status == "DEPLOYED"'
+
+            reckoner plot --only nginx-ingress --only redis-env end_to_end_testing/basic.yml
+            helm list --output json | jq -e '.Releases[]|select(.Name == "nginx-ingress")|.Status == "DEPLOYED"'
+            helm list --output json | jq -e '.Releases[]|select(.Name == "redis-env")|.Status == "DEPLOYED"'
 
 workflows:
   version: 2
