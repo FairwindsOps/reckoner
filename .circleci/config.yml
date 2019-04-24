@@ -27,6 +27,9 @@ executors:
   vm:
     machine:
       enabled: true
+  darwin:
+    macos:
+      xcode: 10.2.0
 
 jobs:
   build-2-7:
@@ -115,14 +118,45 @@ jobs:
           name: persist binaries
           command: |
             sudo mkdir /tmp/binaries/
-            sudo cp installer/dist/reckoner /tmp/binaries/
+            sudo cp installer/dist/reckoner /tmp/binaries/reckoner-linux-amd64
       - persist_to_workspace:
           root: /tmp/binaries
           paths:
-            - reckoner
+            - reckoner-linux-amd64
       - store_artifacts:
           path: installer/dist/reckoner
-          destination: reckoner_linux_amd64
+          destination: reckoner-linux-amd64
+  compile-darwin:
+    executor: darwin
+    working_directory: ~/reckoner
+    steps:
+      - run:
+          name: Setup PATH to support pip user installs
+          command: echo 'export PATH=$PATH:/home/circleci/.local/bin' >> $BASH_ENV
+      - checkout
+      - run:
+          name: build binary for linux
+          command: |
+            which python
+            python -V
+            pip list
+            pip install --user pyinstaller setuptools-scm
+            pip install --user .
+            cd installer
+            python -c 'from setuptools_scm import get_version; get_version(root="..", write_to="reckoner/version.txt")'
+            pyinstaller --noconfirm --paths .:../ --onefile --add-data ../reckoner/version.txt:reckoner --name reckoner cli.py
+      - run:
+          name: persist binaries
+          command: |
+            sudo mkdir /tmp/binaries/
+            sudo cp installer/dist/reckoner /tmp/binaries/reckoner-darwin
+      - persist_to_workspace:
+          root: /tmp/binaries
+          paths:
+            - reckoner-darwin
+      - store_artifacts:
+          path: installer/dist/reckoner
+          destination: reckoner-darwin
   end-to-end:
     executor: vm
     working_directory: ~/reckoner
@@ -138,7 +172,7 @@ jobs:
             sudo apt-get install -yqq jq git
 
             echo "Installing Reckoner"
-            sudo cp /tmp/binaries/reckoner /usr/local/bin/
+            sudo cp /tmp/binaries/reckoner-linux-amd64 /usr/local/bin/reckoner
             reckoner version
 
             echo "Installing Kind"
@@ -201,6 +235,7 @@ workflows:
   version: 2
   build:
     jobs:
+      - compile-darwin
       - build-2-7
       - build-3-6
       - build-3-7
