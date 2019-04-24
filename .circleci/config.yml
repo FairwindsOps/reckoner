@@ -147,7 +147,7 @@ jobs:
             pip3 install .
             find $HOME -iname pyinstaller -type f
             cd installer
-            python -c 'from setuptools_scm import get_version; get_version(root="..", write_to="reckoner/version.txt")'
+            python3 -c 'from setuptools_scm import get_version; get_version(root="..", write_to="reckoner/version.txt")'
             pyinstaller --noconfirm --paths .:../ --onefile --add-data ../reckoner/version.txt:reckoner --name reckoner cli.py
       - run:
           name: persist binaries
