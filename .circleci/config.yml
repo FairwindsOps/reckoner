@@ -260,6 +260,11 @@ workflows:
             - build-2-7
             - build-3-6
             - build-3-7
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              only: /.*/
       - compile:
           requires:
             - build-2-7
