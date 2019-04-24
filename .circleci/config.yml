@@ -137,15 +137,9 @@ jobs:
       - run:
           name: build binary for os x
           command: |
-            echo $PATH
-            which python
-            which brew
-            python3 -V
-            python -V
-            pip list
             pip3 install pyinstaller setuptools-scm
             pip3 install .
-            find $HOME -iname pyinstaller -type f
+            pip3 list
             cd installer
             python3 -c 'from setuptools_scm import get_version; get_version(root="..", write_to="reckoner/version.txt")'
             pyinstaller --noconfirm --paths .:../ --onefile --add-data ../reckoner/version.txt:reckoner --name reckoner cli.py
