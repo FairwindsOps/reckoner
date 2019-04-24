@@ -134,29 +134,40 @@ jobs:
       - run:
           name: Setup Kube Cluster
           command: |
+            echo "Installing Kind"
             wget https://github.com/kubernetes-sigs/kind/releases/download/0.2.1/kind-linux-amd64
             mv kind-linux-amd64 kind
             chmod 0755 kind
+            kind version
 
-            ./kind create cluster --wait=90s
-
-            echo $(./kind get kubeconfig-path --name=kind) ~/.kube/config
-
+            echo "Installing Reckoner"
             sudo cp /tmp/binaries/reckoner /usr/local/bin/
-            sudo apt-get install jq
+            reckoner version
 
+            echo "Installing git and jq"
+            sudo apt-get install -y jq git
+
+            echo "Installing Kubectl"
             curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.12.7/bin/linux/amd64/kubectl
             chmod 0755 kubectl
             sudo mv kubectl /usr/local/bin/
-            kubectl version
+            kubectl version --client
 
-            curl -LO https://storage.googleapis.com/kubernetes-helm/helm-v2.13.1-linux-amd64.tar.gz
-            tar xzvf helm-v2.13.1-linux-amd64.tar.gz linux-amd64/helm
+            echo "Installing Helm"
+            curl -L https://storage.googleapis.com/kubernetes-helm/helm-v2.13.1-linux-amd64.tar.gz | tar xzv linux-amd64/helm
             sudo mv helm /usr/local/bin/helm
             rm -rf helm linux-amd64
             helm version --client
 
+            echo "Creating Kubernetes Cluster with Kind"
+            ./kind create cluster --wait=90s
+            docker ps -a
+
+            echo "Setting up kubecfg"
+            echo $(./kind get kubeconfig-path --name=kind) ~/.kube/config
             kubectl version
+
+            echo "Setting up Helm on Kubernetes"
             kubectl -n kube-system create serviceaccount tiller
             kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount kube-system:tiller
             helm init --service-account tiller --wait
