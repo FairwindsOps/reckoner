@@ -134,19 +134,19 @@ jobs:
       - run:
           name: Setup Kube Cluster
           command: |
+            echo "Installing git and jq"
+            sudo apt-get install -y jq git
+
+            echo "Installing Reckoner"
+            sudo cp /tmp/binaries/reckoner /usr/local/bin/
+            reckoner version
+
             echo "Installing Kind"
             wget https://github.com/kubernetes-sigs/kind/releases/download/0.2.1/kind-linux-amd64
             mv kind-linux-amd64 kind
             chmod 0755 kind
             sudo mv kind /usr/local/bin/kind
             kind version
-
-            echo "Installing Reckoner"
-            sudo cp /tmp/binaries/reckoner /usr/local/bin/
-            reckoner version
-
-            echo "Installing git and jq"
-            sudo apt-get install -y jq git
 
             echo "Installing Kubectl"
             curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.12.7/bin/linux/amd64/kubectl
@@ -156,8 +156,8 @@ jobs:
 
             echo "Installing Helm"
             curl -L https://storage.googleapis.com/kubernetes-helm/helm-v2.13.1-linux-amd64.tar.gz | tar xzv linux-amd64/helm
-            sudo mv helm /usr/local/bin/helm
-            rm -rf helm linux-amd64
+            sudo mv linux-amd64/helm /usr/local/bin/helm
+            rm -rf linux-amd64
             helm version --client
 
             echo "Creating Kubernetes Cluster with Kind"
