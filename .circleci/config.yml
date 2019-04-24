@@ -138,7 +138,6 @@ jobs:
           name: build binary for os x
           command: |
             echo $PATH
-            find $HOME -iname pyinstaller -type f
             which python
             which brew
             python3 -V
