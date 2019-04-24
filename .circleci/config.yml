@@ -12,10 +12,116 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-version: 2
+version: 2.1
+
+executors:
+  python-2-7:
+    docker: circleci/python:2.7
+  python-3-6:
+    docker: circleci/python:3.6
+  python-3-7:
+    docker: circleci/python:3.7
+  vm:
+    machine:
+      enabled: true
 
 jobs:
+  build-2.7:
+    executor: python-2-7
+    working_directory: ~/reckoner
+    steps:
+      - run:
+          name: Setup PATH to support pip user installs
+          command: echo 'export PATH=$PATH:/home/circleci/.local/bin' >> $BASH_ENV
+      - checkout
+      - run:
+          name: Unit Tests
+          command: |
+            pip install --user -r development-requirements.txt
+            pip install --user -e .
+            reckoner --version
+            pytest
+  build-3.6:
+    executor: python-3-6
+    working_directory: ~/reckoner
+    steps:
+      - run:
+          name: Setup PATH to support pip user installs
+          command: echo 'export PATH=$PATH:/home/circleci/.local/bin' >> $BASH_ENV
+      - checkout
+      - run:
+          name: Unit Tests
+          command: |
+            pip install --user -r development-requirements.txt
+            pip install --user -e .
+            reckoner --version
+            pytest
+  build-3.7:
+    executor: python-3-7
+    working_directory: ~/reckoner
+    steps:
+      - run:
+          name: Setup PATH to support pip user installs
+          command: echo 'export PATH=$PATH:/home/circleci/.local/bin' >> $BASH_ENV
+      - checkout
+      - run:
+          name: Unit Tests
+          command: |
+            pip install --user -r development-requirements.txt
+            pip install --user -e .
+            reckoner --version
+            pytest
+  release:
+    executor: python-3-7
+    environment:
+      PYPI_USERNAME: ReactiveOps
+      GITHUB_ORGANIZATION: $CIRCLE_PROJECT_USERNAME
+      GITHUB_REPOSITORY: $CIRCLE_PROJECT_REPONAME
+    working_directory: ~/reckoner
+    steps:
+      - checkout
+      - run:
+          name: init .pypirc
+          command: |
+            echo -e "[pypi]" >> ~/.pypirc
+            echo -e "username = $PYPI_USERNAME" >> ~/.pypirc
+            echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
+      - run:
+          name: package and upload
+          command: |
+            sudo pip install twine
+            python setup.py sdist bdist_wheel
+            twine upload dist/*
+  compile:
+    executor: python-3-7
+    working_directory: ~/reckoner
+    steps:
+      - run:
+          name: Setup PATH to support pip user installs
+          command: echo 'export PATH=$PATH:/home/circleci/.local/bin' >> $BASH_ENV
+      - checkout
+      - run:
+          name: build binary for linux
+          command: |
+            pip install --user pyinstaller setuptools-scm
+            pip install --user .
+            cd installer
+            python -c 'from setuptools_scm import get_version; get_version(root="..", write_to="reckoner/version.txt")'
+            pyinstaller -y -p .:../ -F -n reckoner reckoner.spec
+      - run:
+          name: persist binaries
+          command: |
+            sudo mkdir /tmp/binaries/
+            sudo cp installer/installer/dist/reckoner /tmp/binaries/
+      - persist_to_workspace:
+          root: /tmp/binaries
+          paths:
+            - reckoner
+      - store_artifacts:
+          path: installer/dist/reckoner
+          destination: reckoner_linux_amd64
   end-to-end:
+    executor: vm
     working_directory: ~/reckoner
     resource_class: small
     steps:
@@ -63,105 +169,6 @@ jobs:
             docker exec kube-access sh -c "helm list --output json | jq -e '[.Releases[].Name] | contains([\"redis-hook\"])|not'"
             docker exec kube-access reckoner plot --only nginx-ingress /app/reckoner/end_to_end_testing/basic.yml
             docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"nginx-ingress\")|.Revision == 2'"
-  build-2.7:
-    docker:
-      - image: circleci/python:2.7
-    working_directory: ~/reckoner
-    steps:
-      - run:
-          name: Setup PATH to support pip user installs
-          command: echo 'export PATH=$PATH:/home/circleci/.local/bin' >> $BASH_ENV
-      - checkout
-      - run:
-          name: Unit Tests
-          command: |
-            pip install --user -r development-requirements.txt
-            pip install --user -e .
-            reckoner --version
-            pytest
-  build-3.6:
-    docker:
-      - image: circleci/python:3.6
-    working_directory: ~/reckoner
-    steps:
-      - run:
-          name: Setup PATH to support pip user installs
-          command: echo 'export PATH=$PATH:/home/circleci/.local/bin' >> $BASH_ENV
-      - checkout
-      - run:
-          name: Unit Tests
-          command: |
-            pip install --user -r development-requirements.txt
-            pip install --user -e .
-            reckoner --version
-            pytest
-  build-3.7:
-    docker:
-      - image: circleci/python:3.7
-    working_directory: ~/reckoner
-    steps:
-      - run:
-          name: Setup PATH to support pip user installs
-          command: echo 'export PATH=$PATH:/home/circleci/.local/bin' >> $BASH_ENV
-      - checkout
-      - run:
-          name: Unit Tests
-          command: |
-            pip install --user -r development-requirements.txt
-            pip install --user -e .
-            reckoner --version
-            pytest
-  release:
-    docker:
-      - image: circleci/python:3
-    environment:
-      PYPI_USERNAME: ReactiveOps
-      GITHUB_ORGANIZATION: $CIRCLE_PROJECT_USERNAME
-      GITHUB_REPOSITORY: $CIRCLE_PROJECT_REPONAME
-    working_directory: ~/reckoner
-    steps:
-      - checkout
-      - run:
-          name: init .pypirc
-          command: |
-            echo -e "[pypi]" >> ~/.pypirc
-            echo -e "username = $PYPI_USERNAME" >> ~/.pypirc
-            echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
-      - run:
-          name: package and upload
-          command: |
-            sudo pip install twine
-            python setup.py sdist bdist_wheel
-            twine upload dist/*
-  compile:
-    docker:
-      - image: circleci/python:3.7
-    working_directory: ~/reckoner
-    steps:
-      - run:
-          name: Setup PATH to support pip user installs
-          command: echo 'export PATH=$PATH:/home/circleci/.local/bin' >> $BASH_ENV
-      - checkout
-      - run:
-          name: build binary for linux
-          command: |
-            pip install --user pyinstaller setuptools-scm
-            pip install --user .
-            cd installer
-            python -c 'from setuptools_scm import get_version; get_version(root="..", write_to="reckoner/version.txt")'
-            pyinstaller -y -p .:../ -F -n reckoner reckoner.spec
-      - run:
-          name: persist binaries
-          command: |
-            sudo mkdir /tmp/binaries/
-            sudo cp installer/installer/dist/reckoner /tmp/binaries/
-      - persist_to_workspace:
-          root: /tmp/binaries
-          paths:
-            - reckoner
-      - store_artifacts:
-          path: installer/dist/reckoner
-          destination: reckoner_linux_amd64
 
 workflows:
   version: 2
