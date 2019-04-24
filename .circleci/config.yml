@@ -128,7 +128,6 @@ jobs:
     working_directory: ~/reckoner
     resource_class: small
     steps:
-      - setup_remote_docker
       - checkout
       - attach_workspace:
           at: /tmp/binaries
