@@ -180,7 +180,7 @@ workflows:
       # - build-2-7
       # - build-3-6
       # - build-3-7
-      - compile:
+      - compile
           # requires:
           #   - build-2-7
           #   - build-3-6
