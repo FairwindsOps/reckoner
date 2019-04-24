@@ -201,22 +201,22 @@ workflows:
   version: 2
   build:
     jobs:
-      # - build-2-7
-      # - build-3-6
-      # - build-3-7
+      - build-2-7
+      - build-3-6
+      - build-3-7
       - compile
-          # requires:
-          #   - build-2-7
-          #   - build-3-6
-          #   - build-3-7
+          requires:
+            - build-2-7
+            - build-3-6
+            - build-3-7
       - end-to-end:
           requires:
             - compile
-      # - release:
-      #     requires:
-      #       - end-to-end
-      #     filters:
-      #       tags:
-      #         only: /.*/
-      #       branches:
-      #         ignore: /.*/
+      - release:
+          requires:
+            - end-to-end
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
