@@ -132,10 +132,10 @@ jobs:
     steps:
       - run:
           name: Setup PATH to support pip user installs
-          command: echo 'export PATH=$PATH:$HOME/.local/bin' >> $BASH_ENV
+          command: echo 'export PATH=$PATH:$HOME/Library/Python/3.7/bin' >> $BASH_ENV
       - checkout
       - run:
-          name: build binary for linux
+          name: build binary for os x
           command: |
             echo $SHELL
             which python
