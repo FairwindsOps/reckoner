@@ -143,6 +143,7 @@ jobs:
             cat ../reckoner/version.txt
             git describe --tags --always --dirty
             pyinstaller --noconfirm --paths .:../ --onefile --add-data ../reckoner/version.txt:reckoner --name reckoner cli.py
+            ./dist/reckoner version
       - run:
           name: persist binaries
           command: |
