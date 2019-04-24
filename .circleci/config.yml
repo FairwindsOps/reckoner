@@ -195,7 +195,7 @@ jobs:
       - run:
           name: build binary for linux
           command: |
-            pip install --user pyinstaller
+            pip install --user pyinstaller setuptools-scm
             cd installer
             python -c 'from setuptools_scm import get_version; get_version(root="..", write_to="reckoner/version.txt")'
             pyinstaller -y -p .:../ -F -n reckoner cli.py
