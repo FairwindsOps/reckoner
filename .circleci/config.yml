@@ -199,7 +199,7 @@ jobs:
             pip install --user .
             cd installer
             python -c 'from setuptools_scm import get_version; get_version(root="..", write_to="reckoner/version.txt")'
-            pyinstaller -y -p .:../ -F -n reckoner cli.py
+            pyinstaller -y -p .:../ -F -n reckoner reckoner.spec
       - store_artifacts:
           path: installer/dist/reckoner
           destination: reckoner_linux_amd64
