@@ -115,7 +115,7 @@ jobs:
           name: persist binaries
           command: |
             sudo mkdir /tmp/binaries/
-            sudo cp installer/installer/dist/reckoner /tmp/binaries/
+            sudo cp installer/dist/reckoner /tmp/binaries/
       - persist_to_workspace:
           root: /tmp/binaries
           paths:
