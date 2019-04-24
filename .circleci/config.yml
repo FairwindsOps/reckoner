@@ -130,18 +130,18 @@ jobs:
     executor: darwin
     working_directory: ~/reckoner
     steps:
-      - run:
-          name: Setup PATH to support pip user installs
-          command: echo 'export PATH=$PATH:$HOME/Library/Python/3.7/bin' >> $BASH_ENV
       - checkout
       - run:
           name: build binary for os x
           command: |
+            git describe --tags --always --dirty
             pip3 install pyinstaller setuptools-scm
             pip3 install .
             pip3 list
             cd installer
             python3 -c 'from setuptools_scm import get_version; get_version(root="..", write_to="reckoner/version.txt")'
+            cat ../reckoner/version.txt
+            git describe --tags --always --dirty
             pyinstaller --noconfirm --paths .:../ --onefile --add-data ../reckoner/version.txt:reckoner --name reckoner cli.py
       - run:
           name: persist binaries
