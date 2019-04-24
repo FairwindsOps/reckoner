@@ -18,19 +18,105 @@ executors:
   python-2-7:
     docker:
       - image: circleci/python:2.7
+<<<<<<< HEAD
   python-3-6:
     docker:
       - image: circleci/python:3.6
   python-3-7:
+=======
+    working_directory: ~/reckoner
+    resource_class: small
+    steps:
+      - setup_remote_docker
+      - checkout
+      - run:
+          name: Setup Kube Cluster
+          command: |
+            wget https://github.com/kubernetes-sigs/kind/releases/download/0.2.1/kind-linux-amd64
+            mv kind-linux-amd64 kind
+            chmod 0755 kind
+
+            ./kind create cluster --wait=90s
+
+            docker run -d --name kube-access --network container:kind-control-plane gcr.io/kubernetes-charts-ci/test-image:v3.2.0 tail -f /dev/null
+            docker exec kube-access mkdir /root/.kube /app/
+            docker cp $(./kind get kubeconfig-path --name=kind) kube-access:/root/.kube/config
+            docker exec kube-access sed -i 's/localhost:.*/localhost:6443/' /root/.kube/config
+            docker exec -it kube-access kubectl version
+
+            docker exec kube-access apk update
+            docker exec kube-access apk add jq
+            docker cp ~/reckoner/ kube-access:/app/.
+            docker exec kube-access pip install /app/reckoner/
+            docker exec kube-access pip list
+
+            docker exec kube-access kubectl -n kube-system create serviceaccount tiller
+            docker exec kube-access kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount kube-system:tiller
+            docker exec kube-access helm init --service-account tiller --wait
+      - run:
+          name: Run Tests
+          command: |
+            docker exec kube-access reckoner --version
+            docker exec -e test_environ_var=testing kube-access reckoner plot /app/reckoner/end_to_end_testing/basic.yml
+            docker exec kube-access sh -c "helm list --output json | jq . -C"
+
+            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"nginx-ingress\")|.Namespace == \"infra\"'"
+            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"go-harbor\")|.Namespace == \"test\"'"
+            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"redis-env\")|.Namespace == \"redis-test-namespace\"'"
+            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"nginx-ingress\")|.Status == \"DEPLOYED\"'"
+            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"go-harbor\")|.Status == \"DEPLOYED\"'"
+            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"redis-env\")|.Status == \"DEPLOYED\"'"
+            docker exec kube-access sh -c "helm list --output json | jq -e '[.Releases[].Name] | contains([\"redis-hook\"])|not'"
+            docker exec kube-access reckoner plot --only nginx-ingress /app/reckoner/end_to_end_testing/basic.yml
+            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"nginx-ingress\")|.Revision == 2'"
+  end-to-end-3.7:
+>>>>>>> master
     docker:
       - image: circleci/python:3.7
   vm:
     machine:
       enabled: true
 
+<<<<<<< HEAD
 jobs:
   build-2-7:
     executor: python-2-7
+=======
+            docker run -d --name kube-access --network container:kind-control-plane gcr.io/kubernetes-charts-ci/test-image:v3.2.0 tail -f /dev/null
+            docker exec kube-access mkdir /root/.kube /app/
+            docker cp $(./kind get kubeconfig-path --name=kind) kube-access:/root/.kube/config
+            docker exec kube-access sed -i 's/localhost:.*/localhost:6443/' /root/.kube/config
+            docker exec -it kube-access kubectl version
+
+            docker exec kube-access apk update
+            docker exec kube-access apk add python3 jq
+            docker cp ~/reckoner/ kube-access:/app/.
+            docker exec kube-access pip3 install /app/reckoner/
+            docker exec kube-access pip3 list
+
+            docker exec kube-access kubectl -n kube-system create serviceaccount tiller
+            docker exec kube-access kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount kube-system:tiller
+            docker exec kube-access helm init --service-account tiller --wait
+      - run:
+          name: Run Tests
+          command: |
+            docker exec kube-access reckoner --version
+            docker exec -e test_environ_var=testing kube-access reckoner plot /app/reckoner/end_to_end_testing/basic.yml
+            docker exec kube-access sh -c "helm list --output json | jq . -C"
+
+            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"nginx-ingress\")|.Namespace == \"infra\"'"
+            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"go-harbor\")|.Namespace == \"test\"'"
+            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"redis-env\")|.Namespace == \"redis-test-namespace\"'"
+            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"nginx-ingress\")|.Status == \"DEPLOYED\"'"
+            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"go-harbor\")|.Status == \"DEPLOYED\"'"
+            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"redis-env\")|.Status == \"DEPLOYED\"'"
+            docker exec kube-access sh -c "helm list --output json | jq -e '[.Releases[].Name] | contains([\"redis-hook\"])|not'"
+            docker exec kube-access reckoner plot --only nginx-ingress /app/reckoner/end_to_end_testing/basic.yml
+            docker exec kube-access sh -c "helm list --output json | jq -e '.Releases[]|select(.Name == \"nginx-ingress\")|.Revision == 2'"
+  build-2.7:
+    docker:
+      - image: circleci/python:2.7
+>>>>>>> master
     working_directory: ~/reckoner
     steps:
       - run:
