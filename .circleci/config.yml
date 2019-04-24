@@ -138,7 +138,7 @@ jobs:
             wget https://github.com/kubernetes-sigs/kind/releases/download/0.2.1/kind-linux-amd64
             mv kind-linux-amd64 kind
             chmod 0755 kind
-            mv kind /usr/local/bin/kind
+            sudo mv kind /usr/local/bin/kind
             kind version
 
             echo "Installing Reckoner"
