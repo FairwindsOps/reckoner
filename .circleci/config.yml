@@ -185,7 +185,8 @@ jobs:
             helm list --output json | jq -e '.Releases[]|select(.Name == "nginx-ingress")|.Status == "DEPLOYED"'
             helm list --output json | jq -e '.Releases[]|select(.Name == "go-harbor")|.Status == "DEPLOYED"'
             helm list --output json | jq -e '.Releases[]|select(.Name == "redis-env")|.Status == "DEPLOYED"'
-            helm list --output json | jq -e '[.Releases[].Name] | contains(["redis-hook"])|not'
+            helm list --output json | jq -e '[.Releases[].Name] | contains(["redis-hook"])'
+            helm list --output json | jq -e '[.Releases[].Name] | contains(["redis-failed-hook"])|not'
       - run:
           name: basic.yml Test Running Only One Chart
           command: |
