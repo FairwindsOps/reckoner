@@ -175,7 +175,7 @@ jobs:
           name: Run Tests
           command: |
             reckoner --version
-            test_environ_var=testing reckoner plot /app/reckoner/end_to_end_testing/basic.yml
+            test_environ_var=testing reckoner plot end_to_end_testing/basic.yml
             helm list --output json | jq . -C
 
             helm list --output json | jq -e '.Releases[]|select(.Name == "nginx-ingress")|.Namespace == "infra"'
@@ -185,7 +185,7 @@ jobs:
             helm list --output json | jq -e '.Releases[]|select(.Name == "go-harbor")|.Status == "DEPLOYED"'
             helm list --output json | jq -e '.Releases[]|select(.Name == "redis-env")|.Status == "DEPLOYED"'
             helm list --output json | jq -e '[.Releases[].Name] | contains(["redis-hook"])|not'
-            reckoner plot --only nginx-ingress /app/reckoner/end_to_end_testing/basic.yml
+            reckoner plot --only nginx-ingress end_to_end_testing/basic.yml
             helm list --output json | jq -e '.Releases[]|select(.Name == "nginx-ingress")|.Revision == 2'
 
 workflows:
