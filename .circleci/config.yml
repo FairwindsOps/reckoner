@@ -237,9 +237,24 @@ workflows:
   version: 2
   build:
     jobs:
-      - build-2-7
-      - build-3-6
-      - build-3-7
+      - build-2-7:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              only: /.*/
+      - build-3-6:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              only: /.*/
+      - build-3-7:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              only: /.*/
       - compile-darwin:
           requires:
             - build-2-7
@@ -250,9 +265,19 @@ workflows:
             - build-2-7
             - build-3-6
             - build-3-7
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              only: /.*/
       - end-to-end:
           requires:
             - compile
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              only: /.*/
       - release:
           requires:
             - end-to-end
