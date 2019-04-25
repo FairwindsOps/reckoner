@@ -232,6 +232,30 @@ jobs:
             reckoner plot --only nginx-ingress --only redis-env end_to_end_testing/basic.yml
             helm list --output json | jq -e '.Releases[]|select(.Name == "nginx-ingress")|.Status == "DEPLOYED"'
             helm list --output json | jq -e '.Releases[]|select(.Name == "redis-env")|.Status == "DEPLOYED"'
+  publish-binaries:
+    executor: python-3-7
+    steps:
+      - attach_workspace:
+          at: /tmp/binaries
+      - run:
+          name: find release tag
+          command: |
+            release_id=$(curl -s -H "Authorization: token ${GITHUB_ACCESS_TOKEN}" -X GET https://api.github.com/repos/reactiveops/reckoner/releases/tags/${CIRCLE_TAG} | jq -e .id)
+            echo "Found Release (${release_id})"
+            echo "Posting Binaries to Release"
+
+            for filename in /tmp/binaries/*; do
+              publish_url="https://uploads.github.com/repos/reactiveops/reckoner/releases/${release_id}/assets?name=$(basename ${filename})"
+              echo "Publishing ${filename} to ${publish_url}"
+              curl \
+                --fail \
+                -H "Accept: application/json" \
+                -H "Authorization: token ${GITHUB_ACCESS_TOKEN}" \
+                -H "Content-Type: application/octet-stream" \
+                --request POST \
+                --data-binary @"${filename}" \
+                ${publish_url}
+            done
 
 workflows:
   version: 2
@@ -260,6 +284,11 @@ workflows:
             - build-2-7
             - build-3-6
             - build-3-7
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              only: /.*/
       - compile:
           requires:
             - build-2-7
@@ -279,6 +308,14 @@ workflows:
             branches:
               only: /.*/
       - release:
+          requires:
+            - end-to-end
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
+      - publish-binaries:
           requires:
             - end-to-end
           filters:
