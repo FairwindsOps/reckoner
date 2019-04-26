@@ -302,6 +302,7 @@ workflows:
       - end-to-end:
           requires:
             - compile
+            - compile-darwin
           filters:
             tags:
               only: /.*/
