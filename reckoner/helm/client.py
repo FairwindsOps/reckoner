@@ -39,7 +39,7 @@ class HelmClient(object):
         """Setter of the default helm arguments to override"""
         self._default_helm_arguments = value
 
-    def execute(self, command, arguments=[], filter_non_global_flags=False):
+    def execute(self, command, arguments=[], filter_non_global_flags=False, plugin=None):
         """
         Run the command with the help of the provider.
 
@@ -56,6 +56,7 @@ class HelmClient(object):
         command = HelmCommand(
             command=command,
             arguments=arguments,
+            plugin=plugin
         )
         response = self._provider.execute(command)
         if response.succeeded:
@@ -91,12 +92,12 @@ class HelmClient(object):
     def check_helm_command(self):
         return self.execute("help", [], filter_non_global_flags=True).succeeded
 
-    def upgrade(self, args, install=True):
+    def upgrade(self, args, install=True, plugin=None):
         if install:
             arguments = ['--install'] + args
         else:
             arguments = args
-        return self.execute("upgrade", arguments)
+        return self.execute("upgrade", arguments, plugin=plugin )
 
     def rollback(self, release):
         raise NotImplementedError(

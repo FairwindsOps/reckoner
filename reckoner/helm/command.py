@@ -16,7 +16,7 @@
 class HelmCommand(object):
     """Intended to simplify the contract for the helm provider."""
 
-    def __init__(self, command, arguments=[]):
+    def __init__(self, command, arguments=[], plugin=None):
         self._errors = []
         self.validate_command(command)
         self.validate_arguments(arguments)
@@ -25,6 +25,7 @@ class HelmCommand(object):
 
         self._command = command
         self._arguments = arguments
+        self._plugin = plugin
 
     def validate_command(self, cmd):
         if not cmd:
@@ -46,6 +47,10 @@ class HelmCommand(object):
     @property
     def arguments(self):
         return self._arguments
+
+    @property
+    def plugin(self):
+        return self._plugin
 
     def __str__(self):
         return 'helm ' + self._command + ' ' + ' '.join(self._arguments)
