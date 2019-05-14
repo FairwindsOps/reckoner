@@ -355,7 +355,14 @@ class Chart(object):
         """
         for key, value in self.values_strings.items():
             for k, v in self._format_set(key, value):
-                self.args.append("--set-string={}={}".format(k, v))
+                """
+                In order to maintain BWC, for now, only chage the -f arg style for secrets plugin
+                as it doesn't accept -f=arg style
+                """
+                if self._plugin=='secrets':
+                    self.args.append("--set-string {}={}".format(k, v))
+                else:
+                    self.args.append("--set-string={}={}".format(k, v))
 
     def build_set_arguments(self):
         """
@@ -367,7 +374,14 @@ class Chart(object):
         """
         for key, value in self.set_values.items():
             for k, v in self._format_set(key, value):
-                self.args.append("--set={}={}".format(k, v))
+                """
+                In order to maintain BWC, for now, only chage the -f arg style for secrets plugin
+                as it doesn't accept -f=arg style
+                """
+                if self._plugin=='secrets':
+                    self.args.append("--set {}={}".format(k, v))
+                else:
+                    self.args.append("--set={}={}".format(k, v))
 
     def _format_set(self, key, value):
         """
