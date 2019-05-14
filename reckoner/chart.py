@@ -335,7 +335,15 @@ class Chart(object):
         files specified in the course.yml
         """
         for values_file in self.files:
-            self.args.append("-f={}".format(values_file))
+            """
+            In order to maintain BWC, for now, only chage the -f arg style for secrets plugin
+            as it doesn't accept -f=arg style
+            """
+            if self._plugin=='secrets':
+                self.args.append("-f {}".format(values_file))
+            else:
+                self.args.append("-f={}".format(values_file))
+
 
     def build_set_string_arguments(self):
         """
