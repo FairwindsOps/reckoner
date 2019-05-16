@@ -124,7 +124,7 @@ class Chart(object):
         return self._repository
 
     @property
-    def plugin (self):
+    def plugin(self):
         """ Helm plugin name parsed from course chart """
         return self._plugin
 
@@ -335,15 +335,7 @@ class Chart(object):
         files specified in the course.yml
         """
         for values_file in self.files:
-            """
-            In order to maintain BWC, for now, only chage the -f arg style for secrets plugin
-            as it doesn't accept -f=arg style
-            """
-            if self._plugin=='secrets':
-                self.args.append("-f {}".format(values_file))
-            else:
-                self.args.append("-f={}".format(values_file))
-
+            self.args.append("-f={}".format(values_file))
 
     def build_set_string_arguments(self):
         """
@@ -355,14 +347,7 @@ class Chart(object):
         """
         for key, value in self.values_strings.items():
             for k, v in self._format_set(key, value):
-                """
-                In order to maintain BWC, for now, only chage the -f arg style for secrets plugin
-                as it doesn't accept -f=arg style
-                """
-                if self._plugin=='secrets':
-                    self.args.append("--set-string {}={}".format(k, v))
-                else:
-                    self.args.append("--set-string={}={}".format(k, v))
+                self.args.append("--set-string={}={}".format(k, v))
 
     def build_set_arguments(self):
         """
@@ -374,14 +359,7 @@ class Chart(object):
         """
         for key, value in self.set_values.items():
             for k, v in self._format_set(key, value):
-                """
-                In order to maintain BWC, for now, only chage the -f arg style for secrets plugin
-                as it doesn't accept -f=arg style
-                """
-                if self._plugin=='secrets':
-                    self.args.append("--set {}={}".format(k, v))
-                else:
-                    self.args.append("--set={}={}".format(k, v))
+                self.args.append("--set={}={}".format(k, v))
 
     def _format_set(self, key, value):
         """

@@ -53,12 +53,16 @@ class HelmClient(object):
 
         arguments = default_args + list(arguments)
 
-        command = HelmCommand(
+        # If we need to run wrapped in a plugin, then put that command first, always
+        if plugin:
+            arguments = [command] + arguments
+            command = plugin
+
+        helm_command = HelmCommand(
             command=command,
             arguments=arguments,
-            plugin=plugin
         )
-        response = self._provider.execute(command)
+        response = self._provider.execute(helm_command)
         if response.succeeded:
             return response
         else:
@@ -97,7 +101,7 @@ class HelmClient(object):
             arguments = ['--install'] + args
         else:
             arguments = args
-        return self.execute("upgrade", arguments, plugin=plugin )
+        return self.execute("upgrade", arguments, plugin=plugin)
 
     def rollback(self, release):
         raise NotImplementedError(

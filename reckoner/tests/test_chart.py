@@ -217,3 +217,34 @@ class TestCharts(unittest.TestCase):
 
         chart._check_env_vars()
         self.assertEqual(chart.args[0], 'thing=$(environVar)')
+
+    @mock.patch('reckoner.chart.Repository')
+    def test_chart_install(self, repositoryMock):
+        repo_mock = repositoryMock()
+        repo_mock.chart_path = ""
+        helm_client_mock = mock.MagicMock()
+
+        chart = Chart({'nameofchart': {'namespace': 'fakenamespace', 'set-values': {}}}, helm_client_mock)
+        chart.config.dryrun = False
+        chart.config.local_development = False
+
+        chart.install()
+        helm_client_mock.upgrade.assert_called_once()
+        upgrade_call = helm_client_mock.upgrade.call_args
+        self.assertEqual(upgrade_call[0][0], ['nameofchart', '', '--namespace=fakenamespace'])
+
+    @mock.patch('reckoner.chart.Repository')
+    def test_chart_install_with_plugin(self, repositoryMock):
+        repo_mock = repositoryMock()
+        repo_mock.chart_path = ""
+        helm_client_mock = mock.MagicMock()
+
+        chart = Chart({'nameofchart': {'namespace': 'fakenamespace', 'plugin': 'someplugin', 'set-values': {}}}, helm_client_mock)
+        chart.config.dryrun = False
+        chart.config.local_development = False
+
+        chart.install()
+        helm_client_mock.upgrade.assert_called_once()
+        upgrade_call = helm_client_mock.upgrade.call_args
+        self.assertEqual(upgrade_call[0][0], ['nameofchart', '', '--namespace=fakenamespace'])
+        self.assertEqual(upgrade_call[1], {'plugin': 'someplugin'})

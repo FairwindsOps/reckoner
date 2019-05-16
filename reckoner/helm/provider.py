@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
 from reckoner.command_line_caller import call
 from .cmd_response import HelmCmdResponse
 
@@ -42,10 +41,7 @@ class HelmProvider(object):
 
         # start by creating a command line arguments list with the command being first
         args = list([instance._helm_binary])
-        if instance._helm_command.plugin is not None:
-            args.append(instance._helm_command.plugin)
         args.append(instance._helm_command.command)
-      
         for arg in instance._helm_command.arguments:
             args.append(arg)
 
