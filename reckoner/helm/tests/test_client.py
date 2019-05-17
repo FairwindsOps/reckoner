@@ -114,23 +114,42 @@ incubator       https://kubernetes-charts-incubator.storage.googleapis.com
         with self.assertRaises(HelmClientException) as e:
             assert HelmClient(provider=self.dummy_provider).check_helm_command() == False
 
+    def test_default_upgrade_calls_install_flag(self):
+        HelmClient(provider=self.dummy_provider).upgrade([])
+        self.dummy_provider.execute.called_once()
+        self.assertEqual(self.dummy_provider.execute.call_args[0][0].command, "upgrade")
+        self.assertEqual(self.dummy_provider.execute.call_args[0][0].arguments, ["--install"])
+        self.dummy_provider.reset_mock()
+
     def test_upgrade(self):
-        self.dummy_provider.execute.side_effect = [
-            HelmCmdResponse(
-                0, '', 'pass', HelmCommand('install', ['--install'])
-            ),
-            HelmCmdResponse(
-                0, '', 'pass', HelmCommand('install', [])
-            )
-        ]
+        HelmClient(provider=self.dummy_provider).upgrade([], install=True)
+        self.dummy_provider.execute.called_once()
+        self.assertEqual(self.dummy_provider.execute.call_args[0][0].command, "upgrade")
+        self.assertEqual(self.dummy_provider.execute.call_args[0][0].arguments, ["--install"])
+        self.dummy_provider.reset_mock()
 
-        with_install = HelmClient(provider=self.dummy_provider).upgrade([], install=True)
-        without_install = HelmClient(provider=self.dummy_provider).upgrade([], install=False)
+        HelmClient(provider=self.dummy_provider).upgrade([], install=False)
+        self.dummy_provider.execute.called_once()
+        self.assertEqual(self.dummy_provider.execute.call_args[0][0].command, "upgrade")
+        self.assertEqual(self.dummy_provider.execute.call_args[0][0].arguments, [])
+        self.dummy_provider.reset_mock()
 
-        assert with_install.command.arguments == ['--install']
-        assert without_install.command.command == 'install'
-        assert with_install.command.arguments == ['--install']
-        assert without_install.command.command == 'install'
+    def test_upgrade_with_plugin(self):
+        plugin_name = 'some-plugin'
+
+        HelmClient(provider=self.dummy_provider).upgrade([], install=True, plugin=plugin_name)
+        self.dummy_provider.execute.assert_called_once()
+
+        self.assertEqual(self.dummy_provider.execute.call_args[0][0].command, plugin_name)
+        self.assertEqual(self.dummy_provider.execute.call_args[0][0].arguments, ["upgrade", "--install"])
+
+        self.dummy_provider.reset_mock()
+
+        HelmClient(provider=self.dummy_provider).upgrade([], install=False, plugin=plugin_name)
+        self.dummy_provider.execute.assert_called_once()
+
+        self.assertEqual(self.dummy_provider.execute.call_args[0][0].command, plugin_name)
+        self.assertEqual(self.dummy_provider.execute.call_args[0][0].arguments, ["upgrade"])
 
     def test_dependency_update(self):
         HelmClient(provider=self.dummy_provider).dependency_update('chart_path')

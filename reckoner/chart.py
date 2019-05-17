@@ -56,6 +56,7 @@ class Chart(object):
         self._release_name = list(chart.keys())[0]
         self._chart = chart[self._release_name]
         self._repository = Repository(self._chart.get('repository', default_repository), self.helm)
+        self._plugin = self._chart.get('plugin')
         self._chart['values'] = self._chart.get('values', {})
         self._chart['set_values'] = self._chart.get('set-values', {})
 
@@ -121,6 +122,11 @@ class Chart(object):
     def repository(self):
         """ Repository object parsed from course chart """
         return self._repository
+
+    @property
+    def plugin(self):
+        """ Helm plugin name parsed from course chart """
+        return self._plugin
 
     def pre_install_hook(self):
         self.run_hook('pre_install')
@@ -249,7 +255,7 @@ class Chart(object):
         # Perform the upgrade with the arguments
         try:
             # Try to run helm upgrade
-            helm_command_response = self.helm.upgrade(self.args)
+            helm_command_response = self.helm.upgrade(self.args, plugin=self.plugin)
             # Log the stdout response in info
             logging.info(helm_command_response.stdout)
         except HelmClientException as error:

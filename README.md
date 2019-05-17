@@ -151,6 +151,20 @@ charts:
 
 The version of the chart to use
 
+### plugin
+
+A helm wrapper plugin to invoke for this chart.
+Make sure that the plugin is installed in your environment, and is working properly.
+Unfortunately, we cannot support every plugin.
+
+```
+charts:
+  chart_name:
+    plugin: secrets
+    files:
+      - /path/to/secret/values/file.yaml
+```
+
 ## Repository Options
 
 ### name
