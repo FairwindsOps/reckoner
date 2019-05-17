@@ -229,9 +229,10 @@ jobs:
             reckoner plot --only nginx-ingress end_to_end_testing/basic.yml
             helm list --output json | jq -e '.Releases[]|select(.Name == "nginx-ingress")|.Status == "DEPLOYED"'
 
-            reckoner plot --only nginx-ingress --only redis-env end_to_end_testing/basic.yml
+            test_environ_var=somevalue reckoner plot --only nginx-ingress --only redis-env end_to_end_testing/basic.yml
             helm list --output json | jq -e '.Releases[]|select(.Name == "nginx-ingress")|.Status == "DEPLOYED"'
             helm list --output json | jq -e '.Releases[]|select(.Name == "redis-env")|.Status == "DEPLOYED"'
+            helm get values redis-env --output json | jq -e '.test_environ_var == "somevalue"'
   publish-binaries:
     executor: python-3-7
     steps:
