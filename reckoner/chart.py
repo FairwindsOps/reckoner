@@ -268,31 +268,37 @@ class Chart(object):
         if self._deprecation_messages:
             [logging.warning(msg) for msg in self._deprecation_messages]
 
+    def _append_arg(self, arg_string):
+        for item in arg_string.split(" ", 1):
+            self.args.append(item)
+
     def build_helm_arguments_for_chart(self):
         """
         This method builds all the arguments we'll pass along to the helm
         client once we need to run the install
         """
 
+        # always start off with empty args list
+        self.args = []
+
         # Set Default args (release name and chart path)
-        self.args = [
-            '{}'.format(self._release_name),
-            self.repository.chart_path,
-        ]
+        self._append_arg('{}'.format(self._release_name))
+        self._append_arg(self.repository.chart_path)
 
         # Add namespace to args
-        self.args.append('--namespace={}'.format(self.namespace))
+        self._append_arg('--namespace {}'.format(self.namespace))
 
         # Add kubecfg context
         if self.context is not None:
-            self.args.append('--kube-context={}'.format(self.context))
+            self._append_arg('--kube-context {}'.format(self.context))
 
         # Add debug arguments
-        self.args.extend(self.debug_args)
+        for debug_arg in self.debug_args:
+            self._append_arg(debug_arg)
 
         # Add the version arguments
         if self.version:
-            self.args.append('--version={}'.format(self.version))
+            self._append_arg('--version {}'.format(self.version))
 
         # HACK: This is in place until we can fully deprecate the usage of set
         #       in place of values. Currently values: gets translated into
@@ -335,7 +341,7 @@ class Chart(object):
         files specified in the course.yml
         """
         for values_file in self.files:
-            self.args.append("-f={}".format(values_file))
+            self._append_arg("-f {}".format(values_file))
 
     def build_set_string_arguments(self):
         """
@@ -347,7 +353,7 @@ class Chart(object):
         """
         for key, value in self.values_strings.items():
             for k, v in self._format_set(key, value):
-                self.args.append("--set-string={}={}".format(k, v))
+                self._append_arg("--set-string {}={}".format(k, v))
 
     def build_set_arguments(self):
         """
@@ -359,7 +365,7 @@ class Chart(object):
         """
         for key, value in self.set_values.items():
             for k, v in self._format_set(key, value):
-                self.args.append("--set={}={}".format(k, v))
+                self._append_arg("--set {}={}".format(k, v))
 
     def _format_set(self, key, value):
         """
