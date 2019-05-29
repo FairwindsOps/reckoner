@@ -231,7 +231,7 @@ class TestCharts(unittest.TestCase):
         chart.install()
         helm_client_mock.upgrade.assert_called_once()
         upgrade_call = helm_client_mock.upgrade.call_args
-        self.assertEqual(upgrade_call[0][0], ['nameofchart', '', '--namespace=fakenamespace'])
+        self.assertEqual(upgrade_call[0][0], ['nameofchart', '', '--namespace', 'fakenamespace'])
 
     @mock.patch('reckoner.chart.Repository')
     def test_chart_install_with_plugin(self, repositoryMock):
@@ -246,5 +246,5 @@ class TestCharts(unittest.TestCase):
         chart.install()
         helm_client_mock.upgrade.assert_called_once()
         upgrade_call = helm_client_mock.upgrade.call_args
-        self.assertEqual(upgrade_call[0][0], ['nameofchart', '', '--namespace=fakenamespace'])
+        self.assertEqual(upgrade_call[0][0], ['nameofchart', '', '--namespace', 'fakenamespace'])
         self.assertEqual(upgrade_call[1], {'plugin': 'someplugin'})

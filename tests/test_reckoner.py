@@ -397,7 +397,6 @@ class TestChart(TestBase):
                     'upgrade',
                     '--recreate-pods',
                     '--install',
-                    # '--namespace={}'.format(chart.namespace),
                     chart.release_name,
                     chart.repository.chart_path,
                 ]
@@ -413,8 +412,10 @@ class TestChart(TestBase):
                         '--install',
                         chart.release_name,
                         chart.repository.chart_path,
-                        '--namespace={}'.format(chart.namespace),
-                        '--set={}={}'.format(test_environ_var_name, test_environ_var)]
+                        '--namespace',
+                        '{}'.format(chart.namespace),
+                        '--set',
+                        '{}={}'.format(test_environ_var_name, test_environ_var)]
                 )
             if chart.release_name == test_values_strings_chart:
                 self.assertEqual(
@@ -426,11 +427,16 @@ class TestChart(TestBase):
                         '--install',
                         chart.release_name,
                         chart.repository.chart_path,
-                        '--namespace={}'.format(chart.namespace),
-                        '--version=0.1.0',
-                        '--set-string=string=string',
-                        '--set-string=integer=10',
-                        '--set-string=boolean=True'
+                        '--namespace',
+                        '{}'.format(chart.namespace),
+                        '--version',
+                        '0.1.0',
+                        '--set-string',
+                        'string=string',
+                        '--set-string',
+                        'integer=10',
+                        '--set-string',
+                        'boolean=True'
                     ]
                 )
 

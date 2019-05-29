@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [1.2.0]
 - Support helm wrapper plugins such as [Helm Secrets](https://github.com/futuresimple/helm-secrets)
+- POTENTIAL BREAKING CHANGE: Refactored all helm commands to use `--arg value` instead of `--arg=value`. (This helps with poor param support with how helm plugin wrappers work)
 
 ## [1.1.6]
 - Skipped versions to kickstart pipelines
