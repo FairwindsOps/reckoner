@@ -46,7 +46,8 @@ jobs:
             pip install --user -r development-requirements.txt
             pip install --user -e .
             reckoner --version
-            pytest
+            pytest --cov ./
+            codecov
   build-3-6:
     executor: python-3-6
     working_directory: ~/reckoner
@@ -61,7 +62,8 @@ jobs:
             pip install --user -r development-requirements.txt
             pip install --user -e .
             reckoner --version
-            pytest
+            pytest --cov ./
+            codecov
   build-3-7:
     executor: python-3-7
     working_directory: ~/reckoner
@@ -76,7 +78,8 @@ jobs:
             pip install --user -r development-requirements.txt
             pip install --user -e .
             reckoner --version
-            pytest
+            pytest --cov ./
+            codecov
   release:
     executor: python-3-7
     environment:
