@@ -15,9 +15,6 @@
 version: 2.1
 
 executors:
-  python-2-7:
-    docker:
-      - image: circleci/python:2.7
   python-3-6:
     docker:
       - image: circleci/python:3.6
@@ -32,22 +29,6 @@ executors:
       xcode: 10.2.0
 
 jobs:
-  build-2-7:
-    executor: python-2-7
-    working_directory: ~/reckoner
-    steps:
-      - run:
-          name: Setup PATH to support pip user installs
-          command: echo 'export PATH=$PATH:/home/circleci/.local/bin' >> $BASH_ENV
-      - checkout
-      - run:
-          name: Unit Tests
-          command: |
-            pip install --user -r development-requirements.txt
-            pip install --user -e .
-            reckoner --version
-            pytest --cov ./
-            codecov
   build-3-6:
     executor: python-3-6
     working_directory: ~/reckoner
@@ -62,8 +43,7 @@ jobs:
             pip install --user -r development-requirements.txt
             pip install --user -e .
             reckoner --version
-            pytest --cov ./
-            codecov
+            pytest
   build-3-7:
     executor: python-3-7
     working_directory: ~/reckoner
@@ -265,12 +245,6 @@ workflows:
   version: 2
   build:
     jobs:
-      - build-2-7:
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              only: /.*/
       - build-3-6:
           filters:
             tags:
@@ -285,7 +259,6 @@ workflows:
               only: /.*/
       - compile-darwin:
           requires:
-            - build-2-7
             - build-3-6
             - build-3-7
           filters:
@@ -295,7 +268,6 @@ workflows:
               only: /.*/
       - compile:
           requires:
-            - build-2-7
             - build-3-6
             - build-3-7
           filters:

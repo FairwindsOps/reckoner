@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.3.0]
+### Breaking Changes
+Python2 support is now ended.  Pip install will now require python ~= 3.6.  In any case, use of the binary release is recommended.
+
 ## [1.2.0]
 - Support helm wrapper plugins such as [Helm Secrets](https://github.com/futuresimple/helm-secrets)
 - POTENTIAL BREAKING CHANGE: Refactored all helm commands to use `--arg value` instead of `--arg=value`. (This helps with poor param support with how helm plugin wrappers work)

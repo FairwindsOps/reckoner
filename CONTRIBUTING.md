@@ -16,6 +16,8 @@ Requirements
 ```
 Note that some of the above commands may need `python3` instead of just `python` to work depending on your environment.
 
+*Note:* Python2 is no longer supported by this tool
+
 ## Requirements for Pull Requests
 * Update the changelog
 * Run tests

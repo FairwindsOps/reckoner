@@ -1,5 +1,4 @@
-
-# reckoner [![CircleCI](https://circleci.com/gh/reactiveops/reckoner.svg?style=svg)](https://circleci.com/gh/reactiveops/reckoner)
+# reckoner [![CircleCI](https://circleci.com/gh/reactiveops/reckoner.svg?style=svg)](https://circleci.com/gh/reactiveops/reckoner) [![codecov](https://codecov.io/gh/reactiveops/reckoner/branch/master/graph/badge.svg)](https://codecov.io/gh/reactiveops/reckoner)
 
 Command line helper for helm.
 This utility adds to the functionality of [Helm](https://github.com/kubernetes/helm) in multiple ways:
@@ -11,6 +10,8 @@ This utility adds to the functionality of [Helm](https://github.com/kubernetes/h
 ## Requirements
 - python 3
 - helm: installed and initialized
+
+*Note:* Python2 is no longer supported by Reckoner. In general we suggest using the binary on the [Releases](https://github.com/reactiveops/reckoner/releases) page.
 
 ### Installation
 Via Binary: *preferred method*
@@ -51,12 +52,6 @@ For development see [CONTRIBUTING.md](./CONTRIBUTING.md).
       * `--local-development`: Run `reckoner` in local-development mode where Tiller is not required and no helm commands are run. Useful for rapid or offline development.
   * `generate`: Generates example file `course.yml` with extensive descriptions
   * `version`: Output reckoner version
-
-## Example configuration file:
-
-There is an example file in reckoner/example-course.yml
-
-Further customization is documented below.
 
 # Options
 
