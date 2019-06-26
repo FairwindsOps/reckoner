@@ -169,70 +169,10 @@ jobs:
           at: /tmp/binaries
       - run:
           name: Setup Testing Environment
-          command: |
-            echo "Installing git and jq"
-            sudo apt-get install -yqq jq git
-
-            echo "Installing Reckoner"
-            sudo cp /tmp/binaries/reckoner-linux-amd64 /usr/local/bin/reckoner
-            reckoner version
-
-            echo "Installing Kind"
-            curl -sLO https://github.com/kubernetes-sigs/kind/releases/download/0.2.1/kind-linux-amd64
-            chmod 0755 kind-linux-amd64
-            sudo mv kind-linux-amd64 /usr/local/bin/kind
-            kind version
-
-            echo "Installing Kubectl"
-            curl -sLO https://storage.googleapis.com/kubernetes-release/release/v1.12.7/bin/linux/amd64/kubectl
-            chmod 0755 kubectl
-            sudo mv kubectl /usr/local/bin/
-            kubectl version --client
-
-            echo "Installing Helm"
-            curl -sL https://storage.googleapis.com/kubernetes-helm/helm-v2.13.1-linux-amd64.tar.gz | tar xzv linux-amd64/helm
-            sudo mv linux-amd64/helm /usr/local/bin/helm
-            rm -rf linux-amd64
-            helm version --client
-
-            echo "Creating Kubernetes Cluster with Kind"
-            kind create cluster --wait=90s
-            docker ps -a
-
-            echo "Setting up kubecfg"
-            cp $(kind get kubeconfig-path --name=kind) ~/.kube/config
-            kubectl version
-
-            echo "Setting up Helm on Kubernetes"
-            kubectl -n kube-system create serviceaccount tiller
-            kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount kube-system:tiller
-            helm init --service-account tiller --wait
+          command: "./end_to_end_testing/setup.sh"
       - run:
-          name: basic.yml Test Running Whole Course
-          command: |
-            test_environ_var=testing reckoner plot end_to_end_testing/basic.yml
-            helm list --output json | jq . -C
-      - run:
-          name: basic.yml Check reckoner run for installed services
-          command: |
-            helm list --output json | jq -e '.Releases[]|select(.Name == "nginx-ingress")|.Namespace == "infra"'
-            helm list --output json | jq -e '.Releases[]|select(.Name == "go-harbor")|.Namespace == "test"'
-            helm list --output json | jq -e '.Releases[]|select(.Name == "redis-env")|.Namespace == "redis-test-namespace"'
-            helm list --output json | jq -e '.Releases[]|select(.Name == "nginx-ingress")|.Status == "DEPLOYED"'
-            helm list --output json | jq -e '.Releases[]|select(.Name == "go-harbor")|.Status == "DEPLOYED"'
-            helm list --output json | jq -e '.Releases[]|select(.Name == "redis-env")|.Status == "DEPLOYED"'
-            helm list --output json | jq -e '[.Releases[].Name] | contains(["redis-hook"])'
-            helm list --output json | jq -e '[.Releases[].Name] | contains(["redis-failed-hook"])|not'
-      - run:
-          name: basic.yml Test Running Only One Chart
-          command: |
-            reckoner plot --only nginx-ingress end_to_end_testing/basic.yml
-            helm list --output json | jq -e '.Releases[]|select(.Name == "nginx-ingress")|.Status == "DEPLOYED"'
-
-            test_environ_var=somevalue reckoner plot --only nginx-ingress --only redis-env end_to_end_testing/basic.yml
-            helm list --output json | jq -e '.Releases[]|select(.Name == "nginx-ingress")|.Status == "DEPLOYED"'
-            helm list --output json | jq -e '.Releases[]|select(.Name == "redis-env")|.Status == "DEPLOYED"'
-            helm get values redis-env --output json | jq -e '.test_environ_var == "somevalue"'
+          name: Run end to end tests
+          command: "./end_to_end_testing/run_end_to_end.sh"
   publish-binaries:
     executor: python-3-7
     steps:
