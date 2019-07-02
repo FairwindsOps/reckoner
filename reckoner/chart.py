@@ -143,7 +143,7 @@ class Chart(object):
             commands = [commands]
 
         for command in commands:
-            if self.config.local_development or self.config.dryrun:
+            if self.config.dryrun:
                 logging.warning("Hook not run due to --dry-run: {}".format(command))
                 continue
             else:
@@ -206,7 +206,7 @@ class Chart(object):
 
     def update_dependencies(self):
         """ Update the course chart dependencies """
-        if self.config.local_development or self.config.dryrun:
+        if self.config.dryrun:
             return True
         logging.debug("Updating chart dependencies: {}".format(self.repository.chart_path))
         if os.path.exists(self.repository.chart_path):

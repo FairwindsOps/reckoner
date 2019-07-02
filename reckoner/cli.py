@@ -45,14 +45,10 @@ def cli(ctx, log_level, *args, **kwargs):
 @click.option("--helm-args", help='Passes the following arg on to helm, can be used more than once. WARNING: Setting '
                                   'this will completely override any helm_args in the course. Also cannot be used for '
                                   'configuring how helm connects to tiller.', multiple=True)
-@click.option("--local-development", is_flag=True, default=False, help='Run `reckoner` in local-development mode '
-                                                                       'where Tiller is not required and no helm '
-                                                                       'commands are run. Useful for rapid or offline '
-                                                                       'development.')
-def plot(ctx, course_file=None, dry_run=False, debug=False, only=None, helm_args=None, local_development=False):
+def plot(ctx, course_file=None, dry_run=False, debug=False, only=None, helm_args=None):
     """ Install charts with given arguments as listed in yaml file argument """
     try:
-        h = Reckoner(course_file=course_file, dryrun=dry_run, debug=debug, helm_args=helm_args, local_development=local_development)
+        h = Reckoner(course_file=course_file, dryrun=dry_run, debug=debug, helm_args=helm_args)
         # Convert tuple to list
         only = list(only)
         h.install(only)

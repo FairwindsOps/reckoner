@@ -44,7 +44,6 @@ class TestChartHooks(unittest.TestCase):
             None,
         )
         chart.config.dryrun = False
-        chart.config.local_development = False
 
         return chart
 
@@ -128,14 +127,6 @@ class TestChartHooks(unittest.TestCase):
         mock_logging.info.assert_called()
         mock_logging.log.assert_called()
 
-    def test_skipping_due_to_local_development(self, mock_cmd_call, *args):
-        """Verify skipping call() when in local_development"""
-        chart = self.get_chart()
-
-        chart.config.local_development = True
-        chart.run_hook('pre_install')
-        mock_cmd_call.assert_not_called()
-
     def test_skipping_due_to_dryrun(self, mock_cmd_call, *args):
         """Verify that we do NOT run the actual calls when dryrun is enabled"""
         chart = self.get_chart()
@@ -185,7 +176,6 @@ class TestCharts(unittest.TestCase):
     def test_interpolation_of_env_vars(self, environMock):
         chart = Chart({'name': {'values': {}}}, None)
         chart.config.dryrun = False
-        chart.config.local_development = False
 
         chart.args = ['thing=${environVar}', 'another=$environVar']
         environMock.environ = {'environVar': 'asdf'}
@@ -198,7 +188,6 @@ class TestCharts(unittest.TestCase):
     def test_interpolation_of_missing_env_vars(self, environMock):
         chart = Chart({'name': {'values': {}}}, None)
         chart.config.dryrun = False
-        chart.config.local_development = False
 
         chart.args = ['thing=${environVar}']
         environMock.environ = {}
@@ -210,7 +199,6 @@ class TestCharts(unittest.TestCase):
     def test_interpolation_of_env_vars_kube_deploy_spec(self, environMock):
         chart = Chart({'name': {'values': {}}}, None)
         chart.config.dryrun = False
-        chart.config.local_development = False
 
         chart.args = ['thing=$(environVar)']
         environMock.environ = {}
@@ -226,7 +214,6 @@ class TestCharts(unittest.TestCase):
 
         chart = Chart({'nameofchart': {'namespace': 'fakenamespace', 'set-values': {}}}, helm_client_mock)
         chart.config.dryrun = False
-        chart.config.local_development = False
 
         chart.install()
         helm_client_mock.upgrade.assert_called_once()
@@ -241,7 +228,6 @@ class TestCharts(unittest.TestCase):
 
         chart = Chart({'nameofchart': {'namespace': 'fakenamespace', 'plugin': 'someplugin', 'set-values': {}}}, helm_client_mock)
         chart.config.dryrun = False
-        chart.config.local_development = False
 
         chart.install()
         helm_client_mock.upgrade.assert_called_once()

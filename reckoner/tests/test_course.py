@@ -28,7 +28,6 @@ class TestMinVersion(unittest.TestCase):
         """Tests that minimum version will throw an exit."""
         c = configMock()
         c.helm_args = ['provided args']
-        c.local_development = False
 
         yamlLoadMock.load.return_value = {
             'repositories': {
@@ -52,7 +51,6 @@ class TestMinVersion(unittest.TestCase):
         """Tests that minimum version will throw an exit."""
         c = configMock()
         c.helm_args = ['provided args']
-        c.local_development = False
 
         h = helmClientMock()
         h.client_version = '0.0.1'
@@ -86,7 +84,6 @@ class TestIntegrationWithChart(unittest.TestCase):
         """Test that the chart isn't installed when the pre_install hooks return any non-zero responses. This also assures we don't raise python errors with hook errors."""
         c = configMock()
         c.helm_args = ['provided args']
-        c.local_development = False
 
         h = helmClientMock()
         h.client_version = '0.0.1'
