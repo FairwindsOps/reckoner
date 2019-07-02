@@ -17,7 +17,6 @@
 
 import logging
 import semver
-import traceback
 import sys
 from typing import List
 

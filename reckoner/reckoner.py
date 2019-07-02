@@ -94,7 +94,7 @@ class Reckoner(object):
 
         self.course = Course(course_file)
 
-    def install(self, charts: List[str] = []):
+    def install(self, charts: List[str] = []) -> None:
         """
         Description:
         - Calls plot on course instance.
@@ -104,7 +104,7 @@ class Reckoner(object):
           charts will be installed or if the argument is empty, All charts in the course will be installed
 
         Returns:
-        - ReckonerInstallResults
+        - None
 
         """
         selected_charts = charts or [chart._release_name for chart in self.course.charts]
@@ -118,17 +118,6 @@ class Reckoner(object):
         except NoChartsToInstall as error:
             logging.error(error)
             raise ReckonerCommandException('Failed to find any valid charts to install.')
-
-        # HACK - Nick Huanca
-        # This is to satisfy a test requirement but the bool contract is a
-        # farse. The called plot command only ever raised an error or returned
-        # True. Having this always return True doesn't make sense and needs to
-        # be refactored to either have logic for WHY you want True or False.
-        # The upstream use of this code doesn't do anything with the return
-        # values of this function. (reckoner.cli.plot)
-        # The Tests:
-        #   - TestReckonerMethods.test_install_succeeds
-        #   - TestReckoner.test_install
 
     def add_result(self, result: ChartResult) -> None:
         self.results.add_result(result)

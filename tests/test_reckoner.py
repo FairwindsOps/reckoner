@@ -77,26 +77,6 @@ class TestReckonerAttributes(TestBase):
         self.assertTrue(hasattr(reckoner_instance, 'helm'))
 
 
-# Test methods
-@mock.patch('reckoner.reckoner.Config', autospec=True)
-@mock.patch('reckoner.reckoner.Course', autospec=True)
-@mock.patch.object(HelmClient, 'server_version')
-@mock.patch.object(HelmClient, 'check_helm_command')
-class TestReckonerMethods(TestBase):
-    name = 'test-reckoner-methods'
-
-    def setUp(self):
-        super(type(self), self).setUp()
-        self.configure_subprocess_mock('', '', 0)
-
-    def test_install_succeeds(self, *args):
-        reckoner_instance = reckoner.reckoner.Reckoner()
-        reckoner_instance.course.plot.return_value = True
-        install_response = reckoner_instance.install()
-        self.assertIsInstance(install_response, bool)
-        self.assertTrue(install_response)
-
-
 class TestCourseMocks(unittest.TestCase):
     @mock.patch('reckoner.course.yaml', autospec=True)
     @mock.patch('reckoner.course.HelmClient', autospec=True)
@@ -277,7 +257,7 @@ class TestReckoner(TestBase):
 
     @mock.patch('reckoner.repository.git', autospec=True)
     def test_install(self, mock_git_lib):
-        self.assertTrue(self.a.install())
+        self.assertEqual(self.a.install(), None)
 
 
 class TestCourse(TestBase):

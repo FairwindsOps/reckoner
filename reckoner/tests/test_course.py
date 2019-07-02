@@ -73,16 +73,18 @@ class TestMinVersion(unittest.TestCase):
         return True
 
 
-@mock.patch('reckoner.chart.call', autospec=True)
-@mock.patch('reckoner.repository.Repository', autospec=True)
-@mock.patch('reckoner.course.sys')
-@mock.patch('reckoner.course.yaml', autospec=True)
-@mock.patch('reckoner.course.HelmClient', autospec=True)
-@mock.patch('reckoner.course.Config', autospec=True)
 class TestIntegrationWithChart(unittest.TestCase):
+    @mock.patch('reckoner.chart.call', autospec=True)
+    @mock.patch('reckoner.repository.Repository', autospec=True)
+    @mock.patch('reckoner.course.sys')
+    @mock.patch('reckoner.course.yaml', autospec=True)
+    @mock.patch('reckoner.course.HelmClient', autospec=True)
+    @mock.patch('reckoner.course.Config', autospec=True)
     def test_failed_pre_install_hooks_fail_chart_installation(self, configMock, helmClientMock, yamlLoadMock, sysMock, repoMock, chartCallMock):
         """Test that the chart isn't installed when the pre_install hooks return any non-zero responses. This also assures we don't raise python errors with hook errors."""
         c = configMock()
+        # TODO Fix how this mock is autospecced - something fishy with having this class attribs all come from dict options
+        c.continue_on_error = False
         c.helm_args = ['provided args']
 
         h = helmClientMock()
@@ -103,7 +105,7 @@ class TestIntegrationWithChart(unittest.TestCase):
         chartCallMock.return_value = Response(exitcode=1, command_string='mocked', stderr=' ', stdout=' ')
 
         course = Course(None)
-        course.plot(['first-chart'])
+        results = course.plot(['first-chart'])
 
         self.assertEqual(chartCallMock.call_count, 1)
-        # self.assertEqual(len(course.failed_charts), 1, "We should have only one failed chart install due to hook failure.")
+        self.assertEqual(len([result for result in results if result.failed]), 1, "We should have only one failed chart install due to hook failure.")
