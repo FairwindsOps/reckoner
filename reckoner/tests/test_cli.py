@@ -68,7 +68,7 @@ class TestCliPlot(unittest.TestCase):
     def test_plot_exists(self, reckoner_mock):
         """Assure we have a plot command and it calls reckoner install"""
         reckoner_instance = reckoner_mock()
-        reckoner_instance.install.side_effect = [None]
+        reckoner_instance.results = mock.MagicMock(has_errors=False)
         runner = CliRunner()
         with runner.isolated_filesystem():
             with open('nonexistent.file', 'wb') as fake_file:
@@ -87,6 +87,7 @@ class TestCliPlot(unittest.TestCase):
                 '--helm-args',
                 '--heading',
                 '--only',
+                '--continue-on-error',
             ],
             'argument': [
                 'course_file',
