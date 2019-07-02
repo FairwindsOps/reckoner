@@ -19,11 +19,12 @@ import logging
 import semver
 import traceback
 import sys
+from typing import List
 
 import oyaml as yaml
 
 from .config import Config
-from .chart import Chart
+from .chart import Chart, ChartResult
 from .repository import Repository
 from .exception import MinimumVersionException, ReckonerCommandException, NoChartsToInstall
 from .helm.client import HelmClient
@@ -59,7 +60,6 @@ class Course(object):
         self.helm = HelmClient(default_helm_arguments=self.config.helm_args)
         self._repositories = []
         self._charts = []
-        self._failed_charts = []
         for name, repository in self._dict.get('repositories', {}).items():
             repository['name'] = name
             self._repositories.append(Repository(repository, self.helm))
@@ -96,11 +96,7 @@ class Course(object):
         """ List of Chart() instances """
         return self._charts
 
-    @property
-    def failed_charts(self):
-        return self._failed_charts
-
-    def plot(self, charts_to_install):
+    def plot(self, charts_to_install) -> List[ChartResult]:
         """
         Accepts charts_to_install, an interable of the names of the charts
         to install. This method compares the charts in the argument to the
@@ -108,12 +104,18 @@ class Course(object):
 
         """
         self._charts_to_install = []
+        results = []
 
         try:
             iter(charts_to_install)
         except TypeError:
             charts_to_install = charts_to_install
 
+        # NOTE: Unexpected feature here: Since we're iterating on all charts
+        #       in the course to find the ones the user has requested, a
+        #       biproduct is that the --only's will always be run in the order
+        #       defined in the course.yml. No matter the order added to via
+        #       command line arguments.
         for chart in self.charts:
             if chart.release_name in charts_to_install:
                 self._charts_to_install.append(chart)
@@ -131,6 +133,14 @@ class Course(object):
                 'and not the chart name.'.format(', '.join(charts_to_install))
             )
 
+        if charts_to_install:
+            for missing_chart in charts_to_install:
+                logging.warning(
+                    'Could not find {} in course.yml'.format(missing_chart)
+                )
+            logging.warning('Some of the requested charts were not found in '
+                            'your course.yml')
+
         for chart in self._charts_to_install:
             logging.info("Installing {}".format(chart.release_name))
             try:
@@ -141,24 +151,17 @@ class Course(object):
                 if type(e) == Exception:
                     logging.error(e)
                 logging.error('Helm upgrade failed on {}'.format(chart.release_name))
-                logging.debug(traceback.format_exc())
                 # chart.rollback #TODO Fix this - it doesn't actually fire or work
-                self.failed_charts.append(chart)
-
-        if self.failed_charts:
-            logging.error("ERROR: Some charts failed to install.")
-            for chart in self.failed_charts:
+                logging.error("ERROR: Chart failed to install.")
                 logging.error(" - {}".format(chart.release_name))
+                if not self.config.continue_on_errors:
+                    logging.error("Stopping chart installations due to an error! Some of your charts may not have been installed!")
+                    break
+            finally:
+                # Always grab any results in the chart results
+                results.append(chart.result)
 
-        if charts_to_install:
-            for missing_chart in charts_to_install:
-                logging.warning(
-                    'Could not find {} in course.yml'.format(missing_chart)
-                )
-            logging.warning('Some of the requested charts were not found in '
-                            'your course.yml')
-
-        return True
+        return results
 
     def _compare_required_versions(self):
         """

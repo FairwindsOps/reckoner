@@ -18,11 +18,32 @@
 
 import logging
 import sys
+from typing import List
 
 from .config import Config
 from .course import Course
+from .chart import ChartResult
 from .helm.client import HelmClient, HelmClientException
 from .exception import NoChartsToInstall, ReckonerCommandException
+
+
+class ReckonerInstallResults:
+    def __init__(self):
+        self.results = []
+
+    def add_result(self, result: ChartResult) -> None:
+        self.results.append(result)
+
+    @property
+    def has_errors(self) -> bool:
+        if any([result.failed for result in self.results]):
+            return True
+        else:
+            return False
+
+    @property
+    def results_with_errors(self) -> List[ChartResult]:
+        return [result for result in self.results if result.failed]
 
 
 class Reckoner(object):
@@ -45,6 +66,7 @@ class Reckoner(object):
 
     def __init__(self, course_file=None, dryrun=False, debug=False, helm_args=None):
         self.config = Config()
+        self.results = ReckonerInstallResults()
         self.config.dryrun = dryrun
         self.config.debug = debug
         self.config.helm_args = helm_args
@@ -71,7 +93,7 @@ class Reckoner(object):
 
         self.course = Course(course_file)
 
-    def install(self, charts=[]):
+    def install(self, charts: List[str] = []):
         """
         Description:
         - Calls plot on course instance.
@@ -81,12 +103,17 @@ class Reckoner(object):
           charts will be installed or if the argument is empty, All charts in the course will be installed
 
         Returns:
-        - bool
+        - ReckonerInstallResults
 
         """
         selected_charts = charts or [chart._release_name for chart in self.course.charts]
         try:
-            self.course.plot(selected_charts)
+            plot_results = self.course.plot(selected_charts)
+            for chart_result in plot_results:
+                if chart_result:
+                    self.add_result(chart_result)
+                else:
+                    raise Exception("Didn't expect None as a chart result...")
         except NoChartsToInstall as error:
             logging.error(error)
             raise ReckonerCommandException('Failed to find any valid charts to install.')
@@ -101,28 +128,31 @@ class Reckoner(object):
         # The Tests:
         #   - TestReckonerMethods.test_install_succeeds
         #   - TestReckoner.test_install
-        return True
+
+    def add_result(self, result: ChartResult) -> None:
+        self.results.add_result(result)
 
     # TODO this doesn't actually work to update context - missing _context attribute.
     #      also missing subprocess function
-    def _update_context(self):
-        """
-        Description:
-        - Update the current context in the kubeconfig to the desired context.
-          Accepts no arguments
-        """
-        logging.debug("Checking for correct cluster context")
-        logging.debug("Current cluster context is: {}".format(self.config.current_context))
 
-        self.course.context or self.config.current_context
+    # def _update_context(self):
+    #     """
+    #     Description:
+    #     - Update the current context in the kubeconfig to the desired context.
+    #       Accepts no arguments
+    #     """
+    #     logging.debug("Checking for correct cluster context")
+    #     logging.debug("Current cluster context is: {}".format(self.config.current_context))
 
-        if self.config.current_context != self._context:
-            logging.debug("Updating cluster context to {}".format(self._context))
-            args = ['kubectl', 'config', 'use-context', self._context]
-            logging.debug(" ".join(args))
-            subprocess.call(args)
+    #     self.course.context or self.config.current_context
 
-        if self.config.current_context == self._context:
-            return True
-        else:
-            raise ReckonerException("Unable to set cluster context to: {}".format(self._context))
+    #     if self.config.current_context != self._context:
+    #         logging.debug("Updating cluster context to {}".format(self._context))
+    #         args = ['kubectl', 'config', 'use-context', self._context]
+    #         logging.debug(" ".join(args))
+    #         subprocess.call(args)
+
+    #     if self.config.current_context == self._context:
+    #         return True
+    #     else:
+    #         raise ReckonerException("Unable to set cluster context to: {}".format(self._context))
