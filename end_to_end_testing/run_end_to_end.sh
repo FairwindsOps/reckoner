@@ -99,8 +99,7 @@ function e2e_test_good_hooks() {
 function e2e_test_exit_on_post_install_hook() {
     # we expect this to fail exit code != 0
     if reckoner plot test_exit_on_post_install_hook.yml; then
-        # mark_failed "${FUNCNAME[0]}" "Expected plot to have a bad exit code"
-        true
+        mark_failed "${FUNCNAME[0]}" "Expected plot to have a bad exit code"
     fi
 
     if ! helm_has_release_name_in_namespace "nginx-ingress" "infra"; then
@@ -111,8 +110,7 @@ function e2e_test_exit_on_post_install_hook() {
 function e2e_test_exit_on_pre_install_hook() {
     # we expect this to fail exit code != 0
     if reckoner plot test_exit_on_pre_install_hook.yml; then
-        # mark_failed "${FUNCNAME[0]}" "Expected plot to have a bad exit code"
-        true
+        mark_failed "${FUNCNAME[0]}" "Expected plot to have a bad exit code"
     fi
 
     # we don't expect nginx-ingress to be installed
@@ -124,8 +122,7 @@ function e2e_test_exit_on_pre_install_hook() {
 function e2e_test_failed_chart() {
     # we expect this command to have a bad exit code
     if reckoner plot test_failed_chart.yml; then
-        # mark_failed "${FUNCNAME[0]}" "Expected plot to fail with bad exit code"
-        true
+        mark_failed "${FUNCNAME[0]}" "Expected plot to fail with bad exit code"
     fi
 
     if helm_has_release_name_in_namespace "bad-chart" "test"; then
@@ -195,6 +192,7 @@ fi
 
 # Exit with a bad code if we failed any tests
 if $E2E_FAILED_TESTS; then
+    echo -e "* * *\nFound Failed Tests"
     echo -e "${E2E_FAILED_MESSAGES[@]}"
     exit 1
 else
