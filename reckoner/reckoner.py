@@ -64,12 +64,13 @@ class Reckoner(object):
 
     """
 
-    def __init__(self, course_file=None, dryrun=False, debug=False, helm_args=None):
+    def __init__(self, course_file=None, dryrun=False, debug=False, helm_args=None, continue_on_error=False):
         self.config = Config()
         self.results = ReckonerInstallResults()
         self.config.dryrun = dryrun
         self.config.debug = debug
         self.config.helm_args = helm_args
+        self.config.continue_on_error = continue_on_error
         if course_file:
             self.config.course_path = course_file.name
 

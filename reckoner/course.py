@@ -154,7 +154,7 @@ class Course(object):
                 # chart.rollback #TODO Fix this - it doesn't actually fire or work
                 logging.error("ERROR: Chart failed to install.")
                 logging.error(" - {}".format(chart.release_name))
-                if not self.config.continue_on_errors:
+                if not self.config.continue_on_error:
                     logging.error("Stopping chart installations due to an error! Some of your charts may not have been installed!")
                     break
             finally:

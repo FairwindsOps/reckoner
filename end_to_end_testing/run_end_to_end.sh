@@ -192,6 +192,25 @@ function e2e_test_stop_after_first_failure() {
     fi
 }
 
+function e2e_test_continue_after_first_failure() {
+    # we expect a non-zero exit code here
+    if reckoner plot --continue-on-error test_continue_after_first_failure.yml; then
+        mark_failed "${FUNCNAME[0]}" "Expected reckoner to exit with a bad exit code."
+    fi
+
+    if ! helm_has_release_name_in_namespace "good-chart" "test"; then
+        mark_failed "${FUNCNAME[0]}" "Expected 'good-chart' to be installed before 'bad-chart' failure"
+    fi
+
+    if helm_has_release_name_in_namespace "bad-chart" "test"; then
+        mark_failed "${FUNCNAME[0]}" "Did not expect 'bad-chart' to install, expected to fail"
+    fi
+
+    if ! helm_has_release_name_in_namespace "expected-skipped-chart" "test"; then
+        mark_failed "${FUNCNAME[0]}" "Expected this chart to be installed even if 'bad-chart' fail to install (--continue-on-error set)"
+    fi
+}
+
 function e2e_test_strong_ordering() {
     # NOTE We expect the charts to be installed in the order defined on the course.yml ALWAYS
     if ! reckoner plot test_strong_ordering.yml --only second-chart --only first-chart; then
