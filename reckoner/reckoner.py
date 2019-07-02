@@ -35,7 +35,6 @@ class Reckoner(object):
     - dryrun (bool) - implies helm --dry-run --debug and skips any hooks
     - debug (bool) DEPRECATED - use helm_args instead or just --dry-run
     - helm_args (list) - passes content of list as additional arguments to helm binary
-    - local_development (bool) - when true, most actions over the network are switched off
 
     Attributes:
     - config: Instance of Config()
@@ -44,11 +43,10 @@ class Reckoner(object):
 
     """
 
-    def __init__(self, course_file=None, dryrun=False, debug=False, helm_args=None, local_development=False):
+    def __init__(self, course_file=None, dryrun=False, debug=False, helm_args=None):
         self.config = Config()
         self.config.dryrun = dryrun
         self.config.debug = debug
-        self.config.local_development = local_development
         self.config.helm_args = helm_args
         if course_file:
             self.config.course_path = course_file.name
@@ -64,13 +62,12 @@ class Reckoner(object):
             logging.error(e)
             sys.exit(1)
 
-        if not self.config.local_development:
-            try:
-                self.helm.check_helm_command()
-                self.helm.server_version
-            except HelmClientException as e:
-                logging.error("Failed checking helm: See errors:\n{}".format(e))
-                sys.exit(1)
+        try:
+            self.helm.check_helm_command()
+            self.helm.server_version
+        except HelmClientException as e:
+            logging.error("Failed checking helm: See errors:\n{}".format(e))
+            sys.exit(1)
 
         self.course = Course(course_file)
 
@@ -118,8 +115,6 @@ class Reckoner(object):
         logging.debug("Current cluster context is: {}".format(self.config.current_context))
 
         self.course.context or self.config.current_context
-        if self.config.local_development:
-            return True
 
         if self.config.current_context != self._context:
             logging.debug("Updating cluster context to {}".format(self._context))

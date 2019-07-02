@@ -49,7 +49,6 @@ For development see [CONTRIBUTING.md](./CONTRIBUTING.md).
         Multiples are supported but only one parameter per `--helm-args` is
         supported. Note that specifying this flag will override `helm_args`
         in the course.yml file.
-      * `--local-development`: Run `reckoner` in local-development mode where Tiller is not required and no helm commands are run. Useful for rapid or offline development.
   * `generate`: Generates example file `course.yml` with extensive descriptions
   * `version`: Output reckoner version
 

@@ -69,18 +69,16 @@ class Course(object):
 
         for repo in self._repositories:
             type(repo)
-            if not self.config.local_development:
-                logging.debug("Installing repository: {}".format(repo))
-                repo.install()
+            logging.debug("Installing repository: {}".format(repo))
+            repo.install()
 
         self.helm.repo_update()
 
-        if not self.config.local_development:
-            try:
-                self._compare_required_versions()
-            except MinimumVersionException as e:
-                logging.error(e)
-                sys.exit(1)
+        try:
+            self._compare_required_versions()
+        except MinimumVersionException as e:
+            logging.error(e)
+            sys.exit(1)
 
     def __str__(self):
         return str(self._dict)
@@ -183,9 +181,8 @@ class Course(object):
         if r1 < 0:
             raise MinimumVersionException("reckoner Minimum Version {} not met.".format(reckoner_minimum_version))
 
-        if not self.config.local_development:
-            r2 = semver.compare(self.helm.client_version, helm_minimum_version)
-            if r2 < 0:
-                raise MinimumVersionException("helm Minimum Version {} not met.".format(helm_minimum_version))
+        r2 = semver.compare(self.helm.client_version, helm_minimum_version)
+        if r2 < 0:
+            raise MinimumVersionException("helm Minimum Version {} not met.".format(helm_minimum_version))
 
         return True

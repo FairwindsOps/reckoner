@@ -87,7 +87,6 @@ class TestCliPlot(unittest.TestCase):
                 '--helm-args',
                 '--heading',
                 '--only',
-                '--local-development',
             ],
             'argument': [
                 'course_file',

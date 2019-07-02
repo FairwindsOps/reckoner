@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [unreleased]
+### Breaking Changes
+- Removed the `--local-development` flag from `plot` command (unused) and cleaned up test dependencies
+
 ## [1.3.0]
 ### Breaking Changes
 Python2 support is now ended.  Pip install will now require python ~= 3.6.  In any case, use of the binary release is recommended.
