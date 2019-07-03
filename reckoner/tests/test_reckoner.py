@@ -16,7 +16,8 @@ import unittest
 import mock
 
 from reckoner.helm.client import HelmClientException
-from reckoner.reckoner import Reckoner
+from reckoner.reckoner import Reckoner, ReckonerInstallResults
+from reckoner.chart import ChartResult
 from reckoner.exception import ReckonerCommandException, NoChartsToInstall, ReckonerException
 
 
@@ -47,3 +48,26 @@ class TestReckoner(unittest.TestCase):
         reckoner_instance = Reckoner()
         with self.assertRaises(ReckonerCommandException):
             reckoner_instance.install()
+
+
+class TestReckonerInstallResults(unittest.TestCase):
+    def test_blank_results(self):
+        r = ReckonerInstallResults()
+        self.assertEqual(len(r.results), 0)
+        self.assertFalse(r.has_errors)
+
+    def test_has_errors(self):
+        r = ReckonerInstallResults()
+        r.add_result(ChartResult(name="fake-result", failed=False, error_reason=""))
+        self.assertFalse(r.has_errors)
+
+        r = ReckonerInstallResults()
+        r.add_result(ChartResult(name="failed-result", failed=True, error_reason="somereason"))
+        self.assertTrue(r.has_errors)
+
+    def test_results_with_errors(self):
+        r = ReckonerInstallResults()
+        r.add_result(ChartResult(name="good-result", failed=False, error_reason=""))
+        r.add_result(ChartResult(name="failed", failed=True, error_reason="failed install"))
+
+        self.assertEqual(len(r.results_with_errors), 1)

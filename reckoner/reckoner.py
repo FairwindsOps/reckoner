@@ -17,7 +17,6 @@
 """Reckoner object"""
 
 import logging
-import sys
 from typing import List
 
 from .config import Config
