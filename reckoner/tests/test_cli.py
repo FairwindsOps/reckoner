@@ -99,8 +99,7 @@ class TestCliPlot(unittest.TestCase):
     @mock.patch('reckoner.cli.Reckoner', autospec=True)
     def test_plot_handles_exception(self, reckoner_mock):
         """Assure we have a plot command and it calls reckoner install"""
-        reckoner_instance = reckoner_mock()
-        reckoner_instance.side_effect = ReckonerException("had an error")
+        reckoner_mock.side_effect = [ReckonerException("had some error")]
         runner = CliRunner()
         with runner.isolated_filesystem():
             with open('nonexistent.file', 'wb') as fake_file:
@@ -109,7 +108,6 @@ class TestCliPlot(unittest.TestCase):
             result = runner.invoke(cli.plot, args=['nonexistent.file'])
 
         self.assertEqual(1, result.exit_code, result.output)
-        reckoner_instance.install.assert_called_once()
 
     def test_plot_options(self):
         required = {

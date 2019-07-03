@@ -121,7 +121,7 @@ function e2e_test_exit_on_pre_install_hook() {
 
 function e2e_test_failed_chart() {
     # we expect this command to have a bad exit code
-    if reckoner --log-level debug plot test_failed_chart.yml; then
+    if reckoner plot test_failed_chart.yml; then
         mark_failed "${FUNCNAME[0]}" "Expected plot to fail with bad exit code"
     fi
 
