@@ -15,6 +15,7 @@
 import mock
 import unittest
 from reckoner.course import Course
+from reckoner.chart import Chart
 from reckoner.command_line_caller import Response
 
 
@@ -109,3 +110,46 @@ class TestIntegrationWithChart(unittest.TestCase):
 
         self.assertEqual(chartCallMock.call_count, 1)
         self.assertEqual(len([result for result in results if result.failed]), 1, "We should have only one failed chart install due to hook failure.")
+
+
+@mock.patch('reckoner.course.yaml', autospec=True)
+@mock.patch('reckoner.course.HelmClient', autospec=True)
+class TestCourse(unittest.TestCase):
+    def setUp(self):
+        self.course_yaml = {
+            'charts': {
+                'first-chart': {
+                    'repository': 'stable',
+                    'chart': 'nonexistant',
+                    'version': '0.0.0',
+                }
+            }
+        }
+
+    def test_plot(self, mockHelm, mockYAML):
+        mockYAML.load.return_value = self.course_yaml
+        course = Course(None)
+        assert course.plot(['first-chart'])
+
+    def test_str_output(self, mockHelm, mockYAML):
+        mockYAML.load.return_value = self.course_yaml
+        assert Course(None).__str__()
+
+    def test_chart_install_logic(self, mockHelm, mockYAML):
+        mockYAML.load.return_value = {
+            'charts': {
+                'first-chart': {},
+                'second-chart': {}
+            }
+        }
+
+        # expect the first chart install to bubble up an error
+        chart = mock.MagicMock()
+        chart.result = None
+        chart.install.side_effect = Exception("Second command has an error")
+
+        course = Course(None)
+        self.assertEqual(len(course.install_charts([chart, chart])), 1)
+
+        course.config.continue_on_error = True
+        self.assertEqual(len(course.install_charts([chart, chart])), 2)

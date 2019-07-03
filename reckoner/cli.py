@@ -60,8 +60,10 @@ def plot(ctx, course_file=None, dry_run=False, debug=False, only=None, helm_args
                 click.echo(click.style("\n* * * * *\n", fg="bright_red"))
                 click.echo(click.style(str(result), fg="bright_red"))
             ctx.exit(1)
-    except exception.ReckonerException:
+    except exception.ReckonerException as err:
         # This handles exceptions cleanly, no expected stack traces from reckoner code
+        click.echo(click.style("Unexpected Error Occurred within Reckoner", fg="red"))
+        click.echo(click.style("{}".format(err)))
         ctx.exit(1)
 
 

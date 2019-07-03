@@ -17,7 +17,7 @@ import mock
 
 from reckoner.helm.client import HelmClientException
 from reckoner.reckoner import Reckoner
-from reckoner.exception import ReckonerCommandException, NoChartsToInstall
+from reckoner.exception import ReckonerCommandException, NoChartsToInstall, ReckonerException
 
 
 @mock.patch('reckoner.reckoner.Course')
@@ -26,17 +26,18 @@ from reckoner.exception import ReckonerCommandException, NoChartsToInstall
 class TestReckoner(unittest.TestCase):
     """Test reckoner class"""
 
-    @mock.patch('reckoner.reckoner.sys')
-    def test_reckoner_raises_errors_on_bad_client_response(self, mock_sys, mock_config, mock_helm_client, *args):
+    def test_reckoner_raises_errors_on_bad_client_response(self, mock_config, mock_helm_client, *args):
         """Make sure helm client exceptions are raised"""
-        mock_sys.exit.return_value = True
-
         # Check helm client exception checking command
         helm_instance = mock_helm_client()
         helm_instance.check_helm_command.side_effect = [HelmClientException('broken')]
-        Reckoner()
-        mock_sys.exit.assert_called_once()
+        with self.assertRaises(ReckonerException):
+            Reckoner()
         helm_instance.check_helm_command.assert_called_once()
+
+        mock_helm_client.side_effect = [Exception("it's a mock: had an error starting helm client")]
+        with self.assertRaises(ReckonerException):
+            Reckoner()
 
     def test_reckoner_raises_no_charts_correctly(self, mock_config, mock_helm_client, mock_course):
         """Assure we fail when NoChartsToInstall is bubbled up"""

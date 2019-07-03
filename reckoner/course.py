@@ -95,52 +95,9 @@ class Course(object):
         """ List of Chart() instances """
         return self._charts
 
-    def plot(self, charts_to_install) -> List[ChartResult]:
-        """
-        Accepts charts_to_install, an interable of the names of the charts
-        to install. This method compares the charts in the argument to the
-        charts in the course and calls Chart.install()
-
-        """
-        self._charts_to_install = []
+    def install_charts(self, charts_to_install: list) -> List[ChartResult]:
         results = []
-
-        try:
-            iter(charts_to_install)
-        except TypeError:
-            charts_to_install = charts_to_install
-
-        # NOTE: Unexpected feature here: Since we're iterating on all charts
-        #       in the course to find the ones the user has requested, a
-        #       biproduct is that the --only's will always be run in the order
-        #       defined in the course.yml. No matter the order added to via
-        #       command line arguments.
-        for chart in self.charts:
-            if chart.release_name in charts_to_install:
-                self._charts_to_install.append(chart)
-                charts_to_install.remove(chart.release_name)
-            else:
-                logging.debug(
-                    'Skipping {} in course.yml, not found '
-                    'in your requested charts list'.format(chart.release_name)
-                )
-
-        if len(self._charts_to_install) == 0:
-            raise NoChartsToInstall(
-                'No charts found from requested list ({}). They do not exist '
-                'in the course.yml. Verify you are using the release-name '
-                'and not the chart name.'.format(', '.join(charts_to_install))
-            )
-
-        if charts_to_install:
-            for missing_chart in charts_to_install:
-                logging.warning(
-                    'Could not find {} in course.yml'.format(missing_chart)
-                )
-            logging.warning('Some of the requested charts were not found in '
-                            'your course.yml')
-
-        for chart in self._charts_to_install:
+        for chart in charts_to_install:
             logging.info("Installing {}".format(chart.release_name))
             try:
                 chart.install(namespace=self.namespace, context=self.context)
@@ -161,6 +118,55 @@ class Course(object):
                 results.append(chart.result)
 
         return results
+
+    def plot(self, charts_requested_to_install: list) -> List[ChartResult]:
+        """
+        Accepts charts_to_install, an interable of the names of the charts
+        to install. This method compares the charts in the argument to the
+        charts in the course and calls Chart.install()
+
+        """
+        self._charts_to_install = []
+
+        # NOTE: Unexpected feature here: Since we're iterating on all charts
+        #       in the course to find the ones the user has requested, a
+        #       byproduct is that the --only's will always be run in the order
+        #       defined in the course.yml. No matter the order added to via
+        #       command line arguments.
+        for chart in self.charts:
+            if chart.release_name in charts_requested_to_install:
+                self._charts_to_install.append(chart)
+                charts_requested_to_install.remove(chart.release_name)
+            else:
+                logging.debug(
+                    'Skipping {} in course.yml, not found '
+                    'in your requested charts list'.format(chart.release_name)
+                )
+        # If any items remain in charts requested - warn that we didn't find them
+        self._warn_about_missing_requested_charts(charts_requested_to_install)
+
+        # Check to assure out install list has charts in it
+        self._check_for_empty_install_list(charts_requested_to_install)
+
+        # return the results of the charts installation
+        return self.install_charts(self._charts_to_install)
+
+    def _check_for_empty_install_list(self, requested_charts):
+        if len(self._charts_to_install) == 0:
+            raise NoChartsToInstall(
+                'None of the charts you requested to install ({}) could be '
+                'found in the course list. Verify you are using the '
+                'release-name and not the chart name.'.format(', '.join(requested_charts))
+            )
+
+    def _warn_about_missing_requested_charts(self, charts_which_were_not_found):
+        if charts_which_were_not_found:
+            for missing_chart in charts_which_were_not_found:
+                logging.warning(
+                    'Could not find {} in course.yml'.format(missing_chart)
+                )
+            logging.warning('Some of the requested charts were not found in '
+                            'your course.yml')
 
     def _compare_required_versions(self):
         """

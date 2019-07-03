@@ -18,6 +18,7 @@ import unittest
 import mock
 from click.testing import CliRunner
 from reckoner import cli
+from reckoner.exception import ReckonerException
 
 
 class TestCli(unittest.TestCase):
@@ -77,6 +78,37 @@ class TestCliPlot(unittest.TestCase):
             result = runner.invoke(cli.plot, args=['nonexistent.file'])
 
         self.assertEqual(0, result.exit_code, result.output)
+        reckoner_instance.install.assert_called_once()
+
+    @mock.patch('reckoner.cli.Reckoner', autospec=True)
+    def test_plot_has_correct_exit_code_with_errors(self, reckoner_mock):
+        """Assure we have a plot command and it calls reckoner install"""
+        reckoner_instance = reckoner_mock()
+        reckoner_instance.results = mock.MagicMock(has_errors=True)
+        reckoner_instance.results.results_with_errors = [None]
+        runner = CliRunner()
+        with runner.isolated_filesystem():
+            with open('nonexistent.file', 'wb') as fake_file:
+                fake_file.write(''.encode())
+
+            result = runner.invoke(cli.plot, args=['nonexistent.file'])
+
+        self.assertEqual(1, result.exit_code, result.output)
+        reckoner_instance.install.assert_called_once()
+
+    @mock.patch('reckoner.cli.Reckoner', autospec=True)
+    def test_plot_handles_exception(self, reckoner_mock):
+        """Assure we have a plot command and it calls reckoner install"""
+        reckoner_instance = reckoner_mock()
+        reckoner_instance.side_effect = ReckonerException("had an error")
+        runner = CliRunner()
+        with runner.isolated_filesystem():
+            with open('nonexistent.file', 'wb') as fake_file:
+                fake_file.write(''.encode())
+
+            result = runner.invoke(cli.plot, args=['nonexistent.file'])
+
+        self.assertEqual(1, result.exit_code, result.output)
         reckoner_instance.install.assert_called_once()
 
     def test_plot_options(self):

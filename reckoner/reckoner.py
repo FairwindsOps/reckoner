@@ -24,7 +24,7 @@ from .config import Config
 from .course import Course
 from .chart import ChartResult
 from .helm.client import HelmClient, HelmClientException
-from .exception import NoChartsToInstall, ReckonerCommandException
+from .exception import NoChartsToInstall, ReckonerCommandException, ReckonerException
 
 
 class ReckonerInstallResults:
@@ -82,15 +82,13 @@ class Reckoner(object):
         try:
             self.helm = HelmClient(default_helm_arguments=self.config.helm_args)
         except Exception as e:
-            logging.error(e)
-            sys.exit(1)
+            raise ReckonerException("Helm Client Failed to initialize: {}".format(e))
 
         try:
             self.helm.check_helm_command()
             self.helm.server_version
         except HelmClientException as e:
-            logging.error("Failed checking helm: See errors:\n{}".format(e))
-            sys.exit(1)
+            raise ReckonerException("Helm Client Failed to initialize: {}".format(e))
 
         self.course = Course(course_file)
 
