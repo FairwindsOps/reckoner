@@ -17,10 +17,10 @@ version: 2.1
 executors:
   python-3-6:
     docker:
-      - image: circleci/python:3.6
+      - image: circleci/python:3.6-stretch
   python-3-7:
     docker:
-      - image: circleci/python:3.7
+      - image: circleci/python:3.7-stretch
   vm:
     machine:
       enabled: true
@@ -224,7 +224,7 @@ jobs:
       - run:
           name: find release tag
           command: |
-            release_id=$(curl -s -H "Authorization: token ${GITHUB_ACCESS_TOKEN}" -X GET https://api.github.com/repos/reactiveops/reckoner/releases/tags/${CIRCLE_TAG} | jq -e .id)
+            release_id=$(curl -s -H "Authorization: token ${GITHUB_ACCESS_TOKEN}" -X GET https://api.github.com/repos/FairwindsOps/reckoner/releases/tags/${CIRCLE_TAG} | jq -e .id)
             echo "Found Release (${release_id})"
             echo "Posting Binaries to Release"
 
