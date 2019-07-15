@@ -17,10 +17,10 @@ version: 2.1
 executors:
   python-3-6:
     docker:
-      - image: circleci/python:3.6
+      - image: circleci/python:3.6-stretch
   python-3-7:
     docker:
-      - image: circleci/python:3.7
+      - image: circleci/python:3.7-stretch
   vm:
     machine:
       enabled: true
