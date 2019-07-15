@@ -14,6 +14,7 @@
 
 import unittest
 from reckoner.command_line_caller import Response
+from reckoner.command_line_caller import call
 
 
 class TestResponse(unittest.TestCase):
@@ -34,3 +35,25 @@ class TestResponse(unittest.TestCase):
 
         response = Response('', '', 0, '')
         self.assertTrue(response, "All responses with exitcode 0 should return True")
+
+    def test_support_comparisons(self):
+        resp_one = Response('', '', 0, '')
+        resp_two = Response('', '', 0, '')
+        resp_three = Response('', '', 0, 'notequal')
+
+        self.assertEqual(resp_one, resp_two)
+        self.assertNotEqual(resp_one, resp_three)
+        self.assertNotEqual(resp_two, resp_three)
+
+    def test_support_str(self):
+        resp = Response('', '', 0, '')
+        self.assertEqual(resp.__str__(), "{'stdout': '', 'stderr': '', 'exitcode': 0, 'command_string': ''}")
+
+
+class TestCall(unittest.TestCase):
+    def test_call_command(self):
+        """Call whoami and expect an output"""
+        p = call('whoami', shell=False, executable=None, path=None)
+        self.assertIsInstance(p, Response)
+        self.assertIsInstance(p.stdout, str)
+        self.assertIsInstance(p.stderr, str)

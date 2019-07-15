@@ -4,3 +4,4 @@ wheel
 mock
 autopep8
 flake8
+codecov
