@@ -164,7 +164,7 @@ jobs:
       - run:
           name: find release tag
           command: |
-            release_id=$(curl -s -H "Authorization: token ${GITHUB_ACCESS_TOKEN}" -X GET https://api.github.com/repos/reactiveops/reckoner/releases/tags/${CIRCLE_TAG} | jq -e .id)
+            release_id=$(curl -s -H "Authorization: token ${GITHUB_ACCESS_TOKEN}" -X GET https://api.github.com/repos/FairwindsOps/reckoner/releases/tags/${CIRCLE_TAG} | jq -e .id)
             echo "Found Release (${release_id})"
             echo "Posting Binaries to Release"
 
