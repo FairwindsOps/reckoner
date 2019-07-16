@@ -164,11 +164,19 @@ function e2e_test_git_chart() {
         mark_failed "${FUNCNAME[0]}" "Expected chart plot to succeed"
     fi
 
+    if ! helm_has_release_name_in_namespace "polaris-release" "polaris"; then
+        mark_failed "${FUNCNAME[0]}" "Expected git chart release to be installed"
+    fi
+
+    if ! helm_has_release_name_in_namespace "polaris" "another-polaris"; then
+        mark_failed "${FUNCNAME[0]}" "Expected git chart release to be installed"
+    fi
+
     if ! helm_has_release_name_in_namespace "go-harbor" "test"; then
         mark_failed "${FUNCNAME[0]}" "Expected git chart release to be installed"
     fi
 
-    #special cleanup task due to chart artifacts
+    # Special Clean up of GoHarbor
     helm delete --purge go-harbor
     kubectl delete pvc -n test --all
 }
