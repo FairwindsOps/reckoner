@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [unreleased]
 ### Breaking Changes
 - Removed the `--local-development` flag from `plot` command (unused) and cleaned up test dependencies
+- Reckoner now has exit codes that reflect the state of the course run.  
+  Reckoner will immediately exit with a non-zero exit code when a chart or hook fails to run. Previous
+  behavior to continue on error can be enabled by using the `--continue-on-error` flag on your `plot`.
 
 ## [1.3.0]
 ### Breaking Changes
