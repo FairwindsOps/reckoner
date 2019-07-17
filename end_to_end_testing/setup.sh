@@ -12,7 +12,7 @@ sudo cp /tmp/binaries/reckoner-linux-amd64 /usr/local/bin/reckoner
 reckoner version
 
 echo "Installing Kind"
-curl -sLO https://github.com/kubernetes-sigs/kind/releases/download/0.4.0/kind-linux-amd64
+curl -sLO https://github.com/kubernetes-sigs/kind/releases/download/v0.4.0/kind-linux-amd64
 chmod 0755 kind-linux-amd64
 sudo mv kind-linux-amd64 /usr/local/bin/kind
 kind version
