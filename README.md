@@ -30,7 +30,31 @@ pip install git+https://github.com/reactiveops/reckoner@master
 
 For development see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-## Usage
+## Quickstart
+
+In course.yaml, write:
+```
+charts:
+  grafana:
+    namespace: grafana
+    set-values:
+      image:
+        tag: 6.2.5
+  polaris-dashboard:
+    namespace: polaris-dashboard
+    repository:
+      git: https://github.com/FairwindsOps/charts
+      path: stable
+    chart: polaris
+```
+
+```bash
+reckoner plot course.yaml
+```
+
+Grafana and Polaris should now be installed on your cluster!
+
+## Extended Usage
 
 ### As standalone shell command
 - Usage: reckoner [OPTIONS] COMMAND [ARGS]...
@@ -210,3 +234,8 @@ charts:
 ```
 
 The alternative is to use the files method described above
+
+## Contributing
+* [Code of Conduct](CODE_OF_CONDUCT.md)
+* [Roadmap](ROADMAP.md)
+* [Contributing](CONTRIBUTING.md)
