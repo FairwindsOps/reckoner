@@ -125,8 +125,13 @@ class Repository(object):
         if not os.path.isdir(repo_path):
             os.makedirs(repo_path)
 
+        sparse_checkout_file_path = "{}/.git/info/sparse-checkout".format(repo_path)
+
         if not os.path.isdir("{}/.git".format(repo_path)):
             repo = git.Repo.init(repo_path)
+            # HACK to accommodate testing with git mocked...
+            if not os.path.isdir("{}/.git/info/".format(repo_path)):
+                os.makedirs("{}/.git/info/".format(repo_path), exist_ok=True)
         else:
             repo = git.Repo(repo_path)
 
@@ -145,33 +150,32 @@ class Repository(object):
 
         logging.debug("Chart path: {} ".format(self.chart_path))
 
-        if not self.config.local_development:
-            if 'origin' in [remote.name for remote in repo.remotes]:
-                origin = repo.remotes['origin']
-            else:
-                origin = repo.create_remote('origin', (self.git))
+        if 'origin' in [remote.name for remote in repo.remotes]:
+            origin = repo.remotes['origin']
+        else:
+            origin = repo.create_remote('origin', (self.git))
 
-            try:
-                fetch_pull(version)
-            except GitCommandError as e:
-                logging.warn(e)
-                if 'Sparse checkout leaves no entry on working directory' in str(e):
-                    logging.warn("Error with path \"{}\"! Remove path when chart exists at the repository root".format(self.path))
-                    logging.warn("Skipping chart {}".format(chart_name))
-                    return False
-                elif 'did not match any file(s) known to git.' in str(e):
-                    logging.warn("Branch/tag \"{}\" does not seem to exist!".format(version))
-                    logging.warn("Skipping chart {}".format(chart_name))
-                    return False
-                else:
-                    logging.error(e)
-                    raise e
-            except Exception as e:
+        try:
+            fetch_pull(version)
+        except GitCommandError as e:
+            logging.warn(e)
+            if 'Sparse checkout leaves no entry on working directory' in str(e):
+                logging.warn("Error with path \"{}\"! Remove path when chart exists at the repository root".format(self.path))
+                logging.warn("Skipping chart {}".format(chart_name))
+                return False
+            elif 'did not match any file(s) known to git.' in str(e):
+                logging.warn("Branch/tag \"{}\" does not seem to exist!".format(version))
+                logging.warn("Skipping chart {}".format(chart_name))
+                return False
+            else:
                 logging.error(e)
                 raise e
-            finally:
-                # Remove sparse-checkout to prevent path issues from poisoning the cache
-                logging.debug("Removing sparse checkout config")
-                if os.path.isfile(sparse_checkout_file_path):
-                    os.remove(sparse_checkout_file_path)
-                repo.git.config('core.sparseCheckout', 'false')
+        except Exception as e:
+            logging.error(e)
+            raise e
+        finally:
+            # Remove sparse-checkout to prevent path issues from poisoning the cache
+            logging.debug("Removing sparse checkout config")
+            if os.path.isfile(sparse_checkout_file_path):
+                os.remove(sparse_checkout_file_path)
+            repo.git.config('core.sparseCheckout', 'false')

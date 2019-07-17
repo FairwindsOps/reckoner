@@ -77,26 +77,6 @@ class TestReckonerAttributes(TestBase):
         self.assertTrue(hasattr(reckoner_instance, 'helm'))
 
 
-# Test methods
-@mock.patch('reckoner.reckoner.Config', autospec=True)
-@mock.patch('reckoner.reckoner.Course', autospec=True)
-@mock.patch.object(HelmClient, 'server_version')
-@mock.patch.object(HelmClient, 'check_helm_command')
-class TestReckonerMethods(TestBase):
-    name = 'test-reckoner-methods'
-
-    def setUp(self):
-        super(type(self), self).setUp()
-        self.configure_subprocess_mock('', '', 0)
-
-    def test_install_succeeds(self, *args):
-        reckoner_instance = reckoner.reckoner.Reckoner()
-        reckoner_instance.course.plot.return_value = True
-        install_response = reckoner_instance.install()
-        self.assertIsInstance(install_response, bool)
-        self.assertTrue(install_response)
-
-
 class TestCourseMocks(unittest.TestCase):
     @mock.patch('reckoner.course.yaml', autospec=True)
     @mock.patch('reckoner.course.HelmClient', autospec=True)
@@ -243,7 +223,6 @@ test_repo_install_return_string = '"test_repo" has been added to your repositori
 def setUpModule():
     coloredlogs.install(level="DEBUG")
     config = Config()
-    config.local_development = True
 
     os.makedirs(test_helm_archive)
     os.environ['HELM_HOME'] = test_files_path
@@ -260,22 +239,15 @@ def tearDownModule():
 class TestReckoner(TestBase):
     name = "test-pentagon-base"
 
-    def setUp(self):
+    @mock.patch('reckoner.reckoner.HelmClient', autospec=True)
+    @mock.patch('reckoner.course.HelmClient', autospec=True)
+    def setUp(self, mock_helm_client_course_scope, mock_helm_client_reckoner_scope):
+        mock_helm_client_course_instance = mock_helm_client_course_scope()
+        mock_helm_client_course_instance.client_version = "100.100.100"
         super(type(self), self).setUp()
-        # This will eventually be need for integration testing
-        # repo = git.Repo.init(git_repo_path)
-        # os.chdir(git_repo_path)
-        # subprocess.call(["helm", "create", "chart"])
-        # # Create git chart in a git repo, then have it checkout the repo from that location
-        # logging.debug(os.listdir("./"))
-        # os.chdir("../")
         self.configure_subprocess_mock(test_tiller_present_return_string, '', 0)
         with open(test_course) as f:
-            self.a = Reckoner(course_file=f, local_development=True)
-
-    # def tearDown(self):
-    #     self.a = None
-    #     subprocess.call(['rm', '-rf', git_repo_path])
+            self.a = Reckoner(course_file=f)
 
     def test_instance(self):
         self.assertIsInstance(self.a, Reckoner)
@@ -283,13 +255,17 @@ class TestReckoner(TestBase):
     def test_config_instance(self):
         self.assertIsInstance(self.a.config, Config)
 
-    def test_install(self):
-        self.assertTrue(self.a.install())
+    @mock.patch('reckoner.repository.git', autospec=True)
+    def test_install(self, mock_git_lib):
+        self.assertEqual(self.a.install(), None)
 
 
 class TestCourse(TestBase):
 
-    def setUp(self):
+    @mock.patch('reckoner.course.HelmClient', autospec=True)
+    def setUp(self, mock_helm_client_course_scope, autospec=True):
+        mock_helm_client_course_instance = mock_helm_client_course_scope()
+        mock_helm_client_course_instance.client_version = '100.100.100'
         super(type(self), self).setUp()
         self.configure_subprocess_mock(test_repo_update_return_string, '', 0)
         with open(test_course) as f:
@@ -319,11 +295,16 @@ class TestCourse(TestBase):
 
 class TestChart(TestBase):
 
-    def setUp(self):
+    @mock.patch('reckoner.reckoner.HelmClient', autospec=True)
+    @mock.patch('reckoner.course.HelmClient', autospec=True)
+    def setUp(self, mock_helm_client_course_scope, mock_helm_client_reckoner_scope):
+        mock_helm_client_course_instance = mock_helm_client_course_scope()
+        mock_helm_client_course_instance.client_version = "100.100.100"
+        self.helm_client_mock = mock_helm_client_course_instance
         super(type(self), self).setUp()
         self.configure_subprocess_mock(test_tiller_present_return_string, '', 0)
         with open(test_course) as f:
-            self.a = Reckoner(course_file=f, local_development=True)
+            self.a = Reckoner(course_file=f)
         self.charts = self.a.course.charts
 
     def test_releasename_is_different_than_chart_name(self):
@@ -377,26 +358,22 @@ class TestChart(TestBase):
         """
         pass
 
-    def test_chart_install(self):
-        self.configure_subprocess_mock(test_helm_version_return_string, '', 0)
+    @mock.patch('reckoner.repository.git', autospec=True)
+    def test_chart_install(self, mock_git_lib):
         for chart in self.charts:
-            self.subprocess_mock.assert_called()
             os.environ[test_environ_var_name] = test_environ_var
             assert chart.install(test_namespace) is None
+            self.helm_client_mock.upgrade.assert_called()
             logging.debug(chart)
 
             # TODO - we really need to refactor this to be better about testing in the same layer
             #        this is traversing many layers in the code that could be better encapsulated
 
-            last_mock = self.subprocess_mock.call_args_list[-1][0][0]
+            last_mock = self.helm_client_mock.upgrade.call_args_list[-1][0][0]
             logging.debug(last_mock)
             self.assertEqual(
-                last_mock[0:6],
+                last_mock[0:2],
                 [
-                    'helm',
-                    'upgrade',
-                    '--recreate-pods',
-                    '--install',
                     chart.release_name,
                     chart.repository.chart_path,
                 ]
@@ -406,10 +383,6 @@ class TestChart(TestBase):
                 self.assertEqual(
                     last_mock,
                     [
-                        'helm',
-                        'upgrade',
-                        '--recreate-pods',
-                        '--install',
                         chart.release_name,
                         chart.repository.chart_path,
                         '--namespace',
@@ -421,10 +394,6 @@ class TestChart(TestBase):
                 self.assertEqual(
                     last_mock,
                     [
-                        'helm',
-                        'upgrade',
-                        '--recreate-pods',
-                        '--install',
                         chart.release_name,
                         chart.repository.chart_path,
                         '--namespace',
@@ -442,9 +411,8 @@ class TestChart(TestBase):
 
 
 class TestRepository(TestBase):
-
-    def test_git_repository(self):
-        self.configure_subprocess_mock('', '', 0)
+    @mock.patch('reckoner.repository.git', autospec=True)
+    def test_git_repository(self, mock_git_lib):
         helm_mock = mock.Mock()
         helm_mock.repositories = []
         r = Repository(test_git_repository, helm_mock)
@@ -454,7 +422,6 @@ class TestRepository(TestBase):
         self.assertEqual(r.install("test_chart"), None)
 
     def test_tgz_repository(self):
-        self.configure_subprocess_mock('', '', 0)
         helm_mock = mock.Mock()
         helm_mock.repositories = []
         r = Repository(test_repository_dict, helm_mock)

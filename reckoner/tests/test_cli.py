@@ -18,6 +18,7 @@ import unittest
 import mock
 from click.testing import CliRunner
 from reckoner import cli
+from reckoner.exception import ReckonerException
 
 
 class TestCli(unittest.TestCase):
@@ -68,7 +69,7 @@ class TestCliPlot(unittest.TestCase):
     def test_plot_exists(self, reckoner_mock):
         """Assure we have a plot command and it calls reckoner install"""
         reckoner_instance = reckoner_mock()
-        reckoner_instance.install.side_effect = [None]
+        reckoner_instance.results = mock.MagicMock(has_errors=False)
         runner = CliRunner()
         with runner.isolated_filesystem():
             with open('nonexistent.file', 'wb') as fake_file:
@@ -79,6 +80,35 @@ class TestCliPlot(unittest.TestCase):
         self.assertEqual(0, result.exit_code, result.output)
         reckoner_instance.install.assert_called_once()
 
+    @mock.patch('reckoner.cli.Reckoner', autospec=True)
+    def test_plot_has_correct_exit_code_with_errors(self, reckoner_mock):
+        """Assure we have a plot command and it calls reckoner install"""
+        reckoner_instance = reckoner_mock()
+        reckoner_instance.results = mock.MagicMock(has_errors=True)
+        reckoner_instance.results.results_with_errors = [None]
+        runner = CliRunner()
+        with runner.isolated_filesystem():
+            with open('nonexistent.file', 'wb') as fake_file:
+                fake_file.write(''.encode())
+
+            result = runner.invoke(cli.plot, args=['nonexistent.file'])
+
+        self.assertEqual(1, result.exit_code, result.output)
+        reckoner_instance.install.assert_called_once()
+
+    @mock.patch('reckoner.cli.Reckoner', autospec=True)
+    def test_plot_handles_exception(self, reckoner_mock):
+        """Assure we have a plot command and it calls reckoner install"""
+        reckoner_mock.side_effect = [ReckonerException("had some error")]
+        runner = CliRunner()
+        with runner.isolated_filesystem():
+            with open('nonexistent.file', 'wb') as fake_file:
+                fake_file.write(''.encode())
+
+            result = runner.invoke(cli.plot, args=['nonexistent.file'])
+
+        self.assertEqual(1, result.exit_code, result.output)
+
     def test_plot_options(self):
         required = {
             'option': [
@@ -87,7 +117,7 @@ class TestCliPlot(unittest.TestCase):
                 '--helm-args',
                 '--heading',
                 '--only',
-                '--local-development',
+                '--continue-on-error',
             ],
             'argument': [
                 'course_file',

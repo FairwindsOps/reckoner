@@ -67,13 +67,13 @@ Grafana and Polaris should now be installed on your cluster!
       * `--debug`: Pass --debug to helm
       * `--dry-run`: Pass --dry-run to helm so no action is taken. Also includes `--debug`
       * `--heading <chart>`: Run only the specified chart out of the course.yml
+      * `--continue-on-error`: If any charts or hooks fail, continue installing other charts in the course
       * `--helm-args <helm-arg>`: Pass arbitrary flags and parameters to all
         helm chart commands in your course.yml.  Example:
         `--helm-args --set=foo=toast`, or `--helm-args --recreate-pods`.
         Multiples are supported but only one parameter per `--helm-args` is
         supported. Note that specifying this flag will override `helm_args`
         in the course.yml file.
-      * `--local-development`: Run `reckoner` in local-development mode where Tiller is not required and no helm commands are run. Useful for rapid or offline development.
   * `generate`: Generates example file `course.yml` with extensive descriptions
   * `version`: Output reckoner version
 

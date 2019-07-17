@@ -12,17 +12,16 @@ minimum_versions: #set minimum version requirements here
   helm: 0.0.0
   reckoner: 0.0.0
 charts:
-  polaris-release:
-    namespace: polaris
-    chart: polaris
-    repository:
-      git: https://github.com/FairwindsOps/charts
-      path: stable
-  polaris:
-    namespace: another-polaris
-    repository:
-      git: https://github.com/FairwindsOps/charts.git
-      path: stable
-  go-harbor:
-    repository:
-      git: https://github.com/goharbor/harbor-helm.git
+  good-chart:
+    repository: stable
+    chart: nginx-ingress
+  bad-chart:
+    repository: stable
+    chart: atlantis # NOTE: This chart has required values so it should fail without them
+    version: 3.5.2
+    set-values:
+      github:
+        broken: yep
+  expected-skipped-chart: # This chart should never be installed due to bad-chart failing (if applied in order)
+    repository: stable
+    chart: nginx-ingress

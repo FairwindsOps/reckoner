@@ -15,7 +15,7 @@
 """Test the chart functions directly"""
 import unittest
 import mock
-from reckoner.chart import Chart
+from reckoner.chart import Chart, ChartResult
 from reckoner.command_line_caller import Response
 from reckoner.exception import ReckonerCommandException
 
@@ -44,7 +44,6 @@ class TestChartHooks(unittest.TestCase):
             None,
         )
         chart.config.dryrun = False
-        chart.config.local_development = False
 
         return chart
 
@@ -128,14 +127,6 @@ class TestChartHooks(unittest.TestCase):
         mock_logging.info.assert_called()
         mock_logging.log.assert_called()
 
-    def test_skipping_due_to_local_development(self, mock_cmd_call, *args):
-        """Verify skipping call() when in local_development"""
-        chart = self.get_chart()
-
-        chart.config.local_development = True
-        chart.run_hook('pre_install')
-        mock_cmd_call.assert_not_called()
-
     def test_skipping_due_to_dryrun(self, mock_cmd_call, *args):
         """Verify that we do NOT run the actual calls when dryrun is enabled"""
         chart = self.get_chart()
@@ -185,7 +176,6 @@ class TestCharts(unittest.TestCase):
     def test_interpolation_of_env_vars(self, environMock):
         chart = Chart({'name': {'values': {}}}, None)
         chart.config.dryrun = False
-        chart.config.local_development = False
 
         chart.args = ['thing=${environVar}', 'another=$environVar']
         environMock.environ = {'environVar': 'asdf'}
@@ -198,7 +188,6 @@ class TestCharts(unittest.TestCase):
     def test_interpolation_of_missing_env_vars(self, environMock):
         chart = Chart({'name': {'values': {}}}, None)
         chart.config.dryrun = False
-        chart.config.local_development = False
 
         chart.args = ['thing=${environVar}']
         environMock.environ = {}
@@ -210,7 +199,6 @@ class TestCharts(unittest.TestCase):
     def test_interpolation_of_env_vars_kube_deploy_spec(self, environMock):
         chart = Chart({'name': {'values': {}}}, None)
         chart.config.dryrun = False
-        chart.config.local_development = False
 
         chart.args = ['thing=$(environVar)']
         environMock.environ = {}
@@ -226,7 +214,6 @@ class TestCharts(unittest.TestCase):
 
         chart = Chart({'nameofchart': {'namespace': 'fakenamespace', 'set-values': {}}}, helm_client_mock)
         chart.config.dryrun = False
-        chart.config.local_development = False
 
         chart.install()
         helm_client_mock.upgrade.assert_called_once()
@@ -241,10 +228,33 @@ class TestCharts(unittest.TestCase):
 
         chart = Chart({'nameofchart': {'namespace': 'fakenamespace', 'plugin': 'someplugin', 'set-values': {}}}, helm_client_mock)
         chart.config.dryrun = False
-        chart.config.local_development = False
 
         chart.install()
         helm_client_mock.upgrade.assert_called_once()
         upgrade_call = helm_client_mock.upgrade.call_args
         self.assertEqual(upgrade_call[0][0], ['nameofchart', '', '--namespace', 'fakenamespace'])
         self.assertEqual(upgrade_call[1], {'plugin': 'someplugin'})
+
+
+class TestChartResult(unittest.TestCase):
+    def test_initialize(self):
+        c = ChartResult(
+            name="fake-result",
+            failed=False,
+            error_reason="",
+        )
+
+        assert c
+
+    def test_string_output(self):
+        c = ChartResult(name="fake-result", failed=False, error_reason="oops")
+        string_output = c.__str__()
+        self.assertIn("fake-result", string_output)
+        self.assertIn("Succeeded", string_output)
+        self.assertIn(c.error_reason, string_output)
+
+    def test_status_string(self):
+        c = ChartResult(name="railed-result", failed=True, error_reason="")
+        self.assertEqual(c.status_string, "Failed")
+        c.failed = False
+        self.assertEqual(c.status_string, "Succeeded")
