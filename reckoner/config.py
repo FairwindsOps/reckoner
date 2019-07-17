@@ -42,6 +42,7 @@ class Config(object):
     def __init__(self):
         self.__dict__ = self._config
         self._installed_repositories = []
+        self.continue_on_error = self._config.get('continue_on_error')
 
     @property
     def home(self):

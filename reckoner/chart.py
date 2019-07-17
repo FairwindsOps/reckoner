@@ -29,6 +29,25 @@ from .command_line_caller import call
 default_repository = {'name': 'stable', 'url': 'https://kubernetes-charts.storage.googleapis.com'}
 
 
+class ChartResult:
+    def __init__(self, name: str, failed: bool, error_reason: str):
+        self.name = name
+        self.failed = failed
+        self.error_reason = error_reason
+
+    def __str__(self):
+        return "Chart Name: {}\n" \
+            "Status: {}\n" \
+            "Error Reason: {}".format(self.name, self.status_string, self.error_reason)
+
+    @property
+    def status_string(self) -> str:
+        if self.failed:
+            return "Failed"
+        else:
+            return "Succeeded"
+
+
 class Chart(object):
     """
     Description:
@@ -54,6 +73,7 @@ class Chart(object):
         self.helm = helm
         self.config = Config()
         self._release_name = list(chart.keys())[0]
+        self.result = ChartResult(name=self._release_name, failed=False, error_reason="")
         self._chart = chart[self._release_name]
         self._repository = Repository(self._chart.get('repository', default_repository), self.helm)
         self._plugin = self._chart.get('plugin')
@@ -216,7 +236,7 @@ class Chart(object):
             except ReckonerCommandException as error:
                 logging.warn("Unable to update chart dependencies: {}".format(error.stderr))
 
-    def install(self, namespace=None, context=None):
+    def install(self, namespace=None, context=None) -> None:
         """
         Description:
         - Upgrade --install the course chart
@@ -233,40 +253,43 @@ class Chart(object):
         if self.context is None:
             self._context = context
 
-        # Fire the pre_install_hook
-        self.pre_install_hook()
-
-        # TODO: Improve error handling of a repository installation
-        #       Thoughts here, perhaps it would be better to install the
-        #       repositories *before* trying to install the chart. This
-        #       way we could find out earlier our course is wrong.
-        self.repository.install(self.name, self.version)
-
-        # Update the helm dependencies
-        self.update_dependencies()
-
-        # Build the args for the chart installation
-        # And add any extra arguments
-        self.build_helm_arguments_for_chart()
-
-        # Check and Error if we're missing required env vars
-        self._check_env_vars()
-
-        # Perform the upgrade with the arguments
+        # Try to run the install process for mark the result as failed
         try:
-            # Try to run helm upgrade
+            # Fire the pre_install_hook
+            self.pre_install_hook()
+
+            # TODO: Improve error handling of a repository installation
+            #       Thoughts here, perhaps it would be better to install the
+            #       repositories *before* trying to install the chart. This
+            #       way we could find out earlier our course is wrong.
+            self.repository.install(self.name, self.version)
+
+            # Update the helm dependencies
+            self.update_dependencies()
+
+            # Build the args for the chart installation
+            # And add any extra arguments
+            self.build_helm_arguments_for_chart()
+
+            # Check and Error if we're missing required env vars
+            self._check_env_vars()
+
+            # Perform the upgrade with the arguments
             helm_command_response = self.helm.upgrade(self.args, plugin=self.plugin)
             # Log the stdout response in info
             logging.info(helm_command_response.stdout)
-        except HelmClientException as error:
-            logging.error(error)
-            return
 
-        # Fire the post_install_hook
-        self.post_install_hook()
-
-        if self._deprecation_messages:
-            [logging.warning(msg) for msg in self._deprecation_messages]
+            # Fire the post_install_hook
+            self.post_install_hook()
+        except Exception as err:
+            logging.debug("Saving encountered error to chart result. See Below:")
+            logging.debug("{}".format(err))
+            self.result.failed = True
+            self.result.error_reason = err
+            raise err
+        finally:
+            if self._deprecation_messages:
+                [logging.warning(msg) for msg in self._deprecation_messages]
 
     def _append_arg(self, arg_string):
         for item in arg_string.split(" ", 1):

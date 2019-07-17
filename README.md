@@ -30,7 +30,31 @@ pip install git+https://github.com/reactiveops/reckoner@master
 
 For development see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-## Usage
+## Quickstart
+
+In course.yaml, write:
+```
+charts:
+  grafana:
+    namespace: grafana
+    set-values:
+      image:
+        tag: 6.2.5
+  polaris-dashboard:
+    namespace: polaris-dashboard
+    repository:
+      git: https://github.com/FairwindsOps/charts
+      path: stable
+    chart: polaris
+```
+
+```bash
+reckoner plot course.yaml
+```
+
+Grafana and Polaris should now be installed on your cluster!
+
+## Extended Usage
 
 ### As standalone shell command
 - Usage: reckoner [OPTIONS] COMMAND [ARGS]...
@@ -43,6 +67,7 @@ For development see [CONTRIBUTING.md](./CONTRIBUTING.md).
       * `--debug`: Pass --debug to helm
       * `--dry-run`: Pass --dry-run to helm so no action is taken. Also includes `--debug`
       * `--heading <chart>`: Run only the specified chart out of the course.yml
+      * `--continue-on-error`: If any charts or hooks fail, continue installing other charts in the course
       * `--helm-args <helm-arg>`: Pass arbitrary flags and parameters to all
         helm chart commands in your course.yml.  Example:
         `--helm-args --set=foo=toast`, or `--helm-args --recreate-pods`.
@@ -209,3 +234,8 @@ charts:
 ```
 
 The alternative is to use the files method described above
+
+## Contributing
+* [Code of Conduct](CODE_OF_CONDUCT.md)
+* [Roadmap](ROADMAP.md)
+* [Contributing](CONTRIBUTING.md)

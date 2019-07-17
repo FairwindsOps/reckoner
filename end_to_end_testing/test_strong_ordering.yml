@@ -1,0 +1,20 @@
+namespace: test #namespace to install the chart in, defaults to 'kube-system'
+repositories:
+  test_repo:
+    url: https://kubernetes-charts.storage.googleapis.com
+  incubator:
+    url: https://kubernetes-charts-incubator.storage.googleapis.com
+  reactiveops-stable:
+    url: https://charts.reactiveops.com/stable
+  reactiveops-incubator:
+    url: https://charts.reactiveops.com/incubator
+minimum_versions: #set minimum version requirements here
+  helm: 0.0.0
+  reckoner: 0.0.0
+charts:
+  first-chart:
+    repository: stable
+    chart: nginx-ingress
+  second-chart:
+    repository: stable
+    chart: nginx-ingress

@@ -15,7 +15,7 @@
 """Test the chart functions directly"""
 import unittest
 import mock
-from reckoner.chart import Chart
+from reckoner.chart import Chart, ChartResult
 from reckoner.command_line_caller import Response
 from reckoner.exception import ReckonerCommandException
 
@@ -234,3 +234,27 @@ class TestCharts(unittest.TestCase):
         upgrade_call = helm_client_mock.upgrade.call_args
         self.assertEqual(upgrade_call[0][0], ['nameofchart', '', '--namespace', 'fakenamespace'])
         self.assertEqual(upgrade_call[1], {'plugin': 'someplugin'})
+
+
+class TestChartResult(unittest.TestCase):
+    def test_initialize(self):
+        c = ChartResult(
+            name="fake-result",
+            failed=False,
+            error_reason="",
+        )
+
+        assert c
+
+    def test_string_output(self):
+        c = ChartResult(name="fake-result", failed=False, error_reason="oops")
+        string_output = c.__str__()
+        self.assertIn("fake-result", string_output)
+        self.assertIn("Succeeded", string_output)
+        self.assertIn(c.error_reason, string_output)
+
+    def test_status_string(self):
+        c = ChartResult(name="railed-result", failed=True, error_reason="")
+        self.assertEqual(c.status_string, "Failed")
+        c.failed = False
+        self.assertEqual(c.status_string, "Succeeded")
