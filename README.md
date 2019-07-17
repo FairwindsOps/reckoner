@@ -48,6 +48,7 @@ charts:
     chart: polaris
 ```
 
+Then run:
 ```bash
 reckoner plot course.yaml
 ```
