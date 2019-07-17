@@ -33,7 +33,7 @@ For development see [CONTRIBUTING.md](./CONTRIBUTING.md).
 ## Quickstart
 
 In course.yaml, write:
-```
+```yaml
 charts:
   grafana:
     namespace: grafana
@@ -48,6 +48,7 @@ charts:
     chart: polaris
 ```
 
+Then run:
 ```bash
 reckoner plot course.yaml
 ```
