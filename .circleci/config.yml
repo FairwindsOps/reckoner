@@ -169,7 +169,7 @@ jobs:
             echo "Posting Binaries to Release"
 
             for filename in /tmp/binaries/*; do
-              publish_url="https://uploads.github.com/repos/reactiveops/reckoner/releases/${release_id}/assets?name=$(basename ${filename})"
+              publish_url="https://uploads.github.com/repos/FairwindsOps/reckoner/releases/${release_id}/assets?name=$(basename ${filename})"
               echo "Publishing ${filename} to ${publish_url}"
               curl \
                 --fail \
