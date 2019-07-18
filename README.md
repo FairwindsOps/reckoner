@@ -1,21 +1,21 @@
-# reckoner [![CircleCI](https://circleci.com/gh/reactiveops/reckoner.svg?style=svg)](https://circleci.com/gh/reactiveops/reckoner) [![codecov](https://codecov.io/gh/reactiveops/reckoner/branch/master/graph/badge.svg)](https://codecov.io/gh/reactiveops/reckoner)
+# reckoner [![CircleCI](https://circleci.com/gh/FairwindsOps/reckoner.svg?style=svg)](https://circleci.com/gh/FairwindsOps/reckoner) [![codecov](https://codecov.io/gh/FairwindsOps/reckoner/branch/master/graph/badge.svg)](https://codecov.io/gh/FairwindsOps/reckoner)
 
 Command line helper for helm.
 This utility adds to the functionality of [Helm](https://github.com/kubernetes/helm) in multiple ways:
 * Creates a declarative syntax to manage multiple releases in one place
 * Allows installation of charts from a git commit/branch/release
 
-**Want to learn more?** ReactiveOps holds [office hours on Zoom](https://zoom.us/j/242508205) the first Friday of every month, at 12pm Eastern. You can also reach out via email at `opensource@reactiveops.com`
+**Want to learn more?** ReactiveOps holds [office hours on Zoom](https://zoom.us/j/242508205) the first Friday of every month, at 12pm Eastern. You can also reach out via email at `opensource@fairwinds.com`
 
 ## Requirements
 - python 3
 - helm: installed and initialized
 
-*Note:* Python2 is no longer supported by Reckoner. In general we suggest using the binary on the [Releases](https://github.com/reactiveops/reckoner/releases) page.
+*Note:* Python2 is no longer supported by Reckoner. In general we suggest using the binary on the [Releases](https://github.com/FairwindsOps/reckoner/releases) page.
 
 ### Installation
 Via Binary: *preferred method*
-* Binary downloads of Reckoner client can be found on the [Releases](https://github.com/reactiveops/reckoner/releases) page.
+* Binary downloads of Reckoner client can be found on the [Releases](https://github.com/FairwindsOps/reckoner/releases) page.
 * Unpack the binary `chmod -x` and add it to your PATH and you are good to go!
 
 Via pip:
@@ -25,7 +25,7 @@ pip install reckoner
 
 Via Git
 ```shell
-pip install git+https://github.com/reactiveops/reckoner@master
+pip install git+https://github.com/FairwindsOps/reckoner@master
 ```
 
 For development see [CONTRIBUTING.md](./CONTRIBUTING.md).
