@@ -1,6 +1,6 @@
 # -- coding: utf-8 --
 
-# Copyright 2019 ReactiveOps Inc
+# Copyright 2019 FairwindsOps Inc
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -355,7 +355,7 @@ class Chart(object):
             self._deprecation_messages.append(
                 "DEPRECATION NOTICE: Change 'values: {}' to 'set-values: {}' "
                 "to keep consistent behavior beyond v1.1+. Details: "
-                "https://github.com/reactiveops/reckoner/issues/7"
+                "https://github.com/FairwindsOps/reckoner/issues/7"
             )
 
     def build_files_list(self):
@@ -426,7 +426,7 @@ class Chart(object):
     def _merge_set_and_values(self):
         """
         This is a temporary method that will be gone once the values: vs set:
-        debacle has been resolved. (See https://github.com/reactiveops/reckoner/issues/7)
+        debacle has been resolved. (See https://github.com/FairwindsOps/reckoner/issues/7)
 
         NOTE ONLY RUN THIS ONCE BECAUSE IT'S NOT IDEMPOTENT
         """

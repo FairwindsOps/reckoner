@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -- coding: utf-8 --
 
-# Copyright 2017 Reactive Ops Inc.
+# Copyright 2017 FairwindsOps Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the “License”);
 # you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ setup(name='reckoner',
       use_scm_version=True,
       setup_requires=['setuptools_scm'],
       description='Declarative Helm configuration with Git capability',
-      author='ReactiveOps Inc.',
+      author='FairwindsOps Inc.',
       author_email='service@fairwinds.com',
       url='http://fairwinds.com/',
       license='Apache2.0',
