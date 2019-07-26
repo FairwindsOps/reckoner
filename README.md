@@ -15,8 +15,8 @@ This utility adds to the functionality of [Helm](https://github.com/kubernetes/h
 
 ### Installation
 Via Binary: *preferred method*
-* Binary downloads of Reckoner client can be found on the [Releases](https://github.com/FairwindsOps/reckoner/releases) page.
-* Unpack the binary `chmod -x` and add it to your PATH and you are good to go!
+* Binary downloads of the Reckoner client can be found on the [Releases](https://github.com/FairwindsOps/reckoner/releases) page.
+* Unpack the binary, `chmod +x`, add it to your PATH, and you are good to go!
 
 Via pip:
 ```shell
