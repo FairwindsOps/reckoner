@@ -1,4 +1,4 @@
-#Copyright 2017 Reactive Ops Inc.
+#Copyright 2017 FairwindsOps Inc.
 #
 #Licensed under the Apache License, Version 2.0 (the “License”);
 #you may not use this file except in compliance with the License.
