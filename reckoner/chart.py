@@ -16,6 +16,8 @@
 
 import logging
 import os
+from tempfile import NamedTemporaryFile as tempfile
+from .yaml.handler import Handler as yaml_handler
 
 from collections import OrderedDict
 from string import Template
@@ -23,7 +25,6 @@ from string import Template
 from .exception import ReckonerCommandException
 from .config import Config
 from .repository import Repository
-from .helm.client import HelmClientException
 from .command_line_caller import call
 
 default_repository = {'name': 'stable', 'url': 'https://kubernetes-charts.storage.googleapis.com'}
@@ -78,7 +79,9 @@ class Chart(object):
         self._repository = Repository(self._chart.get('repository', default_repository), self.helm)
         self._plugin = self._chart.get('plugin')
         self._chart['values'] = self._chart.get('values', {})
+        self._temp_values_file_paths = []
         self._chart['set_values'] = self._chart.get('set-values', {})
+        self.args = []
 
         self._namespace = self._chart.get('namespace')
         self._context = self._chart.get('context')
@@ -272,10 +275,14 @@ class Chart(object):
             self.build_helm_arguments_for_chart()
 
             # Check and Error if we're missing required env vars
+            # TODO Rename this function as it does more than just "check", it also interpolates
             self._check_env_vars()
 
-            # Perform the upgrade with the arguments
-            helm_command_response = self.helm.upgrade(self.args, plugin=self.plugin)
+            try:
+                # Perform the upgrade with the arguments
+                helm_command_response = self.helm.upgrade(self.args, plugin=self.plugin)
+            finally:
+                self.clean_up_temp_files()
             # Log the stdout response in info
             logging.info(helm_command_response.stdout)
 
@@ -323,18 +330,11 @@ class Chart(object):
         if self.version:
             self._append_arg('--version {}'.format(self.version))
 
-        # HACK: This is in place until we can fully deprecate the usage of set
-        #       in place of values. Currently values: gets translated into
-        #       --set commands to the helm command line run. This should be
-        #       changed so that set: goes to command line args and values: goes
-        #       to temporary values files, to keep strong types in yaml.
-        #       This will go away once we fully change the functionality of
-        #       values: vs sets: settings in course.yml
-        self._merge_set_and_values()
-
+        # TODO Assert that files list is always first
         # Build the list of existing yaml files to use for the helm command
         self.build_files_list()
 
+        # TODO Assert that temp files from course yaml is always after files list, so it takes precedence
         # Build the file arguments from the `values: {}` in course.yml
         self.build_temp_values_files()
 
@@ -351,12 +351,27 @@ class Chart(object):
         between the course.yml and what is passed to helm. If you use set:
         value arguments then you can lose types like int, float and true/false
         """
+        # If any values exist
         if self.values:
-            self._deprecation_messages.append(
-                "DEPRECATION NOTICE: Change 'values: {}' to 'set-values: {}' "
-                "to keep consistent behavior beyond v1.1+. Details: "
-                "https://github.com/FairwindsOps/reckoner/issues/7"
-            )
+            # create a temporary file on the file-system but don't clean up after you close it
+            with tempfile('w+t', suffix=".yml", delete=False) as temp_yaml:
+                # load up the self.values yaml string
+                yaml_output = yaml_handler.dump(self.values)
+
+                # read the yaml_output and interpolate any variables
+                yaml_output = self._interpolate_env_vars_from_string(yaml_output)
+
+                # write the interpolated yaml string and flush it to the file
+                temp_yaml.write(yaml_output) and temp_yaml.flush()
+
+                # add the name of the temp file to a list to clean up later
+                self._temp_values_file_paths.append(temp_yaml.name)
+
+                # add the name of the file to the helm arguments
+                self._append_arg("-f {}".format(temp_yaml.name))
+
+                # log debug info of the contents of the file
+                logging.debug("Yaml Values Temp File:\n{}".format(yaml_output))
 
     def build_files_list(self):
         """
@@ -365,6 +380,18 @@ class Chart(object):
         """
         for values_file in self.files:
             self._append_arg("-f {}".format(values_file))
+
+    @staticmethod
+    def _interpolate_env_vars_from_string(original_string: str) -> str:
+        try:
+            interpolated_string = Template(original_string).substitute(os.environ)
+        except KeyError as err:
+            raise Exception("Missing required environment variable: {}".format(", ".join(err.args)))
+        except ValueError:
+            logging.debug("Could not replace Variable {} with an Env Var: Formatting Error.".format(original_string))
+            logging.debug("This generally happens if you use $(THING) instead of $THING or ${THING}.")
+            return original_string
+        return interpolated_string
 
     def build_set_string_arguments(self):
         """
@@ -376,7 +403,11 @@ class Chart(object):
         """
         for key, value in self.values_strings.items():
             for k, v in self._format_set(key, value):
-                self._append_arg("--set-string {}={}".format(k, v))
+                if v is None:
+                    arg_val = "null"
+                else:
+                    arg_val = v
+                self._append_arg("--set-string {}={}".format(k, arg_val))
 
     def build_set_arguments(self):
         """
@@ -388,31 +419,32 @@ class Chart(object):
         """
         for key, value in self.set_values.items():
             for k, v in self._format_set(key, value):
-                self._append_arg("--set {}={}".format(k, v))
+                if v is None:
+                    arg_val = "null"
+                else:
+                    arg_val = v
+                self._append_arg("--set {}={}".format(k, arg_val))
 
+    def clean_up_temp_files(self):
+        # Clean up all temp files used in the helm run
+        for temp_file in self._temp_values_file_paths:
+            os.remove(temp_file)
+
+    # TODO This needs some documentation and some more thorough testing
     def _format_set(self, key, value):
         """
         Allows nested yaml to be set on the command line of helm.
         Accepts key and value, if value is an ordered dict, recursively
         formats the string properly
         """
-        if type(value) in [dict, OrderedDict]:
+        if isinstance(value, dict):
             for new_key, new_value in value.items():
                 for k, v in self._format_set("{}.{}".format(key, new_key), new_value):
-                    for a, b in self._format_set_list(k, v):
+                    for a, b in self._format_set(k, v):
                         yield a, b
-        else:
-            for a, b in self._format_set_list(key, value):
-                yield a, b
-
-    def _format_set_list(self, key, value):
-        """
-        given a list and a key, format it properly
-        for the helm set list indexing
-        """
-        if type(value) == list:
+        elif isinstance(value, list):
             for index, item in enumerate(value):
-                if type(item) in [dict, OrderedDict]:
+                if isinstance(item, dict):
                     for k, v in self._format_set("{}[{}]".format(key, index), item):
                         yield k, v
                 else:
@@ -422,30 +454,6 @@ class Chart(object):
 
     def __getattr__(self, key):
         return self._chart.get(key)
-
-    def _merge_set_and_values(self):
-        """
-        This is a temporary method that will be gone once the values: vs set:
-        debacle has been resolved. (See https://github.com/FairwindsOps/reckoner/issues/7)
-
-        NOTE ONLY RUN THIS ONCE BECAUSE IT'S NOT IDEMPOTENT
-        """
-        if self._hack_set_values_already_merged:
-            raise Exception('This method cannot be called twice. '
-                            'If you are seeing this please open an '
-                            'issue in github.')
-
-        def merge_dicts(values, sets):
-            """This does a dict merge and prefers "sets" values"""
-            new_dict = values.copy()
-            new_dict.update(sets)
-            return new_dict
-
-        logging.debug('Merging values: into sets: - sets: take precedence.')
-        logging.debug('Original value of sets: {}'.format(self.set_values))
-        self.set_values = merge_dicts(self.values, self.set_values)
-        logging.debug('New value of sets: {}'.format(self.set_values))
-        self._hack_set_values_already_merged = True
 
     def __str__(self):
         return str(dict(self._chart))
@@ -463,7 +471,7 @@ class Chart(object):
         """
         for idx in range(len(self.args)):
             try:
-                self.args[idx] = Template(self.args[idx]).substitute(os.environ)
+                self.args[idx] = self._interpolate_env_vars_from_string(self.args[idx])
             except ValueError:
                 logging.debug("Could not replace Variable {} with an Env Var: Formatting Error.".format(self.args[idx]))
                 logging.debug("This generally happens if you use $(THING) instead of $THING or ${THING}.")

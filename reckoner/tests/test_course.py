@@ -15,13 +15,12 @@
 import mock
 import unittest
 from reckoner.course import Course
-from reckoner.chart import Chart
 from reckoner.command_line_caller import Response
 
 
 @mock.patch('reckoner.repository.Repository', autospec=True)
 @mock.patch('reckoner.course.sys')
-@mock.patch('reckoner.course.yaml', autospec=True)
+@mock.patch('reckoner.course.yaml_handler', autospec=True)
 @mock.patch('reckoner.course.HelmClient', autospec=True)
 @mock.patch('reckoner.course.Config', autospec=True)
 class TestMinVersion(unittest.TestCase):
@@ -78,7 +77,7 @@ class TestIntegrationWithChart(unittest.TestCase):
     @mock.patch('reckoner.chart.call', autospec=True)
     @mock.patch('reckoner.repository.Repository', autospec=True)
     @mock.patch('reckoner.course.sys')
-    @mock.patch('reckoner.course.yaml', autospec=True)
+    @mock.patch('reckoner.course.yaml_handler', autospec=True)
     @mock.patch('reckoner.course.HelmClient', autospec=True)
     @mock.patch('reckoner.course.Config', autospec=True)
     def test_failed_pre_install_hooks_fail_chart_installation(self, configMock, helmClientMock, yamlLoadMock, sysMock, repoMock, chartCallMock):
@@ -112,7 +111,7 @@ class TestIntegrationWithChart(unittest.TestCase):
         self.assertEqual(len([result for result in results if result.failed]), 1, "We should have only one failed chart install due to hook failure.")
 
 
-@mock.patch('reckoner.course.yaml', autospec=True)
+@mock.patch('reckoner.course.yaml_handler', autospec=True)
 @mock.patch('reckoner.course.HelmClient', autospec=True)
 class TestCourse(unittest.TestCase):
     def setUp(self):

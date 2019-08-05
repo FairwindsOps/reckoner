@@ -24,6 +24,7 @@ from .course import Course
 from .chart import ChartResult
 from .helm.client import HelmClient, HelmClientException
 from .exception import NoChartsToInstall, ReckonerCommandException, ReckonerException
+from io import BufferedReader
 
 
 class ReckonerInstallResults:
@@ -63,7 +64,7 @@ class Reckoner(object):
 
     """
 
-    def __init__(self, course_file=None, dryrun=False, debug=False, helm_args=None, continue_on_error=False):
+    def __init__(self, course_file: BufferedReader = None, dryrun=False, debug=False, helm_args=None, continue_on_error=False):
         self.config = Config()
         self.results = ReckonerInstallResults()
         self.config.dryrun = dryrun

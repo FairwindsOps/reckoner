@@ -54,16 +54,21 @@ def plot(ctx, course_file=None, dry_run=False, debug=False, only=None, helm_args
         # Convert tuple to list
         only = list(only)
         r.install(only)
-        if r.results.has_errors:
-            click.echo(click.style("⛵🔥 Encountered errors while running the course ⛵🔥", fg="bright_red"))
-            for result in r.results.results_with_errors:
-                click.echo(click.style("\n* * * * *\n", fg="bright_red"))
-                click.echo(click.style(str(result), fg="bright_red"))
-            ctx.exit(1)
     except exception.ReckonerException as err:
+        click.echo(click.style("⛵🔥 Encountered errors while reading course file ⛵🔥", fg="bright_red"))
+        click.echo(click.style("{}".format(err), fg="red"))
+        ctx.exit(1)
+    except Exception as err:
         # This handles exceptions cleanly, no expected stack traces from reckoner code
-        click.echo(click.style("Unexpected Error Occurred within Reckoner", fg="red"))
-        click.echo(click.style("{}".format(err)))
+        click.echo(click.style("⛵🔥 Encountered unexpected error in Reckoner! Run with --log-level debug to see details! ⛵🔥", fg="bright_red"))
+        if debug:
+            click.echo(click.style("{}".format(err)))
+        ctx.exit(1)
+    if r.results.has_errors:
+        click.echo(click.style("⛵🔥 Encountered errors while running the course ⛵🔥", fg="bright_red"))
+        for result in r.results.results_with_errors:
+            click.echo(click.style("\n* * * * *\n", fg="bright_red"))
+            click.echo(click.style(str(result), fg="bright_red"))
         ctx.exit(1)
 
 
