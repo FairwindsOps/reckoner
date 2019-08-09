@@ -71,11 +71,11 @@ class HelmClient(object):
 
     @property
     def client_version(self):
-        return self._get_version('--client')
+        return self._get_version(kind='--client')
 
     @property
     def server_version(self):
-        return self._get_version('--server')
+        return self._get_version(kind='--server')
 
     @property
     def repositories(self):
@@ -152,9 +152,16 @@ class HelmClient(object):
                 list_of_args.remove(arg)
                 logging.debug('This argument {} was not found in valid arguments: {}, removing from list.'.format(arg, ' '.join(HelmClient.global_helm_flags)))
 
-    def _get_version(self, kind='--server'):
-        get_ver = self.execute("version", arguments=['--short', kind], filter_non_global_flags=True)
-        ver = self._find_version(get_ver.stdout)
+    def _get_version(self, kind):
+        try:
+            get_ver = self.execute("version", arguments=['--short', kind], filter_non_global_flags=True)
+            ver = self._find_version(get_ver.stdout)
+        except HelmClientException as e:
+            # check if running helm3, --client and --server flags are removed
+            logging.debug("Couldn't find Helm version. Are we using Helm 3?")
+            get_ver = self.execute("version", arguments=['--short'], filter_non_global_flags=True)
+            ver = self._find_version(get_ver.stdout)
+            logging.warn("🔥️ 🐲️  Detected Helm 3 as version in use. Helm 3 is untested and not supported. Proceed with caution! 🔥️ 🐲️")
 
         if ver is None:
             raise HelmClientException(
@@ -172,7 +179,12 @@ class HelmClient(object):
         if ver:
             return ver.group(1)
         else:
-            return None
+            logging.debug("Couldn't find Helm version. Are we using Helm 3?")
+            try:
+                ver = re.compile(r'v([0-9\.]+)(\+[a-zA-Z]+)(\+g[0-9a-f]+)?').search(str(raw_version))
+                return ver.group(1)
+            except Exception as e:
+                return None
 
     @staticmethod
     def _validate_default_helm_args(helm_args):
