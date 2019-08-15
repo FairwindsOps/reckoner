@@ -11,14 +11,15 @@ This utility adds to the functionality of [Helm](https://github.com/kubernetes/h
 - python 3
 - helm: installed and initialized
 
-*Note:* Python2 is no longer supported by Reckoner. In general we suggest using the binary on the [Releases](https://github.com/FairwindsOps/reckoner/releases) page.
+*Note:* Python2 is no longer supported by Reckoner. In general we suggest using the binary on the [Latest Releases](https://github.com/FairwindsOps/reckoner/releases/latest) page.
 
 ### Installation
 Via Binary: *preferred method*
 * Binary downloads of the Reckoner client can be found on the [Releases](https://github.com/FairwindsOps/reckoner/releases) page.
 * Unpack the binary, `chmod +x`, add it to your PATH, and you are good to go!
 
-Via pip:
+Via pip:  
+**NOTE: Python2 pip will install a deprecated version of reckoner, Reckoner now requires python3.**
 ```shell
 pip install reckoner
 ```
@@ -37,9 +38,9 @@ In course.yaml, write:
 charts:
   grafana:
     namespace: grafana
-    set-values:
+    values:
       image:
-        tag: 6.2.5
+        tag: "6.2.5"
   polaris-dashboard:
     namespace: polaris-dashboard
     repository:
@@ -75,7 +76,6 @@ Grafana and Polaris should now be installed on your cluster!
         Multiples are supported but only one parameter per `--helm-args` is
         supported. Note that specifying this flag will override `helm_args`
         in the course.yml file.
-  * `generate`: Generates example file `course.yml` with extensive descriptions
   * `version`: Output reckoner version
 
 # Options
@@ -121,7 +121,29 @@ helm_args:
 
 ### values
 
-In-line values overrides for this chart. By default these are set using `--set`.  This introduces some interesting behavior.  Make sure to read the [Caveats](#caveats)
+Override values file for this chart. By default these are translated into `-f temp_values_file.yml` when helm is run. This means that anything in the `values: {}` settings should keep it's YAML type consistency.
+
+```yaml
+charts:
+  my-chart:
+    values:
+      my-string: "1234"
+      my-bool: false
+```
+
+### set-values
+
+In-line values overrides for this chart. By default these are translated into `--set key=value` which means that the default helm type casting applies. Helm will try to cast `key: "true"` into a `true` boolean value, as well as casting strings of integers into the integer representation, ie: `mystr: "1234"` becomes `mystr: 1234` when using `--set`.
+
+```yaml
+charts:
+  my-chart:
+    my-int: "1234"         # Converted into `int` when used with --set
+    my-string: 1.05        # Float numbers are converted to strings in --set
+    my-bool: "true"        # Strings of bool values are converted to bool in --set
+    my-string-null: "null" # String of "null" get converted to null value in --set
+    my-null: null          # null values are kept as null values in --set-strings
+```
 
 ### values-strings
 
@@ -133,7 +155,7 @@ charts:
     values:
       some.value: test
     values-strings:
-      some.value.that.you.need.to.be.a.string: '1'
+      some.value.that.you.need.to.be.a.string: "1"
 ```
 
 ### files
@@ -217,6 +239,8 @@ charts:
 ```
 
 ## Caveats
+### Strong Typing
+Using `set-values: {}` will cast null, bool and integers from strings even if they are quoted in the course.yml. This is the default Helm behavior for `--set`. Note also that floats will be cast as strings when using `set-values: {}`. Also note that if you're using environment variable replacements and you set `my-key: ${MY_VAR}`, if `MY_VAR=yes` then helm will use YAML 1.1 schema and make `my-key: true`. You need to quote your environment variables in order for `"yes"` to be cast as a string instead of a bool (`my-key: "${MY_VAR}"`).
 
 ### Escaping
 

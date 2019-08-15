@@ -14,17 +14,31 @@ set -o errtrace
 
 E2E_FAILED_TESTS=false
 E2E_FAILED_MESSAGES=()
+E2E_SKIPPED_MESSAGES=()
+
+function print_status_end_exit() {
+    if [ "${#E2E_SKIPPED_MESSAGES[@]}" -gt 0 ]; then echo -e "* * *\nSkipped Tests:"; fi
+    for skipped_test in "${E2E_SKIPPED_MESSAGES[@]}"; do
+        echo -en "- ${skipped_test}"
+    done
+
+    # Exit with a bad code if we failed any tests
+    if $E2E_FAILED_TESTS; then
+        echo -e "* * *\nFound Failed Tests"
+        for error_message in "${E2E_FAILED_MESSAGES[@]}"; do
+            echo -en "- ${error_message}"
+        done
+        exit 1
+    else
+        echo "ALL TESTS PASSED!!"
+        exit 0
+    fi
+}
+
+trap 'echo Failed unexpectedly on line ${BASH_LINENO} running ${FUNCNAME[0]}: ${BASH_COMMAND}; clean_helm; exit 1' ERR
 
 # Change to the script dir for help finding yamls
 cd "$(dirname "${0}")"
-
-# Mark the whole suite as failed
-function mark_failed() {
-    local err="Failed test: ${1} due to ${2}"
-    echo "${err}"
-    E2E_FAILED_TESTS=true
-    E2E_FAILED_MESSAGES+=("${err}\n")
-}
 
 # Helper to clean out all the stuff between tests
 function clean_helm() {
@@ -32,6 +46,20 @@ function clean_helm() {
         # Get all installed things in helm and delete/purge them
         helm list --output json | jq '.Releases[].Name' | xargs -I {} helm delete --purge {}
     fi
+}
+
+# Mark the whole suite as failed
+function mark_failed() {
+    local err
+    err="Failed test: ${1} due to ${2}"
+    echo "${err}"
+    E2E_FAILED_TESTS=true
+    E2E_FAILED_MESSAGES+=("${err}\n")
+}
+
+function add_skipped_message() {
+    local msg="${1}"
+    E2E_SKIPPED_MESSAGES+=("${msg}\n")
 }
 
 # check for deployed release in namespace
@@ -45,7 +73,7 @@ function helm_has_release_name_in_namespace() {
     fi
 
     # if the release exists and is in the namespace and is DEPLOYED, then return true, otherwise false
-    if helm list --output json | jq -e ".Releases[]|select(.Name == \"${release_name}\")|.Namespace == \"${namespace}\" and .Status == \"DEPLOYED\""; then
+    if helm list --output json | jq -e ".Releases[]|select(.Name == \"${release_name}\")|.Namespace == \"${namespace}\" and .Status == \"DEPLOYED\"" &>/dev/null; then
         return 0
     else
         return 1
@@ -57,7 +85,30 @@ function helm_release_has_key_value() {
     local key="${2}"
     local value="${3}"
 
-    if helm get values "${release_name}" --output json | jq -e ".[\"${key}\"] == \"${value}\""; then
+    if helm get values "${release_name}" --output json | jq -e ".[\"${key}\"] == \"${value}\"" &>/dev/null; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+function helm_release_values_has_key() {
+    local release_name="${1}"
+    local key="${2}"
+
+    if helm get values "${release_name}" --output json | jq -e ". | has(\"${key}\")" &>/dev/null; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+function helm_release_key_value_is_type() {
+    local release_name="${1}"
+    local key="${2}"
+    local type="${3}"
+
+    if helm get values "${release_name}" --output json | jq -e ".[\"${key}\"] | type == \"${type}\"" &>/dev/null; then
         return 0
     else
         return 1
@@ -79,12 +130,22 @@ function e2e_test_env_var() {
         mark_failed "${FUNCNAME[0]}" "Could not install course"
     fi
 
-    if ! helm_has_release_name_in_namespace "nginx-ingress" "infra"; then
-        mark_failed "${FUNCNAME[0]}" "did not find release in helm"
+    if ! helm_release_has_key_value "check-values" "non-used" "testing"; then
+        mark_failed "${FUNCNAME[0]}" "variable didn't end up using values"
     fi
 
-    if ! helm_release_has_key_value "nginx-ingress" "non-used" "testing"; then
-        mark_failed "${FUNCNAME[0]}" "variable didn't end up in chart values"
+    if ! helm_release_has_key_value "check-set-values" "non-used" "testing"; then
+        mark_failed "${FUNCNAME[0]}" "variable didn't end up using set values"
+    fi
+
+    if ! helm_release_has_key_value "check-values-strings" "non-used" "testing"; then
+        mark_failed "${FUNCNAME[0]}" "variable didn't end up using values-strings"
+    fi
+}
+
+function e2e_test_env_var_exit_code() {
+    if reckoner plot test_env_var.yml; then
+        mark_failed "${FUNCNAME[0]}" "Should fail to plot course without env var."
     fi
 }
 
@@ -242,29 +303,85 @@ function e2e_test_strong_ordering() {
     fi
 }
 
+function e2e_test_strong_typing() {
+    # Skip Test
+    # add_skipped_message "Skipping ${FUNCNAME[0]}."
+    # return
+
+    if ! yes_var=yes true_var=true false_var=false int_var=123 float_var=1.234 reckoner plot test_strong_typing.yml; then
+        mark_failed "${FUNCNAME[0]}" "Expected the course to be installable."
+    fi
+
+    local charts
+    charts="$(helm ls --output json | jq -e -r '.Releases[].Name')"
+    for _release_install in ${charts}; do
+        # Check if the chart is installed
+        if ! helm_has_release_name_in_namespace "${_release_install}" "testing"; then
+            mark_failed "${FUNCNAME[0]}" "Expected release to be installed"
+            continue
+        fi
+
+        # Check that all charts have these keys
+        local values
+        values="$(helm get values "${_release_install}" --output json | jq -e -r 'keys|.[]')"
+        for key in ${values}; do
+            # Check if the chart has this key
+            if ! helm_release_values_has_key "${_release_install}" "${key}"; then
+                mark_failed "${FUNCNAME[0]}" "Expected release (${_release_install}) to have key: (${key})."
+                continue
+            fi
+
+            local _expected_type
+            # Check type of key found in json
+            case "${key}" in
+                expect-float*)
+                    _expected_type="number"
+                    ;;
+                expect-integer*)
+                    _expected_type="number"
+                    ;;
+                expect-string*)
+                    _expected_type="string"
+                    ;;
+                expect-bool*)
+                    _expected_type="boolean"
+                    ;;
+                expect-null*)
+                    _expected_type="null"
+                    ;;
+                *)
+                    mark_failed "${FUNCNAME[0]}" "Did not find how to convert expected keys to types for jq. Key(${key})"
+                    continue
+                    ;;
+            esac
+
+            if ! helm_release_key_value_is_type "${_release_install}" "${key}" "${_expected_type}"; then
+                mark_failed "${FUNCNAME[0]}" "Expected chart (${_release_install}) value for key (${key}) to be (${_expected_type}). Got ($(helm get values "${_release_install}" --output json | jq -cr ".[\"${key}\"]|type"))"
+            fi
+        done
+    done
+}
+
+function run_test() {
+    local test_name
+    test_name="${1}"
+    echo -e "\n\n* * * * * * * *"
+    echo "Running ${test_name}"
+    ${test_name}
+    clean_helm
+}
+
 # list all functions loaded, grab the function name (last element awk) and grep for any starting with e2e_test...
 e2e_tests="$(declare -F | awk '{print $NF}' | grep ^e2e_test)"
 
 
 if [[ "${1}" =~ ^e2e_test_ ]]; then
     # Run a specific test
-    ${1}
-    clean_helm
+    run_test ${1}
 else
     for e2e_test in ${e2e_tests}; do
-        ${e2e_test}
-
-        # Clean up Helm between tests
-        clean_helm
+        run_test ${e2e_test}
     done
 fi
 
-# Exit with a bad code if we failed any tests
-if $E2E_FAILED_TESTS; then
-    echo -e "* * *\nFound Failed Tests"
-    echo -e "${E2E_FAILED_MESSAGES[@]}"
-    exit 1
-else
-    echo "ALL TESTS PASSED!!"
-    exit 0
-fi
+print_status_end_exit

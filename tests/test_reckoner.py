@@ -23,7 +23,7 @@ import os
 import shutil
 import mock
 import reckoner
-import yaml
+import ruamel.yaml as yaml
 
 from reckoner.reckoner import Reckoner
 from reckoner.config import Config
@@ -78,7 +78,7 @@ class TestReckonerAttributes(TestBase):
 
 
 class TestCourseMocks(unittest.TestCase):
-    @mock.patch('reckoner.course.yaml', autospec=True)
+    @mock.patch('reckoner.course.yaml_handler', autospec=True)
     @mock.patch('reckoner.course.HelmClient', autospec=True)
     def test_raises_errors_when_missing_heading(self, mock_helm, mock_yaml):
         course_yml = {
@@ -100,7 +100,7 @@ class TestCourseMocks(unittest.TestCase):
         with self.assertRaises(exception.NoChartsToInstall):
             instance.plot(['a-chart-that-is-not-defined'])
 
-    @mock.patch('reckoner.course.yaml', autospec=True)
+    @mock.patch('reckoner.course.yaml_handler', autospec=True)
     @mock.patch('reckoner.course.HelmClient', autospec=True)
     def test_passes_if_any_charts_exist(self, mock_helm, mock_yaml):
         course_yml = {
@@ -126,7 +126,7 @@ test_course = "./tests/test_course.yml"
 git_repo_path = "./test"
 
 with open(test_course, 'r') as yaml_stream:
-    course_yaml_dict = yaml.load(yaml_stream, Loader=yaml.loader.FullLoader)
+    course_yaml_dict = yaml.load(yaml_stream, Loader=yaml.Loader)
 test_release_names = list(course_yaml_dict['charts'].keys())
 test_repositories = ['stable', 'incubator'],
 test_minimum_versions = ['helm', 'reckoner']
@@ -324,16 +324,16 @@ class TestChart(TestBase):
                 self.assertEqual(chart.repository.name, Repository(test_incubator_repository_str, mock.Mock()).name)
                 self.assertIsNone(chart.repository.url)
 
-    def test_chart_values(self):
+    def test_chart_set_values(self):
         for chart in self.charts:
             if chart.name == test_flat_values_chart:
-                self.assertEqual(chart.values, test_flat_values)
-                self.assertIsInstance(chart.values, dict)
-                self.assertIsInstance(chart.values['string'], str)
-                self.assertIsInstance(chart.values['integer'], int)
-                self.assertIsInstance(chart.values['boolean'], bool)
+                self.assertEqual(chart.set_values, test_flat_values)
+                self.assertIsInstance(chart.set_values, dict)
+                self.assertIsInstance(chart.set_values['string'], str)
+                self.assertIsInstance(chart.set_values['integer'], int)
+                self.assertIsInstance(chart.set_values['boolean'], bool)
             elif chart.name == test_nested_values_chart:
-                self.assertEqual(chart.values, test_nested_values)
+                self.assertEqual(chart.set_values, test_nested_values)
             elif chart.release_name == test_values_strings_chart:
                 self.assertIsInstance(chart.values_strings['string'], str)
                 self.assertIsInstance(chart.values_strings['integer'], int)
