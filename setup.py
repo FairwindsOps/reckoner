@@ -38,10 +38,9 @@ setup(name='reckoner',
       install_requires=[
           "click==7.0",
           "GitPython>=2.1.11",
-          "oyaml>=0.8",
           "coloredlogs>=9.0",
           "semver>=2.8.1",
-          "PyYAML>=5.1",
+          "ruamel.yaml>=0.16.0"
       ],
       entry_points=''' #for click integration
           [console_scripts]

@@ -1,5 +1,3 @@
-# -- coding: utf-8 --
-
 # Copyright 2019 FairwindsOps Inc
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,30 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-class ReckonerException(Exception):
-    pass
-
-
-class ReckonerConfigException(ReckonerException):
-    pass
+from ruamel.yaml import YAML
+from io import BufferedReader, StringIO
 
 
-class NoChartsToInstall(ReckonerException):
-    pass
+class Handler(object):
+    """Yaml handler class for loading, and dumping yaml consistently"""
+    yaml = YAML()
+    yaml.preserve_quotes = True
+    yaml.allow_unicode = True
+    yaml.allow_duplicate_keys = True
 
+    @classmethod
+    def load(cls, yaml_file: BufferedReader):
+        return cls.yaml.load(yaml_file)
 
-class MinimumVersionException(ReckonerException):
-    pass
-
-
-class ReckonerCommandException(ReckonerException):
-
-    def __init__(self, msg, stdout=None, stderr=None, exitcode=None):
-        self.message = msg
-        self.stdout = stdout
-        self.stderr = stderr
-        self.exitcode = exitcode
-
-    def __str__(self):
-        return self.message
+    @classmethod
+    def dump(cls, data: dict) -> str:
+        temp_file = StringIO()
+        cls.yaml.dump(data, temp_file)
+        return temp_file.getvalue()

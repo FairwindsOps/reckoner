@@ -20,13 +20,14 @@ import semver
 import sys
 from typing import List
 
-import oyaml as yaml
-
 from .config import Config
 from .chart import Chart, ChartResult
 from .repository import Repository
-from .exception import MinimumVersionException, ReckonerCommandException, NoChartsToInstall
+from .exception import MinimumVersionException, ReckonerCommandException, NoChartsToInstall, ReckonerException
 from .helm.client import HelmClient
+from .yaml.handler import Handler as yaml_handler
+
+from io import BufferedReader
 
 from .meta import __version__ as reckoner_version
 
@@ -48,12 +49,15 @@ class Course(object):
 
     """
 
-    def __init__(self, course_file):
+    def __init__(self, course_file: BufferedReader):
         """
         Parse course.yml contents into instances.
         """
         self.config = Config()
-        self._dict = yaml.load(course_file, Loader=yaml.loader.FullLoader)
+        try:
+            self._dict = yaml_handler.load(course_file)
+        except Exception as err:
+            raise ReckonerException("Error loading the course file: {}".format(err))
         if not self.config.helm_args:
             self.config.helm_args = self._dict.get('helm_args')
         self.helm = HelmClient(default_helm_arguments=self.config.helm_args)

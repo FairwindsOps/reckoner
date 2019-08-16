@@ -13,7 +13,7 @@ charts:
   cluster-autoscaler:
     repository: stable
     version: "0.2.1"
-    values:
+    set-values:
       string: string
       integer: 10
       boolean: True
@@ -29,7 +29,7 @@ charts:
       git: https://github.com/kubernetes/charts.git
       path: stable
     version: 263bc80322056455c7120b51f1992a40667ec686
-    values:
+    set-values:
       nested:
         values:
           are: supported
@@ -51,5 +51,5 @@ charts:
     version: master
   redis:
     namespace: redis-test-namespace
-    values:
+    set-values:
       test_environ_var: ${test_environ_var}
