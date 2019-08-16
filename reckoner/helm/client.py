@@ -21,6 +21,7 @@ import logging
 
 class HelmClient(object):
     version_regex = re.compile(r'[a-zA-Z]+: v([0-9\.]+)(\+g[0-9a-f]+)?')
+    version_3_regex = re.compile(r'v([0-9\.]+)([\-,\+][a-zA-Z]+)(\+g[0-9a-f]+)?')
     repository_header_regex = re.compile(r'^NAME\s+URL$')
     global_helm_flags = ['debug', 'home', 'host', 'kube-context', 'kubeconfig',
                          'tiller-connection_timeout', 'tiller-namespace']
@@ -156,13 +157,15 @@ class HelmClient(object):
         try:
             get_ver = self.execute("version", arguments=['--short', kind], filter_non_global_flags=True)
             ver = self._find_version(get_ver.stdout)
-        except HelmClientException as e:
+        except HelmClientException:
             # check if running helm3, --client and --server flags are removed
-            logging.debug("Couldn't find Helm version. Are we using Helm 3?")
+            logging.debug("Caught exception when checking version. Are we using Helm 3?")
             get_ver = self.execute("version", arguments=['--short'], filter_non_global_flags=True)
             ver = self._find_version(get_ver.stdout)
-            logging.warn("🔥️ 🐲️  Detected Helm 3 as version in use. Helm 3 is untested and not supported. Proceed with caution! 🔥️ 🐲️")
-
+            if ver.startswith('3'):
+                raise HelmClientException(
+                    """\n\n🔥️ 🐲️  Helm 3 is untested and not supported. 🔥️ 🐲️\nhttps://github.com/FairwindsOps/reckoner/issues/118"""
+                )
         if ver is None:
             raise HelmClientException(
                 """Could not find version!! Could the helm response format have changed?
@@ -175,16 +178,15 @@ class HelmClient(object):
 
     @staticmethod
     def _find_version(raw_version):
-        ver = HelmClient.version_regex.search(str(raw_version))
+        if raw_version.startswith('v3'):
+            ver = HelmClient.version_3_regex.search(str(raw_version))
+        else:
+            ver = HelmClient.version_regex.search(str(raw_version))
+
         if ver:
             return ver.group(1)
         else:
-            logging.debug("Couldn't find Helm version. Are we using Helm 3?")
-            try:
-                ver = re.compile(r'v([0-9\.]+)(\+[a-zA-Z]+)(\+g[0-9a-f]+)?').search(str(raw_version))
-                return ver.group(1)
-            except Exception as e:
-                return None
+            return None
 
     @staticmethod
     def _validate_default_helm_args(helm_args):
