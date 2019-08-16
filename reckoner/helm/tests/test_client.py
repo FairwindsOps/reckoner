@@ -184,6 +184,8 @@ incubator       https://kubernetes-charts-incubator.storage.googleapis.com
             ('Client: v0.0.0+gaaffed92', '0.0.0'),
             ('Server: v0.0.1+g81749d0', '0.0.1'),
             ('Client: v100.100.1000+g928472', '100.100.1000'),
+            ('v3.0+unreleased+g30525d7', '3.0'),
+            ('v3.0.0-alpha.2+g97e7461', '3.0.0')
         ]
         for stdout in invalid:
             assert HelmClient(provider=self.dummy_provider)._find_version(stdout) == None
