@@ -163,8 +163,9 @@ class HelmClient(object):
             get_ver = self.execute("version", arguments=['--short'], filter_non_global_flags=True)
             ver = self._find_version(get_ver.stdout)
             if ver.startswith('3'):
+                logging.error("\n\n🔥️ 🐲️  Helm 3 is untested and not supported. 🔥️ 🐲️\nhttps://github.com/FairwindsOps/reckoner/issues/118")
                 raise HelmClientException(
-                    """\n\n🔥️ 🐲️  Helm 3 is untested and not supported. 🔥️ 🐲️\nhttps://github.com/FairwindsOps/reckoner/issues/118"""
+                    "This version of Helm is not supproted."
                 )
         if ver is None:
             raise HelmClientException(
