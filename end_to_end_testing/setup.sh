@@ -5,6 +5,7 @@ set -o pipefail
 
 
 echo "Installing git and jq"
+sudo apt-get update
 sudo apt-get install -yqq jq git
 
 echo "Installing Reckoner"
