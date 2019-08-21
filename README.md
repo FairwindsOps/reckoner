@@ -18,7 +18,7 @@ Via Binary: *preferred method*
 * Binary downloads of the Reckoner client can be found on the [Releases](https://github.com/FairwindsOps/reckoner/releases) page.
 * Unpack the binary, `chmod +x`, add it to your PATH, and you are good to go!
 
-Via pip:  
+Via pip:
 **NOTE: Python2 pip will install a deprecated version of reckoner, Reckoner now requires python3.**
 ```shell
 pip install reckoner
