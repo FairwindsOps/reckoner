@@ -26,10 +26,11 @@ class HelmProvider(object):
 
     def __init__(
             self,
-            helm_command):
+            helm_command,
+            helm_binary="helm"):
         """Requires protocol of HelmCommand to respond to command and arguments."""
         self._helm_command = helm_command
-        self._helm_binary = "helm"
+        self._helm_binary = helm_binary
 
     # TODO: Investigate if this is really the implementation i need for a provider (class methods with no access to the instance)
     @classmethod

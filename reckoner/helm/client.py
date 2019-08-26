@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from abc import ABC, abstractmethod
 from .provider import HelmProvider
 from .command import HelmCommand
 from reckoner.command_line_caller import Response
@@ -19,12 +20,65 @@ import re
 import logging
 
 
-class HelmClient(object):
-    version_regex = re.compile(r'[a-zA-Z]+: v([0-9\.]+)(\+g[0-9a-f]+)?')
-    version_3_regex = re.compile(r'v([0-9\.]+)([\-,\+][a-zA-Z]+)(\+g[0-9a-f]+)?')
+def get_helm_client(helm_arguments, client_version=None, helm_provider=HelmProvider):
+    """
+    Args:
+      client_version (string): Which client class to use
+      helm_arguments(list): Arguments passed into the HelmClient class
+
+    Returns:
+      Helm2Client or Helm3Client
+
+
+    Raises
+      HelmClientException
+    """
+    try:
+        # if client version is
+        if client_version is not None:
+            if client_version == "2":
+                return Helm2Client(default_helm_arguments=helm_arguments, provider=helm_provider)
+            elif client_version == "3":
+                return Helm3Client(default_helm_arguments=helm_arguments, provider=helm_provider)
+            else:
+                raise HelmClientException("Unsupported version explicitly specified: client_version={}".format(client_version))
+        else:
+            logging.debug('Helm version not declared, detecting version...')
+            # checking for helm2 binary
+            client2 = Helm2Client(default_helm_arguments=helm_arguments, provider=helm_provider)
+            client3 = Helm3Client(default_helm_arguments=helm_arguments, provider=helm_provider)
+            try:
+                logging.debug('Checking for Helm 2 client')
+                detected_version = client2.version
+                logging.info('Found Helm Version {}'.format(detected_version))
+                logging.info('Tiller version {}'.format(client2.tiller_version))
+                return client2
+            except HelmVersionException:
+                logging.debug('Helm 2 check failed')
+                logging.debug('Checking for Helm 3 client')
+                detected_version = client3.version
+                logging.info('Found Helm Version {}'.format(detected_version))
+                logging.warning('Using the Helm 3 Client is currently experimental. Proceed with with caution.')
+                logging.warning('Track Reckoner + Helm 3 support by following this issue: <placeholder>')
+                return client3
+    except HelmClientException as e:
+        logging.error(e)
+        raise HelmClientException('Could not detect helm version')
+    except Exception as e:
+        logging.error(e)
+        raise HelmClientException('Received an unexpected exception in the helm detection, please see the debug output for details.')
+
+
+class HelmClient(ABC):
     repository_header_regex = re.compile(r'^NAME\s+URL$')
-    global_helm_flags = ['debug', 'home', 'host', 'kube-context', 'kubeconfig',
-                         'tiller-connection_timeout', 'tiller-namespace']
+
+    @abstractmethod
+    def version_regex(self):
+        pass
+
+    @abstractmethod
+    def global_helm_flags(self):
+        pass
 
     def __init__(self, default_helm_arguments=[], provider=HelmProvider):
         self._default_helm_arguments = self._validate_default_helm_args(default_helm_arguments)
@@ -71,14 +125,6 @@ class HelmClient(object):
                 response.stdout, response.stderr, response.command))
 
     @property
-    def client_version(self):
-        return self._get_version(kind='--client')
-
-    @property
-    def server_version(self):
-        return self._get_version(kind='--server')
-
-    @property
     def repositories(self):
         repository_names = []
         raw_repositories = self.execute('repo', ['list'], filter_non_global_flags=True).stdout
@@ -115,14 +161,15 @@ class HelmClient(object):
 
     def repo_update(self):
         """Function to update all the repositories"""
+        pass
         return self.execute('repo', ['update'], filter_non_global_flags=True)
 
     def repo_add(self, name, url):
         """Function add repositories to helm via command line"""
         return self.execute('repo', ['add', name, url], filter_non_global_flags=True)
 
-    @staticmethod
-    def _clean_non_global_flags(list_of_args):
+    @classmethod
+    def _clean_non_global_flags(self, list_of_args):
         """Return a copy of the set arguments without any non-global flags - do not edit the instance of default_helm_args"""
         # Filtering out non-global helm flags -- this is to try and support
         # setting all-encompassing flags like `tiller-namespace` but avoiding
@@ -143,51 +190,15 @@ class HelmClient(object):
         for arg in list_of_args:
             logging.debug('Processing {} argument'.format(arg))
             known_global = False
-            for valid in HelmClient.global_helm_flags:
+            for valid in self.global_helm_flags:
                 if re.findall(r"--{}(\s|$)+".format(valid), arg):
                     known_global = True
                     break  # break out of loop and stop searching for valids for this one argument
             if known_global:
-                logging.debug('This argument {} was found in valid arguments: {}, keeping in list.'.format(arg, ' '.join(HelmClient.global_helm_flags)))
+                logging.debug('This argument {} was found in valid arguments: {}, keeping in list.'.format(arg, ' '.join(self.global_helm_flags)))
             else:
                 list_of_args.remove(arg)
-                logging.debug('This argument {} was not found in valid arguments: {}, removing from list.'.format(arg, ' '.join(HelmClient.global_helm_flags)))
-
-    def _get_version(self, kind):
-        try:
-            get_ver = self.execute("version", arguments=['--short', kind], filter_non_global_flags=True)
-            ver = self._find_version(get_ver.stdout)
-        except HelmClientException:
-            # check if running helm3, --client and --server flags are removed
-            logging.debug("Caught exception when checking version. Are we using Helm 3?")
-            get_ver = self.execute("version", arguments=['--short'], filter_non_global_flags=True)
-            ver = self._find_version(get_ver.stdout)
-            if ver.startswith('3'):
-                logging.error("\n\n🔥️ 🐲️  Helm 3 is untested and not supported. 🔥️ 🐲️\nhttps://github.com/FairwindsOps/reckoner/issues/118")
-                raise HelmClientException(
-                    "This version of Helm is not supproted."
-                )
-        if ver is None:
-            raise HelmClientException(
-                """Could not find version!! Could the helm response format have changed?
-                STDOUT: {}
-                STDERR: {}
-                COMMAND: {}""".format(get_ver.stdout, get_ver.stderr, get_ver.command)
-            )
-
-        return ver
-
-    @staticmethod
-    def _find_version(raw_version):
-        if raw_version.startswith('v3'):
-            ver = HelmClient.version_3_regex.search(str(raw_version))
-        else:
-            ver = HelmClient.version_regex.search(str(raw_version))
-
-        if ver:
-            return ver.group(1)
-        else:
-            return None
+                logging.debug('This argument {} was not found in valid arguments: {}, removing from list.'.format(arg, ' '.join(self.global_helm_flags)))
 
     @staticmethod
     def _validate_default_helm_args(helm_args):
@@ -202,6 +213,81 @@ class HelmClient(object):
 
         return helm_args
 
+    @abstractmethod
+    def version(self):
+        pass
+
 
 class HelmClientException(Exception):
     pass
+
+
+class HelmVersionException(Exception):
+    pass
+
+
+class Helm2Client(HelmClient):
+    version_regex = re.compile(r'[a-zA-Z]+: v([0-9\.]+)(\+g[0-9a-f]+)?')
+    global_helm_flags = ['debug', 'home', 'host', 'kube-context', 'kubeconfig',
+                         'tiller-connection_timeout', 'tiller-namespace']
+
+    @property
+    def version(self):
+        return self._get_version(kind='--client')
+
+    @property
+    def tiller_version(self):
+        return self._get_version(kind='--server')
+
+    def _get_version(self, kind):
+        try:
+            get_ver = self.execute("version", arguments=['--short', kind], filter_non_global_flags=True)
+        except HelmClientException:
+            raise HelmVersionException("Error getting helm version")
+        ver = self._find_version(get_ver.stdout)
+        if ver is None:
+            raise HelmClientException(
+                """Could not find version!! Could the helm response format have changed?
+                STDOUT: {}
+                STDERR: {}
+                COMMAND: {}""".format(get_ver.stdout, get_ver.stderr, get_ver.command)
+            )
+
+        return ver
+
+    @staticmethod
+    def _find_version(raw_version):
+        ver = Helm2Client.version_regex.search(str(raw_version))
+        if ver:
+            return ver.group(1)
+        else:
+            return None
+
+
+class Helm3Client(HelmClient):
+    version_regex = re.compile(r'v([0-9\.]+)([\-,\+][a-zA-Z]+)(\+g[0-9a-f]+)?')
+    global_helm_flags = ['debug', 'home', 'host', 'kube-context', 'kubeconfig']
+
+    @property
+    def version(self):
+        return self._get_version()
+
+    def _get_version(self):
+        get_ver = self.execute("version", arguments=['--short'], filter_non_global_flags=True)
+        ver = self._find_version(get_ver.stdout)
+        if ver is None:
+            raise HelmClientException(
+                """Could not find version!! Could the helm response format have changed?
+                STDOUT: {}
+                STDERR: {}
+                COMMAND: {}""".format(get_ver.stdout, get_ver.stderr, get_ver.command)
+            )
+        return ver
+
+    @staticmethod
+    def _find_version(raw_version):
+        ver = Helm3Client.version_regex.search(str(raw_version))
+        if ver:
+            return ver.group(1)
+        else:
+            return None

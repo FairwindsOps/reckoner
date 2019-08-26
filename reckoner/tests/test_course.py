@@ -16,12 +16,14 @@ import mock
 import unittest
 from reckoner.course import Course
 from reckoner.command_line_caller import Response
+from reckoner.helm.client import HelmClientException
+from reckoner.exception import ReckonerException
 
 
 @mock.patch('reckoner.repository.Repository', autospec=True)
 @mock.patch('reckoner.course.sys')
 @mock.patch('reckoner.course.yaml_handler', autospec=True)
-@mock.patch('reckoner.course.HelmClient', autospec=True)
+@mock.patch('reckoner.course.get_helm_client', autospec=True)
 @mock.patch('reckoner.course.Config', autospec=True)
 class TestMinVersion(unittest.TestCase):
     def test_init_error_fails_min_version_reckoner(self, configMock, helmClientMock, yamlLoadMock, sysMock, repoMock):
@@ -52,8 +54,8 @@ class TestMinVersion(unittest.TestCase):
         c = configMock()
         c.helm_args = ['provided args']
 
-        h = helmClientMock()
-        h.client_version = '0.0.1'
+        h = helmClientMock(c.helm_args)
+        h.version = '0.0.1'
 
         yamlLoadMock.load.return_value = {
             'repositories': {
@@ -74,20 +76,23 @@ class TestMinVersion(unittest.TestCase):
 
 
 class TestIntegrationWithChart(unittest.TestCase):
+    @mock.patch('reckoner.chart.Config', autospec=True)
     @mock.patch('reckoner.chart.call', autospec=True)
     @mock.patch('reckoner.repository.Repository', autospec=True)
     @mock.patch('reckoner.course.sys')
     @mock.patch('reckoner.course.yaml_handler', autospec=True)
-    @mock.patch('reckoner.course.HelmClient', autospec=True)
+    @mock.patch('reckoner.course.get_helm_client', autospec=True)
     @mock.patch('reckoner.course.Config', autospec=True)
-    def test_failed_pre_install_hooks_fail_chart_installation(self, configMock, helmClientMock, yamlLoadMock, sysMock, repoMock, chartCallMock):
+    def test_failed_pre_install_hooks_fail_chart_installation(self, configMock, helmClientMock, yamlLoadMock, sysMock, repoMock, chartCallMock, chartConfigMock):
         """Test that the chart isn't installed when the pre_install hooks return any non-zero responses. This also assures we don't raise python errors with hook errors."""
         c = configMock()
         # TODO Fix how this mock is autospecced - something fishy with having this class attribs all come from dict options
         c.continue_on_error = False
         c.helm_args = ['provided args']
-
-        h = helmClientMock()
+        chartConfig = chartConfigMock()
+        chartConfig.course_base_directory = '.'
+        chartConfig.dryrun = False
+        h = helmClientMock(c.helm_args)
         h.client_version = '0.0.1'
 
         yamlLoadMock.load.return_value = {
@@ -112,7 +117,7 @@ class TestIntegrationWithChart(unittest.TestCase):
 
 
 @mock.patch('reckoner.course.yaml_handler', autospec=True)
-@mock.patch('reckoner.course.HelmClient', autospec=True)
+@mock.patch('reckoner.course.get_helm_client', autospec=True)
 class TestCourse(unittest.TestCase):
     def setUp(self):
         self.course_yaml = {
@@ -125,16 +130,16 @@ class TestCourse(unittest.TestCase):
             }
         }
 
-    def test_plot(self, mockHelm, mockYAML):
+    def test_plot(self, mockGetHelm, mockYAML):
         mockYAML.load.return_value = self.course_yaml
         course = Course(None)
         assert course.plot(['first-chart'])
 
-    def test_str_output(self, mockHelm, mockYAML):
+    def test_str_output(self, mockGetHelm, mockYAML):
         mockYAML.load.return_value = self.course_yaml
         assert Course(None).__str__()
 
-    def test_chart_install_logic(self, mockHelm, mockYAML):
+    def test_chart_install_logic(self, mockGetHelm, mockYAML):
         mockYAML.load.return_value = {
             'charts': {
                 'first-chart': {},
@@ -152,3 +157,21 @@ class TestCourse(unittest.TestCase):
 
         course.config.continue_on_error = True
         self.assertEqual(len(course.install_charts([chart, chart])), 2)
+
+    def test_course_raises_errors_on_bad_client_response(self, mockGetHelm, mockYAML, *args):
+        """Make sure course wraps get_helm_client exceptions as ReckonerExceptions"""
+        # Load the course "yaml"
+        mockYAML.load.return_value = self.course_yaml
+
+        # Check helm client exception checking command
+        mockGetHelm.side_effect = HelmClientException('broken')
+        with self.assertRaises(ReckonerException):
+            Course(None)
+        mockGetHelm.assert_called_once()
+        mockGetHelm.reset_mock()
+
+        mockGetHelm.side_effect = Exception("it's a mock: had an error starting helm client")
+        with self.assertRaises(ReckonerException):
+            Course(None)
+
+# TODO: Add test for calling plot against a chart that doesn't exist in your course.yml

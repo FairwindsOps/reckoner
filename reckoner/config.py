@@ -71,7 +71,11 @@ class Config(object):
 
     @property
     def course_base_directory(self):
-        return dirname(self.course_path) or None
+        if self.course_path is None:
+            return_dir = None
+        else:
+            return_dir = dirname(self.course_path) or None
+        return return_dir
 
     def __setattr__(self, name, value):
         object.__setattr__(self, name, value)

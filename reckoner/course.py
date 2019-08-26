@@ -24,7 +24,7 @@ from .config import Config
 from .chart import Chart, ChartResult
 from .repository import Repository
 from .exception import MinimumVersionException, ReckonerCommandException, NoChartsToInstall, ReckonerException
-from .helm.client import HelmClient
+from .helm.client import get_helm_client
 from .yaml.handler import Handler as yaml_handler
 
 from io import BufferedReader
@@ -58,9 +58,12 @@ class Course(object):
             self._dict = yaml_handler.load(course_file)
         except Exception as err:
             raise ReckonerException("Error loading the course file: {}".format(err))
-        if not self.config.helm_args:
-            self.config.helm_args = self._dict.get('helm_args')
-        self.helm = HelmClient(default_helm_arguments=self.config.helm_args)
+
+        try:
+            self.helm = get_helm_client(helm_arguments=self.config.helm_args)
+        except Exception as e:
+            raise ReckonerException("Helm Client Failed to initialize: {}".format(e))
+
         self._repositories = []
         self._charts = []
         for name, repository in self._dict.get('repositories', {}).items():
@@ -131,7 +134,6 @@ class Course(object):
 
         """
         self._charts_to_install = []
-
         # NOTE: Unexpected feature here: Since we're iterating on all charts
         #       in the course to find the ones the user has requested, a
         #       byproduct is that the --only's will always be run in the order
@@ -184,7 +186,7 @@ class Course(object):
         reckoner_minimum_version = self.minimum_versions.get('reckoner', '0.0.0')
 
         logging.debug("Helm Minimum Version is: {}".format(helm_minimum_version))
-        logging.debug("Helm Installed Version is {}".format(self.helm.client_version))
+        logging.debug("Helm Installed Version is {}".format(self.helm.version))
 
         logging.debug("Reckoner Minimum Version is {}".format(reckoner_minimum_version))
         logging.debug("Reckoner Installed Version is {}".format(reckoner_version))
@@ -193,7 +195,7 @@ class Course(object):
         if r1 < 0:
             raise MinimumVersionException("reckoner Minimum Version {} not met.".format(reckoner_minimum_version))
 
-        r2 = semver.compare(self.helm.client_version, helm_minimum_version)
+        r2 = semver.compare(self.helm.version, helm_minimum_version)
         if r2 < 0:
             raise MinimumVersionException("helm Minimum Version {} not met.".format(helm_minimum_version))
 
