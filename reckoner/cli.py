@@ -21,6 +21,7 @@ import click
 from .reckoner import Reckoner
 from . import exception
 from .meta import __version__
+from reckoner.schema_validator.course import validate_course_file
 
 
 @click.group(invoke_without_command=True)
@@ -50,6 +51,10 @@ def cli(ctx, log_level, *args, **kwargs):
 def plot(ctx, course_file=None, dry_run=False, debug=False, only=None, helm_args=None, continue_on_error=False):
     """ Install charts with given arguments as listed in yaml file argument """
     try:
+        # Check Schema of Course FileA
+        with open(course_file.name, 'rb') as course_file_stream:
+            validate_course_file(course_file_stream)
+        # Load Reckoner
         r = Reckoner(course_file=course_file, dryrun=dry_run, debug=debug, helm_args=helm_args, continue_on_error=continue_on_error)
         # Convert tuple to list
         only = list(only)

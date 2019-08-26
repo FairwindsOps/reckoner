@@ -1,3 +1,5 @@
+_references:
+  reuse_value: &reuse "value4"
 namespace: kube-system #namespace to install the chart in, defaults to 'kube-system'
 repository: stable #repository to download chart from, defaults to 'stable'
 context: minikube #kubectl cluster context to use for installing, defaults to current context
@@ -8,26 +10,26 @@ repositories:
     url: https://kubernetes-charts.storage.googleapis.com
 minimum_versions: #set minimum version requirements here
   helm: 2.8.2
-  reckoner: 0.5.0
+  reckoner: 2.1.0
 helm_args: # Specify arguments to pass to helm by default.
   - --recreate-pods
 charts: # list of charts
-# release_name:
-#   chart: Optional, name of chart. defaults to release_name if not present.
-#   version: version to install, defaults to latest. If a git repository is used, this is a branch/tag/ref.
-#   repository: repository to download chart from, overrides above value
-#     name: Optional, name of repository. If 'git' is used, must match the
-#     url: Optional if repository is listed above. Url of repository to add if not already included in above repositories section
-#     git: Git url where chart exists. Supercedes url argument
-#     path: Path where chart is in git repository
-#   namespace: namespace to install chart in, overrides above value
-#   values: # key-value pairs to pass in using the helm --set argument. Inspect individual charts to determine which keys are available and should be set
-#     key: value
-#   hooks: # Hooks maybe be strings or lists and can include redirects or pipes. Assumes Bash.
-#     pre_install: echo test000 | grep test > testfile
-#     post_install:
-#     - echo test again >> testfile
-#     - echo stuff >> testfile; cat testfile
+  # release_name:
+  #   chart: Optional, name of chart. defaults to release_name if not present.
+  #   version: version to install, defaults to latest. If a git repository is used, this is a branch/tag/ref.
+  #   repository: repository to download chart from, overrides above value
+  #     name: Optional, name of repository. If 'git' is used, must match the
+  #     url: Optional if repository is listed above. Url of repository to add if not already included in above repositories section
+  #     git: Git url where chart exists. Supercedes url argument
+  #     path: Path where chart is in git repository
+  #   namespace: namespace to install chart in, overrides above value
+  #   values: # key-value pairs to pass in using the helm --set argument. Inspect individual charts to determine which keys are available and should be set
+  #     key: value
+  #   hooks: # Hooks maybe be strings or lists and can include redirects or pipes. Assumes Bash.
+  #     pre_install: echo test000 | grep test > testfile
+  #     post_install:
+  #     - echo test again >> testfile
+  #     - echo stuff >> testfile; cat testfile
   kubernetes-dashboard:
     version: "0.4.1"
   cluster-autoscaler:
@@ -49,7 +51,7 @@ charts: # list of charts
         - value1
         - value2
         - value3
-        - value4
+        - *reuse
   spotify-docker-gc:
     version: "0.1.0"
   external-dns:

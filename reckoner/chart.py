@@ -379,7 +379,7 @@ class Chart(object):
         files specified in the course.yml
         """
         for values_file in self.files:
-            self._append_arg("-f {}".format(values_file))
+            self._append_arg("-f {}".format(self.config.course_base_directory + "/" + values_file))
 
     @staticmethod
     def _interpolate_env_vars_from_string(original_string: str) -> str:

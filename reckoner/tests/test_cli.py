@@ -65,8 +65,9 @@ class TestCli(unittest.TestCase):
 
 
 class TestCliPlot(unittest.TestCase):
+    @mock.patch('reckoner.cli.validate_course_file')
     @mock.patch('reckoner.cli.Reckoner', autospec=True)
-    def test_plot_exists(self, reckoner_mock):
+    def test_plot_exists(self, reckoner_mock, validation_mock):
         """Assure we have a plot command and it calls reckoner install"""
         reckoner_instance = reckoner_mock()
         reckoner_instance.results = mock.MagicMock(has_errors=False)
@@ -80,8 +81,9 @@ class TestCliPlot(unittest.TestCase):
         self.assertEqual(0, result.exit_code, result.output)
         reckoner_instance.install.assert_called_once()
 
+    @mock.patch('reckoner.cli.validate_course_file')
     @mock.patch('reckoner.cli.Reckoner', autospec=True)
-    def test_plot_has_correct_exit_code_with_errors(self, reckoner_mock):
+    def test_plot_has_correct_exit_code_with_errors(self, reckoner_mock, validation_mock):
         """Assure we have a plot command and it calls reckoner install"""
         reckoner_instance = reckoner_mock()
         reckoner_instance.results = mock.MagicMock(has_errors=True)

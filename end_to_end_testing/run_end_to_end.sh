@@ -296,18 +296,16 @@ function e2e_test_strong_ordering() {
 
     # Custom check which subtracts the two modified timestamps
     # This will fail if they are modified at the same second...
-    local first_chart_timestamp="$(helm ls -a --output json | jq '.Releases[] |select(.Name == "first-chart") | .Updated' -r | sed -E 's/ +/ /g' | xargs -I {} date -d {} +%s)"
-    local second_chart_timestamp="$(helm ls -a --output json | jq '.Releases[] |select(.Name == "second-chart") | .Updated' -r | sed -E 's/ +/ /g' | xargs -I {} date -d {} +%s)"
-    if [[ $(($first_chart_timestamp-$second_chart_timestamp)) -ge 0 ]]; then
+    local first_chart_timestamp
+    first_chart_timestamp="$(helm ls -a --output json | jq '.Releases[] |select(.Name == "first-chart") | .Updated' -r | sed -E 's/ +/ /g' | xargs -I {} date -d {} +%s)"
+    local second_chart_timestamp
+    second_chart_timestamp="$(helm ls -a --output json | jq '.Releases[] |select(.Name == "second-chart") | .Updated' -r | sed -E 's/ +/ /g' | xargs -I {} date -d {} +%s)"
+    if [[ $((first_chart_timestamp-second_chart_timestamp)) -ge 0 ]]; then
         mark_failed "${FUNCNAME[0]}" "Expected timestamp for 'first-chart' to be before 'second-timestamp': Expected 'first-chart' to be installed first..."
     fi
 }
 
 function e2e_test_strong_typing() {
-    # Skip Test
-    # add_skipped_message "Skipping ${FUNCNAME[0]}."
-    # return
-
     if ! yes_var=yes true_var=true false_var=false int_var=123 float_var=1.234 reckoner plot test_strong_typing.yml; then
         mark_failed "${FUNCNAME[0]}" "Expected the course to be installable."
     fi
@@ -362,6 +360,28 @@ function e2e_test_strong_typing() {
     done
 }
 
+function e2e_test_bad_schema_repository() {
+    if reckoner plot test_bad_schema_repository.yml; then
+        mark_failed "${FUNCNAME[0]}" "Expected to fail on schema validation failure."
+    fi
+}
+
+function e2e_test_required_schema() {
+    if reckoner plot test_required_schema.yml; then
+        mark_failed "${FUNCNAME[0]}" "Expected to fail on schema validation failure."
+    fi
+}
+
+function e2e_test_files_in_folders() {
+    if ! reckoner plot testing_in_folder/test_files_in_folders.yml; then
+        mark_failed "${FUNCNAME[0]}" "Expected to run without an error."
+    fi
+
+    if ! helm_release_has_key_value "chart-one" "new_key" "new_value"; then
+        mark_failed "${FUNCNAME[0]}" "Expected file values yaml in a subfolder to work."
+    fi
+}
+
 function run_test() {
     local test_name
     test_name="${1}"
@@ -377,10 +397,10 @@ e2e_tests="$(declare -F | awk '{print $NF}' | grep ^e2e_test)"
 
 if [[ "${1}" =~ ^e2e_test_ ]]; then
     # Run a specific test
-    run_test ${1}
+    run_test "${1}"
 else
     for e2e_test in ${e2e_tests}; do
-        run_test ${e2e_test}
+        run_test "${e2e_test}"
     done
 fi
 

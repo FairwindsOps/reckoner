@@ -1,0 +1,2 @@
+include reckoner/assets/course.schema.json
+include reckoner/version.txt
