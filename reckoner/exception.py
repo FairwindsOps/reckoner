@@ -31,6 +31,10 @@ class MinimumVersionException(ReckonerException):
     pass
 
 
+class SchemaValidationError(ReckonerException):
+    pass
+
+
 class ReckonerCommandException(ReckonerException):
 
     def __init__(self, msg, stdout=None, stderr=None, exitcode=None):

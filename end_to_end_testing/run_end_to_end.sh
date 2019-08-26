@@ -304,10 +304,6 @@ function e2e_test_strong_ordering() {
 }
 
 function e2e_test_strong_typing() {
-    # Skip Test
-    # add_skipped_message "Skipping ${FUNCNAME[0]}."
-    # return
-
     if ! yes_var=yes true_var=true false_var=false int_var=123 float_var=1.234 reckoner plot test_strong_typing.yml; then
         mark_failed "${FUNCNAME[0]}" "Expected the course to be installable."
     fi
@@ -360,6 +356,18 @@ function e2e_test_strong_typing() {
             fi
         done
     done
+}
+
+function e2e_test_bad_schema_repository() {
+    if reckoner plot test_bad_schema_repository.yml; then
+        mark_failed "${FUNCNAME[0]}" "Expected to fail on schema validation failure."
+    fi
+}
+
+function e2e_test_required_schema() {
+    if reckoner plot test_required_schema.yml; then
+        mark_failed "${FUNCNAME[0]}" "Expected to fail on schema validation failure."
+    fi
 }
 
 function run_test() {
