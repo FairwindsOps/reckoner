@@ -8,6 +8,7 @@ main_schema = {
     'definitions': {
         'repository': {
             'type': 'object',
+            'additionalProperties': False,
             'properties': {
                 'url': {'type': 'string'},
                 'path': {'type': 'string'},
@@ -37,40 +38,35 @@ main_schema = {
             'type': 'object',
             'propertyNames': {
                 'pattern': '^[a-zA-Z0-9_-]{1,63}$',
-                'custom_error_message': 'Chart release names must be alphanumeric with "_" and "-" and be between 1 and 63 characters',
+                'x-custom-error-message': 'Chart release names must be alphanumeric with "_" and "-" and be between 1 and 63 characters',
             },
-            'additionalProperties': False,
-            'patternProperties': {
-                '^.+$': {
-                    'type': 'object',
-                    'additionalProperties': False,
-                    'properties': {
-                        'namespace': {'type': 'string'},
-                        'chart': {'type': 'string'},
-                        'repository': {
-                            'oneOf': [
-                                {'type': 'string'},
-                                {'$ref': '#definitions/repository'},
-                            ],
-                            'custom_error_message': 'Problem Parsing Repositories Schema; expecting string or map',
-                        },
-                        'version': {'type': 'string'},
-                        'hooks': {
-                            '$ref': '#definitions/hooks',
-                        },
-                        'plugins': {'type': 'string'},
-                        'files': {
-                            'type': 'array',
-                            'items': {
-                                'type': 'string',
-                            }
-                        },
-                        'values': {'type': 'object'},
-                        'set-values': {'type': 'object'},
-                        'values-strings': {'type': 'object'},
+            'additionalProperties': {
+                'type': 'object',
+                'additionalProperties': False,
+                'properties': {
+                    'namespace': {'type': 'string'},
+                    'chart': {'type': 'string'},
+                    'repository': {
+                        'oneOf': [
+                            {'type': 'string'},
+                            {'$ref': '#definitions/repository'},
+                        ],
+                        'x-custom-error-message': 'Problem Parsing Repositories Schema; expecting string or map',
                     },
-                    'custom_error_message': 'Problem Parsing Chart Schema',
-                }
+                    'version': {'type': 'string'},
+                    'hooks': {'$ref': '#definitions/hooks'},
+                    'plugins': {'type': 'string'},
+                    'files': {
+                        'type': 'array',
+                        'items': {
+                                'type': 'string',
+                        }
+                    },
+                    'values': {'type': 'object'},
+                    'set-values': {'type': 'object'},
+                    'values-strings': {'type': 'object'},
+                },
+                'x-custom-error-message': 'Problem Parsing Chart Schema',
             },
         }
     },
@@ -81,19 +77,20 @@ main_schema = {
         'charts': {'$ref': '#/definitions/chart'},
         'minimum_versions': {
             'type': 'object',
+            'additionalProperties': False,
+            'properties': {
+                'helm': {'type': 'string'},
+                'reckoner': {'type': 'string'},
+            }
         },
         'repositories': {
             'type': 'object',
-            'patternProperties': {
-                '^.*$': {
-                    '$ref': '#definitions/repository'
-                },
+            'additionalProperties': {
+                '$ref': '#definitions/repository',
             },
         },
         'repository': {'type': 'string'},
-        'context': {
-            'type': 'string',
-        },
+        'context': {'type': 'string'},
         'helm_args': {
             'type': 'array',
             'items': {
@@ -102,7 +99,7 @@ main_schema = {
         },
     },
     'required': ['namespace', 'charts'],
-    'custom_error_message': 'Problem found in root of course'
+    'x-custom-error-message': 'Problem found in root of course'
 }
 
 
@@ -116,10 +113,10 @@ class Validator(object):
         self.errors = []
         v = self.validator(main_schema)
         for err in sorted(v.iter_errors(document), key=lambda e: e.path):
-            if 'custom_error_message' in err.schema.keys():
+            if 'x-custom-error-message' in err.schema:
                 self.errors.append(
                     "(Err: {}) {}".format(
-                        err.schema['custom_error_message'],
+                        err.schema['x-custom-error-message'],
                         err.message,
                     )
                 )
@@ -157,5 +154,3 @@ def validate_course_file(course_file: BufferedReader):
             "Course file has schema validation errors. "
             "Please see the docs on schema validation or --log-level debug for in depth validation output.\n\n{}.".format('\n'.join(v.errors))
         )
-    # reset the read point to the beginning of the file
-    course_file.seek(0)
