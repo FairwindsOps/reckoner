@@ -35,6 +35,7 @@ setup(name='reckoner',
       url='http://fairwinds.com/',
       license='Apache2.0',
       packages=find_packages(exclude=('tests', '*.tests')),
+      include_package_data=True,
       install_requires=[
           "click==7.0",
           "GitPython>=2.1.11",
