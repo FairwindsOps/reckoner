@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [2.1.0]
+### Breaking Changes
+- We are introducing schema validation on the course.yml. This will exit hard if your course.yml has indentation errors or other issues that don't conform to the course.yml expected schema. The schema can be found at [here](/reckoner/assets/course.schema.json).
+
 ## [2.0.0]
 ### Breaking Changes
 - Changes to `values: {}` behavior:  
