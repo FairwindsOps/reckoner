@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [2.1.0]
 ### Breaking Changes
+- Added Helm 3 detection
 - We are introducing schema validation on the course.yml. This will exit hard if your course.yml has indentation errors or other issues that don't conform to the course.yml expected schema. The schema can be found at [here](/reckoner/assets/course.schema.json).
 
 ## [2.0.0]

@@ -15,6 +15,7 @@
 from reckoner.helm.client import HelmClient, HelmClientException
 from reckoner.helm.command import HelmCommand
 from reckoner.helm.cmd_response import HelmCmdResponse
+from reckoner.helm.provider import HelmProvider
 import mock
 import unittest
 
@@ -184,6 +185,8 @@ incubator       https://kubernetes-charts-incubator.storage.googleapis.com
             ('Client: v0.0.0+gaaffed92', '0.0.0'),
             ('Server: v0.0.1+g81749d0', '0.0.1'),
             ('Client: v100.100.1000+g928472', '100.100.1000'),
+            ('v3.0+unreleased+g30525d7', '3.0'),
+            ('v3.0.0-alpha.2+g97e7461', '3.0.0')
         ]
         for stdout in invalid:
             assert HelmClient(provider=self.dummy_provider)._find_version(stdout) == None
@@ -219,3 +222,13 @@ incubator       https://kubernetes-charts-incubator.storage.googleapis.com
     def test_rollback(self):
         with self.assertRaises(NotImplementedError):
             HelmClient(provider=self.dummy_provider).rollback('broken')
+
+    def test_get_version(self):
+        with self.assertRaises(HelmClientException):
+            provider_mock = mock.Mock(autospec=HelmProvider)
+            provider_mock.execute.side_effect = [
+                HelmCmdResponse(1, '', '', None),
+                HelmCmdResponse(0, '', 'v3.0.0-alpha.2+g00000', None),
+            ]
+            client = HelmClient(provider=provider_mock)
+            client._get_version('')
