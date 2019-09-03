@@ -2,7 +2,7 @@ import logging
 from jsonschema.validators import Draft7Validator as _validator
 from io import BufferedReader
 from reckoner.yaml.handler import Handler
-from reckoner.exception import SchemaValidationError
+from reckoner.exception import SchemaValidationError, ReckonerConfigException
 from json import loads as read_json_string
 from pkgutil import get_data
 
@@ -51,7 +51,8 @@ class Validator(object):
 
 def validate_course_file(course_file: BufferedReader):
     v = Validator()
-    v.check(Handler.load(course_file))
+    course_file_object = Handler.load(course_file)
+    v.check(course_file_object)
     if len(v.errors) > 0:
         logging.debug("Schema Validation Errors:")
         for err in v.raw_errors:

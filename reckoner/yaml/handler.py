@@ -13,6 +13,9 @@
 # limitations under the License.
 
 from ruamel.yaml import YAML
+from ruamel.yaml.constructor import DuplicateKeyError
+from reckoner.exception import ReckonerConfigException
+import logging
 from io import BufferedReader, StringIO
 
 
@@ -21,14 +24,31 @@ class Handler(object):
     yaml = YAML()
     yaml.preserve_quotes = True
     yaml.allow_unicode = True
-    yaml.allow_duplicate_keys = True
+    yaml.allow_duplicate_keys = False
 
     @classmethod
     def load(cls, yaml_file: BufferedReader):
-        return cls.yaml.load(yaml_file)
+        try:
+            y = cls.yaml.load(yaml_file)
+        except DuplicateKeyError as err:
+            logging.debug(_clean_duplicate_key_message(str(err)))
+            raise ReckonerConfigException(
+                "Duplicate key found while loading your course YAML, please remove the duplicate key or use (--log-level debug) to see the raw parse error.")
+        return y
 
     @classmethod
     def dump(cls, data: dict) -> str:
         temp_file = StringIO()
         cls.yaml.dump(data, temp_file)
         return temp_file.getvalue()
+
+
+def _clean_duplicate_key_message(msg: str):
+    unwanted = """
+To suppress this check see:
+    http://yaml.readthedocs.io/en/latest/api.html#duplicate-keys
+
+Duplicate keys will become an error in future releases, and are errors
+by default when using the new API.
+"""
+    return msg.replace(unwanted, '')
