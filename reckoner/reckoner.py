@@ -86,7 +86,7 @@ class Reckoner(object):
 
         try:
             self.helm.check_helm_command()
-            self.helm.server_version
+            # self.helm.server_version
         except HelmClientException as e:
             raise ReckonerException("Helm Client Failed to initialize: {}".format(e))
 
