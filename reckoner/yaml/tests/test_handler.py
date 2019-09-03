@@ -1,4 +1,5 @@
 from reckoner.yaml.handler import Handler
+from reckoner.exception import ReckonerConfigException
 from io import StringIO
 from string import Template
 
@@ -41,8 +42,8 @@ string_of_bool: "False"
     def test_load_duplicate_keys(self):
         """Assert that the initial key defined, of duplicate keys, takes precedence"""
         with_duplicate = StringIO("{}\nbool: false\n".format(self.yaml_data.getvalue()))
-        yaml = Handler.load(with_duplicate)
-        self.assertEqual(yaml["bool"], True)
+        with self.assertRaises(ReckonerConfigException):
+            Handler.load(with_duplicate)
 
     def test_dump(self):
         """Assert that dump returns a string that is valid yaml"""
