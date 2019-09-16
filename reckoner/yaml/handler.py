@@ -31,9 +31,9 @@ class Handler(object):
         try:
             y = cls.yaml.load(yaml_file)
         except DuplicateKeyError as err:
-            logging.debug(_clean_duplicate_key_message(str(err)))
+            logging.error(_clean_duplicate_key_message(str(err)))
             raise ReckonerConfigException(
-                "Duplicate key found while loading your course YAML, please remove the duplicate key or use (--log-level debug) to see the raw parse error.")
+                "Duplicate key found while loading your course YAML, please remove the duplicate key shown above.")
         return y
 
     @classmethod
