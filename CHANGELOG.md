@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added Helm 3 detection
 - We are introducing schema validation on the course.yml. This will exit hard if your course.yml has indentation errors or other issues that don't conform to the course.yml expected schema. The schema can be found at [here](/reckoner/assets/course.schema.json).
 - Reckoner now blocks on YAML duplicate keys. If your yaml has duplicate keys in any section of the yaml, the course will fail to load and no actions will be performed. There is no way to allow duplicate keys in course.yml anymore to avoid inconsistent behavior or unexpected course runs.
+- Added end-to-end test for values files in subfolders
 
 ## [2.0.0]
 ### Breaking Changes

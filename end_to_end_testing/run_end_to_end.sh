@@ -370,6 +370,16 @@ function e2e_test_required_schema() {
     fi
 }
 
+function e2e_test_files_in_folders() {
+    if ! reckoner plot test_files_in_folders.yml; then
+        mark_failed "${FUNCNAME[0]}" "Expected to run without an error."
+    fi
+
+    if ! helm_release_has_key_value "chart-one" "new_key" "new_value"; then
+        mark_failed "${FUNCNAME[0]}" "Expected file values yaml in a subfolder to work."
+    fi
+}
+
 function run_test() {
     local test_name
     test_name="${1}"
