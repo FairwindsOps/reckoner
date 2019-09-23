@@ -17,4 +17,4 @@ charts:
     chart: nginx-ingress
     namespace: infra
     files:
-      - testing_in_folder/yaml_values.yml
+      - subfolder/yaml_values.yml

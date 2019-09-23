@@ -296,9 +296,11 @@ function e2e_test_strong_ordering() {
 
     # Custom check which subtracts the two modified timestamps
     # This will fail if they are modified at the same second...
-    local first_chart_timestamp="$(helm ls -a --output json | jq '.Releases[] |select(.Name == "first-chart") | .Updated' -r | sed -E 's/ +/ /g' | xargs -I {} date -d {} +%s)"
-    local second_chart_timestamp="$(helm ls -a --output json | jq '.Releases[] |select(.Name == "second-chart") | .Updated' -r | sed -E 's/ +/ /g' | xargs -I {} date -d {} +%s)"
-    if [[ $(($first_chart_timestamp-$second_chart_timestamp)) -ge 0 ]]; then
+    local first_chart_timestamp
+    first_chart_timestamp="$(helm ls -a --output json | jq '.Releases[] |select(.Name == "first-chart") | .Updated' -r | sed -E 's/ +/ /g' | xargs -I {} date -d {} +%s)"
+    local second_chart_timestamp
+    second_chart_timestamp="$(helm ls -a --output json | jq '.Releases[] |select(.Name == "second-chart") | .Updated' -r | sed -E 's/ +/ /g' | xargs -I {} date -d {} +%s)"
+    if [[ $((first_chart_timestamp-second_chart_timestamp)) -ge 0 ]]; then
         mark_failed "${FUNCNAME[0]}" "Expected timestamp for 'first-chart' to be before 'second-timestamp': Expected 'first-chart' to be installed first..."
     fi
 }
@@ -371,7 +373,7 @@ function e2e_test_required_schema() {
 }
 
 function e2e_test_files_in_folders() {
-    if ! reckoner plot test_files_in_folders.yml; then
+    if ! reckoner plot testing_in_folder/test_files_in_folders.yml; then
         mark_failed "${FUNCNAME[0]}" "Expected to run without an error."
     fi
 
@@ -395,10 +397,10 @@ e2e_tests="$(declare -F | awk '{print $NF}' | grep ^e2e_test)"
 
 if [[ "${1}" =~ ^e2e_test_ ]]; then
     # Run a specific test
-    run_test ${1}
+    run_test "${1}"
 else
     for e2e_test in ${e2e_tests}; do
-        run_test ${e2e_test}
+        run_test "${e2e_test}"
     done
 fi
 
