@@ -5,7 +5,7 @@ The "course" is the definition of charts you wish to install using Reckoner. It 
 
 We'll be breaking this documentation down into sections to make reference easier. We'll be starting by looking at top level definitions in your course YAML and breaking down into the lower level objects that make up the course. Keys will be denoted as required, otherwise they are optional.
 
-### Top Level Keys
+# Top Level Keys
 - `namespace` _(string)_ _**(required)**_  
     The default namespace for any chart definitions in your course
 - `charts` _(object)_ _**(required)**_  
@@ -36,7 +36,7 @@ charts:
     chart: metrics-server
 ```
 
-### Charts
+## Charts
 The `charts` block in your course define all the charts you'd like to install and the values that the chart should be installed with. The `key` of your chart definition is the name (`release-name`) that Reckoner will ask helm to install under. Release names only allow alphanumerics, underscores and dashes and must be between 1 and 63 characters long.
 
 - `namespace` _(string)_  
@@ -81,7 +81,7 @@ charts:
 ...
 ```
 
-### Repositories
+## Repositories
 This block defines all the remote chart repositories available for use in this course file. This definition can be used in the root level `repositories` block, or in the chart level `repository` block definition. NOTE: It cannot be used in the root level `repository` definition.
 
 Keys:
@@ -96,7 +96,7 @@ Keys:
 
 Repositories definitions support both HTTP and GIT endpoints for pulling charts. Below are the two supported schemas for each implementation.
 
-#### URL Based Chart Repository
+### URL Based Chart Repository
 ```yaml
 ...
 repositories:
@@ -104,7 +104,7 @@ repositories:
     url: https://kubernetes-charts.storage.googleapis.com
 ...
 ```
-#### Git Based Chart Repository
+### Git Based Chart Repository
 When using git repositories, the behavior of the `chart` and `version` fields change in the charts block. The `chart` becomes the folder in which the chart lives and `version` becomes the git ref (commit sha or tag or branch name).
 ```yaml
 ...
@@ -122,7 +122,7 @@ charts:
 ...
 ```
 
-### Minimum Versions
+## Minimum Versions
 - `reckoner` _(string)_  
     The minimum version of reckoner for this course to work properly (in semver notation).
 - `helm` _(string)_
@@ -136,7 +136,7 @@ minimum_versions:
 ```
 
 
-## CLI Usage
+# CLI Usage
 
 ```text
 Usage: reckoner [OPTIONS] COMMAND [ARGS]...
