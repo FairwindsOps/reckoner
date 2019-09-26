@@ -103,6 +103,9 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
+        "_references": {
+            "type": "object"
+        },
         "namespace": {
             "type": "string"
         },

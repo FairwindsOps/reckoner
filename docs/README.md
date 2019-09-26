@@ -18,6 +18,8 @@ We'll be breaking this documentation down into sections to make reference easier
     The default remote repository for charts in this course if one is not defined in the chart definition
 - `context` _(string)_  
     The `kubectl` context to use for this course (found with `kubectl get current-context`)
+- `_references` _(object)_  
+    An area in which you can put repeat code to be used throughout your course YAML. (See [this article on anchors](https://medium.com/@kinghuang/docker-compose-anchors-aliases-extensions-a1e4105d70bd))
 - `helm_args` _(string)_  
     The default helm arguments to provide to any helm command run by Reckoner in this course
 
@@ -57,6 +59,27 @@ The `charts` block in your course define all the charts you'd like to install an
     Translates all key-values into `--set-string` values for the helm install command line arguments
 - `plugins` _(string)_  
     Prepend your helm commands with this `plugins` string (see [PR 99](https://github.com/FairwindsOps/reckoner/pull/99))
+
+```yaml
+...
+charts:
+  my-release-name:
+    chart: ngixn-ingress
+    version: "0.25.1"
+    repository: stable
+    hooks:
+      pre_install: echo hi
+      post_install:
+        - echo finished
+        - echo ":)"
+    values:
+      set: these
+      values:
+        - for
+        - me
+        - please
+...
+```
 
 ### Repositories
 This block defines all the remote chart repositories available for use in this course file. This definition can be used in the root level `repositories` block, or in the chart level `repository` block definition. NOTE: It cannot be used in the root level `repository` definition.
@@ -99,207 +122,55 @@ charts:
 ...
 ```
 
-* * * 
-## Extended Usage
-
-### As standalone shell command
-- Usage: reckoner [OPTIONS] COMMAND [ARGS]...
-- Options:
-    * `--help`  Show this message and exit.
-    * `--log-level=TEXT` Set the log level for reckoner (defaults to `INFO`. Set to `DEBUG` for more details including helm commands)
-- Commands:
-  * `plot FILE`: Runs helm based on specified yaml file (see configuration example below)
-    * Options:
-      * `--debug`: Pass --debug to helm
-      * `--dry-run`: Pass --dry-run to helm so no action is taken. Also includes `--debug`
-      * `--heading <chart>`: Run only the specified chart out of the course.yml
-      * `--continue-on-error`: If any charts or hooks fail, continue installing other charts in the course
-      * `--helm-args <helm-arg>`: Pass arbitrary flags and parameters to all
-        helm chart commands in your course.yml.  Example:
-        `--helm-args --set=foo=toast`, or `--helm-args --recreate-pods`.
-        Multiples are supported but only one parameter per `--helm-args` is
-        supported. Note that specifying this flag will override `helm_args`
-        in the course.yml file.
-  * `version`: Output reckoner version
-
-# Options
-
-## Global Options
-
-### namespace
-
-The default namespace to deploy into.  Defaults to kube-system
-
-### repository
-
-Repository to download chart from, defaults to 'stable'
-
-### context
-
-Optional.  The kubectl cluster context to use for installing, defaults to the current context.
-
-### repositories
-
-Where to get charts from.  We recommend at least the stable and incubator charts.
-
-```
-repositories:
-  incubator:
-    url: https://kubernetes-charts-incubator.storage.googleapis.com
-  stable:
-    url: https://kubernetes-charts.storage.googleapis.com
-```
-
-### helm_args
-
-A list of arguments to pass to helm each time reckoner is run. Arguments are
-applied for every chart install in your course.  This cannot be used for args
-that specify how Helm connects to the tiller.
-
-```
-helm_args:
-  - --recreate-pods
-```
-
-## Options for Charts
-
-### values
-
-Override values file for this chart. By default these are translated into `-f temp_values_file.yml` when helm is run. This means that anything in the `values: {}` settings should keep it's YAML type consistency.
+### Minimum Versions
+- `reckoner` _(string)_  
+    The minimum version of reckoner for this course to work properly (in semver notation).
+- `helm` _(string)_
+    The desired version of helm to run this course with (will fail if `helm` in your path is older than the version specified).
 
 ```yaml
-charts:
-  my-chart:
-    values:
-      my-string: "1234"
-      my-bool: false
+...
+minimum_versions:
+  helm: 2.14.3
+  reckoner: 2.1.0
 ```
 
-### set-values
 
-In-line values overrides for this chart. By default these are translated into `--set key=value` which means that the default helm type casting applies. Helm will try to cast `key: "true"` into a `true` boolean value, as well as casting strings of integers into the integer representation, ie: `mystr: "1234"` becomes `mystr: 1234` when using `--set`.
+## CLI Usage
 
-```yaml
-charts:
-  my-chart:
-    my-int: "1234"         # Converted into `int` when used with --set
-    my-string: 1.05        # Float numbers are converted to strings in --set
-    my-bool: "true"        # Strings of bool values are converted to bool in --set
-    my-string-null: "null" # String of "null" get converted to null value in --set
-    my-null: null          # null values are kept as null values in --set-strings
+```text
+Usage: reckoner [OPTIONS] COMMAND [ARGS]...
+
+Options:
+  --version         Show the version and exit.
+  --log-level TEXT  Log Level. [INFO | DEBUG | WARN | ERROR]. (default=INFO)
+  --help            Show this message and exit.
+
+Commands:
+  plot     Install charts with given arguments as listed in yaml file...
+  version  Takes no arguments, outputs version info
 ```
 
-### values-strings
+You can add `--help` to any `Command` and get output like the one below:
+```text
+$> reckoner plot --help
 
-This is a wrapper around the helm functionality `--set-string`.  Allows the specification of variables that would normally be interpreted as boolean or int as strings.
+Usage: reckoner plot [OPTIONS] COURSE_FILE
 
+  Install charts with given arguments as listed in yaml file argument
+
+Options:
+  --dry-run                      Pass --dry-run to helm so no action is taken.
+                                 Implies --debug and skips hooks.
+  --debug                        DEPRECATED - use --dry-run instead, or pass
+                                 to --helm-args
+  -o, --only, --heading <chart>  Only run a specific chart by name
+  --helm-args TEXT               Passes the following arg on to helm, can be
+                                 used more than once. WARNING: Setting this
+                                 will completely override any helm_args in the
+                                 course. Also cannot be used for configuring
+                                 how helm connects to tiller.
+  --continue-on-error            Attempt to install all charts in the course,
+                                 even if any charts or hooks fail to run.
+  --help                         Show this message and exit.
 ```
-charts:
-  chartname:
-    values:
-      some.value: test
-    values-strings:
-      some.value.that.you.need.to.be.a.string: "1"
-```
-
-### files
-
-Use a values file(s) rather than leaving them in-line:
-
-```
-charts:
-  chart_name:
-    files:
-      - /path/to/values/file.yml
-```
-Note: The file paths will be interpreted as relative to the working directory of
-the shell calling reckoner.
-
-### namespace
-
-Override the default namespace.
-
-### hooks
-
-Hooks are run locally. For complex hooks, use an external script or Runner task.
-
-```
-charts:
-  chart_name:
-    hooks:
-      pre_install:
-        - ls
-        - env
-      post_install:
-        - rm testfile
-        - cp file1 file2
-```
-
-### version
-
-The version of the chart to use
-
-### plugin
-
-A helm wrapper plugin to invoke for this chart.
-Make sure that the plugin is installed in your environment, and is working properly.
-Unfortunately, we cannot support every plugin.
-
-```
-charts:
-  chart_name:
-    plugin: secrets
-    files:
-      - /path/to/secret/values/file.yaml
-```
-
-## Repository Options
-
-### name
-
-Optional, name of repository.
-
-### url
-
-Optional if repository is listed above. Url of repository to add if not already included in above repositories section.
-
-### git
-
-Git url where chart exists. Supercedes url argument
-
-### path
-
-Path where chart is in the git repository.  NOTE: If the chart folder is in the root, leave this blank.
-
-```
-charts:
-  chart_name:
-    repository: repository to download chart from, overrides global value
-      name: Optional, name of repository.
-      url: Optional if repository is listed above. Url of repository to add if not already included in above repositories section
-      git: Git url where chart exists. Supercedes url argument
-      path: Path where chart is in git repository. If the chart is at the root, leave blank
-    namespace: namespace to install chart in, overrides above value
-```
-
-## Caveats
-### Strong Typing
-Using `set-values: {}` will cast null, bool and integers from strings even if they are quoted in the course.yml. This is the default Helm behavior for `--set`. Note also that floats will be cast as strings when using `set-values: {}`. Also note that if you're using environment variable replacements and you set `my-key: ${MY_VAR}`, if `MY_VAR=yes` then helm will use YAML 1.1 schema and make `my-key: true`. You need to quote your environment variables in order for `"yes"` to be cast as a string instead of a bool (`my-key: "${MY_VAR}"`).
-
-### Escaping
-
-Keys and Values that have dots in the name need to be escaped.  Have a look at the [helm docs](https://github.com/kubernetes/helm/blob/master/docs/using_helm.md#the-format-and-limitations-of---set) on escaping complicated values.
-
-Example:
-
-```
-charts:
-  grafana:
-    namespace: grafana
-    values:
-      datasources:
-        datasources\.yaml:
-          apiVersion: 1
-```
-
-The alternative is to use the files method described above
