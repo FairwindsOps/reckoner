@@ -18,7 +18,6 @@ from .command import HelmCommand
 from reckoner.command_line_caller import Response
 import re
 import logging
-import sys
 
 
 def get_helm_client(helm_arguments, client_version=None):
@@ -61,7 +60,7 @@ def get_helm_client(helm_arguments, client_version=None):
         return client
     except HelmClientException as e:
         logging.error(e)
-        sys.exit(1)
+        raise(e)
 
 
 class HelmClient(ABC):

@@ -16,6 +16,8 @@ import mock
 import unittest
 from reckoner.course import Course
 from reckoner.command_line_caller import Response
+from reckoner.helm.client import HelmClientException
+from reckoner.exception import ReckonerException
 
 
 @mock.patch('reckoner.repository.Repository', autospec=True)
@@ -155,3 +157,15 @@ class TestCourse(unittest.TestCase):
 
         course.config.continue_on_error = True
         self.assertEqual(len(course.install_charts([chart, chart])), 2)
+
+    def test_course_raises_errors_on_bad_client_response(self, mockHelm, mockYAML, *args):
+        """Make sure helm client exceptions are raised"""
+        # Check helm client exception checking command
+        mockHelm(['somearg']).side_effect = HelmClientException('broken')
+        with self.assertRaises(ReckonerException):
+            Course(None)
+        # helm_instance.assert_called_once()
+
+        mock_helm_client.side_effect = [Exception("it's a mock: had an error starting helm client")]
+        with self.assertRaises(ReckonerException):
+            Course(None)
