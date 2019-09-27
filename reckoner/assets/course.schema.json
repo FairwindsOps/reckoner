@@ -1,0 +1,151 @@
+{
+    "definitions": {
+        "repository": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "url": {
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "git": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "hooks": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "post_install": {
+                    "oneOf": [
+                        {
+                            "type": "array"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ]
+                },
+                "pre_install": {
+                    "oneOf": [
+                        {
+                            "type": "array"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ]
+                }
+            }
+        },
+        "chart": {
+            "type": "object",
+            "propertyNames": {
+                "pattern": "^[a-zA-Z0-9_-]{1,63}$",
+                "x-custom-error-message": "Chart release names must be alphanumeric with \"_\" and \"-\" and be between 1 and 63 characters"
+            },
+            "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "namespace": {
+                        "type": "string"
+                    },
+                    "chart": {
+                        "type": "string"
+                    },
+                    "repository": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "$ref": "#definitions/repository"
+                            }
+                        ],
+                        "x-custom-error-message": "Problem Parsing Repositories Schema; expecting string or map"
+                    },
+                    "version": {
+                        "type": "string"
+                    },
+                    "hooks": {
+                        "$ref": "#definitions/hooks"
+                    },
+                    "plugins": {
+                        "type": "string"
+                    },
+                    "files": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "values": {
+                        "type": "object"
+                    },
+                    "set-values": {
+                        "type": "object"
+                    },
+                    "values-strings": {
+                        "type": "object"
+                    }
+                },
+                "x-custom-error-message": "Problem Parsing Chart Schema"
+            }
+        }
+    },
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "_references": {
+            "type": "object"
+        },
+        "namespace": {
+            "type": "string"
+        },
+        "charts": {
+            "$ref": "#/definitions/chart"
+        },
+        "minimum_versions": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "helm": {
+                    "type": "string"
+                },
+                "reckoner": {
+                    "type": "string"
+                }
+            }
+        },
+        "repositories": {
+            "type": "object",
+            "additionalProperties": {
+                "$ref": "#definitions/repository"
+            }
+        },
+        "repository": {
+            "type": "string"
+        },
+        "context": {
+            "type": "string"
+        },
+        "helm_args": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        }
+    },
+    "required": [
+        "namespace",
+        "charts"
+    ],
+    "x-custom-error-message": "Problem found in root of course"
+}

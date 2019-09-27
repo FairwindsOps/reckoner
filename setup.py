@@ -35,12 +35,14 @@ setup(name='reckoner',
       url='http://fairwinds.com/',
       license='Apache2.0',
       packages=find_packages(exclude=('tests', '*.tests')),
+      include_package_data=True,
       install_requires=[
           "click==7.0",
           "GitPython>=2.1.11",
           "coloredlogs>=9.0",
           "semver>=2.8.1",
-          "ruamel.yaml>=0.16.0"
+          "ruamel.yaml>=0.16.0",
+          "jsonschema>=3.0.2",
       ],
       entry_points=''' #for click integration
           [console_scripts]

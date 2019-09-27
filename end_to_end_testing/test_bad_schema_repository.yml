@@ -1,0 +1,8 @@
+namespace: "testing"
+repository: "stable"
+repositories:
+  stable: "https://kubernetes-charts.storage.googleapis.com"
+charts:
+  my-chart:
+    namespace: new
+    chart: nginx-ingress

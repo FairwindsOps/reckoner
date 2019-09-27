@@ -1,0 +1,20 @@
+namespace: test #namespace to install the chart in, defaults to 'kube-system'
+repositories:
+  test_repo:
+    url: https://kubernetes-charts.storage.googleapis.com
+  incubator:
+    url: https://kubernetes-charts-incubator.storage.googleapis.com
+  fairwinds-stable:
+    url: https://charts.fairwinds.com/stable
+  fairwinds-incubator:
+    url: https://charts.fairwinds.com/incubator
+minimum_versions: #set minimum version requirements here
+  helm: 0.0.0
+  reckoner: 0.0.0
+charts:
+  chart-one:
+    repository: stable
+    chart: nginx-ingress
+    namespace: infra
+    files:
+      - subfolder/yaml_values.yml
