@@ -19,10 +19,11 @@ from reckoner.helm.client import HelmClientException
 from reckoner.reckoner import Reckoner, ReckonerInstallResults
 from reckoner.chart import ChartResult
 from reckoner.exception import ReckonerCommandException, NoChartsToInstall, ReckonerException
+from reckoner.helm.client import get_helm_client
 
 
 @mock.patch('reckoner.reckoner.Course')
-@mock.patch('reckoner.reckoner.HelmClient')
+@mock.patch('reckoner.helm.client.get_helm_client')
 @mock.patch('reckoner.reckoner.Config', autospec=True)
 class TestReckoner(unittest.TestCase):
     """Test reckoner class"""

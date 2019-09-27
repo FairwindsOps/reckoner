@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from reckoner.helm.client import HelmClient, HelmClientException
+from reckoner.helm.client import HelmClient, Helm2Client, Helm3Client, HelmClientException, HelmVersionException
 from reckoner.helm.command import HelmCommand
 from reckoner.helm.cmd_response import HelmCmdResponse
 from reckoner.helm.provider import HelmProvider
@@ -20,24 +20,24 @@ import mock
 import unittest
 
 
-class TestHelmClient(unittest.TestCase):
+class TestHelm2Client(unittest.TestCase):
     def setUp(self):
         self.dummy_provider = mock.Mock()
 
     def test_default_helm_arguments(self):
-        helm_client = HelmClient(provider=self.dummy_provider)
+        helm_client = Helm2Client(provider=self.dummy_provider)
         assert hasattr(helm_client, 'default_helm_arguments')
 
-    def test_server_version(self):
+    def test_tiller_version(self):
         self.dummy_provider.execute.return_value = HelmCmdResponse(0, '', 'Server: v0.0.0+gabcdef01234', '')
-        assert '0.0.0' == HelmClient(provider=self.dummy_provider).server_version
+        assert '0.0.0' == Helm2Client(provider=self.dummy_provider).tiller_version
 
-    def test_client_version(self):
+    def test_version(self):
         self.dummy_provider.execute.return_value = HelmCmdResponse(0, '', 'Client: v0.0.0+gabcdef01234', '')
-        assert '0.0.0' == HelmClient(provider=self.dummy_provider).client_version
+        assert '0.0.0' == Helm2Client(provider=self.dummy_provider).version
 
     def test_public_methods(self):
-        helm_client = HelmClient(provider=self.dummy_provider)
+        helm_client = Helm2Client(provider=self.dummy_provider)
         methods = [
             'execute',
             'check_helm_command',
@@ -63,7 +63,7 @@ incubator       https://kubernetes-charts-incubator.storage.googleapis.com"""
             '',
         )
 
-        assert HelmClient(provider=self.dummy_provider).repositories == repositories_expected
+        assert Helm2Client(provider=self.dummy_provider).repositories == repositories_expected
 
         repositories_string_extra_lines = """
 NAME            URL
@@ -81,14 +81,14 @@ incubator       https://kubernetes-charts-incubator.storage.googleapis.com
             ''
         )
 
-        assert HelmClient(provider=self.dummy_provider).repositories == repositories_expected
+        assert Helm2Client(provider=self.dummy_provider).repositories == repositories_expected
 
     def test_execute_with_additional_parameters(self):
         default_params = ['--some params']
         adhoc_params = ['--some more']
         expected_params = default_params + adhoc_params
 
-        HelmClient(
+        Helm2Client(
             default_helm_arguments=default_params,
             provider=self.dummy_provider
         ).execute('version', adhoc_params)
@@ -97,7 +97,7 @@ incubator       https://kubernetes-charts-incubator.storage.googleapis.com
 
     def test_execute_with_default_helm_arguments(self):
         expected_params = ['--some params', '--found']
-        helm_client = HelmClient(provider=self.dummy_provider)
+        helm_client = Helm2Client(provider=self.dummy_provider)
         helm_client.default_helm_arguments = expected_params
 
         helm_client.execute('help')
@@ -111,25 +111,25 @@ incubator       https://kubernetes-charts-incubator.storage.googleapis.com
             HelmCmdResponse(0, None, None, None),
             HelmCmdResponse(127, None, None, None)
         ]
-        assert HelmClient(provider=self.dummy_provider).check_helm_command() == True
+        assert Helm2Client(provider=self.dummy_provider).check_helm_command() == True
         with self.assertRaises(HelmClientException) as e:
-            assert HelmClient(provider=self.dummy_provider).check_helm_command() == False
+            assert Helm2Client(provider=self.dummy_provider).check_helm_command() == False
 
     def test_default_upgrade_calls_install_flag(self):
-        HelmClient(provider=self.dummy_provider).upgrade([])
+        Helm2Client(provider=self.dummy_provider).upgrade([])
         self.dummy_provider.execute.called_once()
         self.assertEqual(self.dummy_provider.execute.call_args[0][0].command, "upgrade")
         self.assertEqual(self.dummy_provider.execute.call_args[0][0].arguments, ["--install"])
         self.dummy_provider.reset_mock()
 
     def test_upgrade(self):
-        HelmClient(provider=self.dummy_provider).upgrade([], install=True)
+        Helm2Client(provider=self.dummy_provider).upgrade([], install=True)
         self.dummy_provider.execute.called_once()
         self.assertEqual(self.dummy_provider.execute.call_args[0][0].command, "upgrade")
         self.assertEqual(self.dummy_provider.execute.call_args[0][0].arguments, ["--install"])
         self.dummy_provider.reset_mock()
 
-        HelmClient(provider=self.dummy_provider).upgrade([], install=False)
+        Helm2Client(provider=self.dummy_provider).upgrade([], install=False)
         self.dummy_provider.execute.called_once()
         self.assertEqual(self.dummy_provider.execute.call_args[0][0].command, "upgrade")
         self.assertEqual(self.dummy_provider.execute.call_args[0][0].arguments, [])
@@ -138,7 +138,7 @@ incubator       https://kubernetes-charts-incubator.storage.googleapis.com
     def test_upgrade_with_plugin(self):
         plugin_name = 'some-plugin'
 
-        HelmClient(provider=self.dummy_provider).upgrade([], install=True, plugin=plugin_name)
+        Helm2Client(provider=self.dummy_provider).upgrade([], install=True, plugin=plugin_name)
         self.dummy_provider.execute.assert_called_once()
 
         self.assertEqual(self.dummy_provider.execute.call_args[0][0].command, plugin_name)
@@ -146,31 +146,31 @@ incubator       https://kubernetes-charts-incubator.storage.googleapis.com
 
         self.dummy_provider.reset_mock()
 
-        HelmClient(provider=self.dummy_provider).upgrade([], install=False, plugin=plugin_name)
+        Helm2Client(provider=self.dummy_provider).upgrade([], install=False, plugin=plugin_name)
         self.dummy_provider.execute.assert_called_once()
 
         self.assertEqual(self.dummy_provider.execute.call_args[0][0].command, plugin_name)
         self.assertEqual(self.dummy_provider.execute.call_args[0][0].arguments, ["upgrade"])
 
     def test_dependency_update(self):
-        HelmClient(provider=self.dummy_provider).dependency_update('chart_path')
+        Helm2Client(provider=self.dummy_provider).dependency_update('chart_path')
         self.dummy_provider.execute.assert_called_once
 
     def test_repo_update(self):
-        HelmClient(provider=self.dummy_provider).repo_update()
+        Helm2Client(provider=self.dummy_provider).repo_update()
         self.dummy_provider.execute.assert_called_once
 
     def test_verify_default_helm_args_intantiate(self):
         # Should support instantiate with None
-        assert HelmClient(provider=self.dummy_provider, default_helm_arguments=None)
+        assert Helm2Client(provider=self.dummy_provider, default_helm_arguments=None)
 
         # Should raise errors on all other non iterators
         for invalid in [str('invalid'), 1, 0.01, True]:
             with self.assertRaises(ValueError):
-                HelmClient(default_helm_arguments=invalid)
+                Helm2Client(default_helm_arguments=invalid)
 
     def test_repo_add(self):
-        HelmClient(provider=self.dummy_provider).repo_add('new', 'url')
+        Helm2Client(provider=self.dummy_provider).repo_add('new', 'url')
         self.dummy_provider.execute.assert_called_once
 
     def test_version_regex(self):
@@ -184,22 +184,20 @@ incubator       https://kubernetes-charts-incubator.storage.googleapis.com
         valid = [
             ('Client: v0.0.0+gaaffed92', '0.0.0'),
             ('Server: v0.0.1+g81749d0', '0.0.1'),
-            ('Client: v100.100.1000+g928472', '100.100.1000'),
-            ('v3.0+unreleased+g30525d7', '3.0'),
-            ('v3.0.0-alpha.2+g97e7461', '3.0.0')
+            ('Client: v100.100.1000+g928472', '100.100.1000')
         ]
         for stdout in invalid:
-            assert HelmClient(provider=self.dummy_provider)._find_version(stdout) == None
+            assert Helm2Client(provider=self.dummy_provider)._find_version(stdout) == None
 
         for stdout, expected in valid:
-            assert HelmClient(provider=self.dummy_provider)._find_version(stdout) == expected
+            assert Helm2Client(provider=self.dummy_provider)._find_version(stdout) == expected
 
     def test_versions_raise_errors(self):
         self.dummy_provider.execute.return_value = HelmCmdResponse(0, '', 'invalid', '')
 
-        for versions in ['client_version', 'server_version']:
+        for versions in ['version', 'tiller_version']:
             with self.assertRaises(HelmClientException):
-                getattr(HelmClient(provider=self.dummy_provider), versions)
+                getattr(Helm2Client(provider=self.dummy_provider), versions)
 
     # TODO need to write testing for this filter
     def test_global_argument_filter(self):
@@ -214,21 +212,221 @@ incubator       https://kubernetes-charts-incubator.storage.googleapis.com
              'expected': []}
         ]
 
-        helm_filter = HelmClient._clean_non_global_flags
+        helm_filter = Helm2Client._clean_non_global_flags
         for example in examples:
             helm_filter(example['original'])
             self.assertEqual(example['expected'], example['original'])
 
     def test_rollback(self):
         with self.assertRaises(NotImplementedError):
-            HelmClient(provider=self.dummy_provider).rollback('broken')
+            Helm2Client(provider=self.dummy_provider).rollback('broken')
+
+    def test_get_version(self):
+        with self.assertRaises(HelmVersionException):
+            provider_mock = mock.Mock(autospec=HelmProvider)
+            provider_mock.execute.side_effect = [
+                HelmCmdResponse(1, '', '', None),
+                HelmCmdResponse(0, '', 'v3.0.0-alpha.2+g00000', None),
+            ]
+            client = Helm2Client(provider=provider_mock)
+            client._get_version('')
+
+
+class TestHelm3Client(unittest.TestCase):
+    def setUp(self):
+        self.dummy_provider = mock.Mock()
+
+    def test_default_helm_arguments(self):
+        helm_client = Helm3Client(provider=self.dummy_provider)
+        assert hasattr(helm_client, 'default_helm_arguments')
+
+    def test_version(self):
+        self.dummy_provider.execute.return_value = HelmCmdResponse(0, '', 'v0.0.0+gabcdef01234', '')
+        assert '0.0.0' == Helm3Client(provider=self.dummy_provider).version
+
+    def test_public_methods(self):
+        helm_client = Helm3Client(provider=self.dummy_provider)
+        methods = [
+            'execute',
+            'check_helm_command',
+            'upgrade',
+        ]
+
+        for method in methods:
+            assert hasattr(helm_client, method)
+
+    def test_repositories(self):
+        repositories_string = """NAME            URL
+stable          https://kubernetes-charts.storage.googleapis.com
+local           http://127.0.0.1:8879/charts
+test_repo       https://kubernetes-charts.storage.googleapis.com
+incubator       https://kubernetes-charts-incubator.storage.googleapis.com"""
+
+        repositories_expected = ['stable', 'local', 'test_repo', 'incubator']
+
+        self.dummy_provider.execute.return_value = HelmCmdResponse(
+            0,
+            '',
+            repositories_string,
+            '',
+        )
+
+        assert Helm3Client(provider=self.dummy_provider).repositories == repositories_expected
+
+        repositories_string_extra_lines = """
+NAME            URL
+stable          https://kubernetes-charts.storage.googleapis.com
+local           http://127.0.0.1:8879/charts
+
+test_repo       https://kubernetes-charts.storage.googleapis.com
+incubator       https://kubernetes-charts-incubator.storage.googleapis.com
+
+"""
+        self.dummy_provider.execute.return_value = HelmCmdResponse(
+            0,
+            '',
+            repositories_string_extra_lines,
+            ''
+        )
+
+        assert Helm3Client(provider=self.dummy_provider).repositories == repositories_expected
+
+    def test_execute_with_additional_parameters(self):
+        default_params = ['--some params']
+        adhoc_params = ['--some more']
+        expected_params = default_params + adhoc_params
+
+        Helm3Client(
+            default_helm_arguments=default_params,
+            provider=self.dummy_provider
+        ).execute('version', adhoc_params)
+
+        assert self.dummy_provider.execute.call_args[0][0].arguments == expected_params
+
+    def test_execute_with_default_helm_arguments(self):
+        expected_params = ['--some params', '--found']
+        helm_client = Helm3Client(provider=self.dummy_provider)
+        helm_client.default_helm_arguments = expected_params
+
+        helm_client.execute('help')
+
+        self.dummy_provider.execute.assert_called_once
+        assert isinstance(self.dummy_provider.execute.call_args[0][0], HelmCommand)
+        assert self.dummy_provider.execute.call_args[0][0].arguments == expected_params
+
+    def test_check_helm_command(self):
+        self.dummy_provider.execute.side_effect = [
+            HelmCmdResponse(0, None, None, None),
+            HelmCmdResponse(127, None, None, None)
+        ]
+        assert Helm3Client(provider=self.dummy_provider).check_helm_command() == True
+        with self.assertRaises(HelmClientException) as e:
+            assert Helm3Client(provider=self.dummy_provider).check_helm_command() == False
+
+    def test_default_upgrade_calls_install_flag(self):
+        Helm3Client(provider=self.dummy_provider).upgrade([])
+        self.dummy_provider.execute.called_once()
+        self.assertEqual(self.dummy_provider.execute.call_args[0][0].command, "upgrade")
+        self.assertEqual(self.dummy_provider.execute.call_args[0][0].arguments, ["--install"])
+        self.dummy_provider.reset_mock()
+
+    def test_upgrade(self):
+        Helm3Client(provider=self.dummy_provider).upgrade([], install=True)
+        self.dummy_provider.execute.called_once()
+        self.assertEqual(self.dummy_provider.execute.call_args[0][0].command, "upgrade")
+        self.assertEqual(self.dummy_provider.execute.call_args[0][0].arguments, ["--install"])
+        self.dummy_provider.reset_mock()
+
+        Helm3Client(provider=self.dummy_provider).upgrade([], install=False)
+        self.dummy_provider.execute.called_once()
+        self.assertEqual(self.dummy_provider.execute.call_args[0][0].command, "upgrade")
+        self.assertEqual(self.dummy_provider.execute.call_args[0][0].arguments, [])
+        self.dummy_provider.reset_mock()
+
+    def test_upgrade_with_plugin(self):
+        plugin_name = 'some-plugin'
+
+        Helm3Client(provider=self.dummy_provider).upgrade([], install=True, plugin=plugin_name)
+        self.dummy_provider.execute.assert_called_once()
+
+        self.assertEqual(self.dummy_provider.execute.call_args[0][0].command, plugin_name)
+        self.assertEqual(self.dummy_provider.execute.call_args[0][0].arguments, ["upgrade", "--install"])
+
+        self.dummy_provider.reset_mock()
+
+        Helm3Client(provider=self.dummy_provider).upgrade([], install=False, plugin=plugin_name)
+        self.dummy_provider.execute.assert_called_once()
+
+        self.assertEqual(self.dummy_provider.execute.call_args[0][0].command, plugin_name)
+        self.assertEqual(self.dummy_provider.execute.call_args[0][0].arguments, ["upgrade"])
+
+    def test_dependency_update(self):
+        Helm3Client(provider=self.dummy_provider).dependency_update('chart_path')
+        self.dummy_provider.execute.assert_called_once
+
+    def test_repo_update(self):
+        Helm3Client(provider=self.dummy_provider).repo_update()
+        self.dummy_provider.execute.assert_called_once
+
+    def test_verify_default_helm_args_intantiate(self):
+        # Should support instantiate with None
+        assert Helm3Client(provider=self.dummy_provider, default_helm_arguments=None)
+
+        # Should raise errors on all other non iterators
+        for invalid in [str('invalid'), 1, 0.01, True]:
+            with self.assertRaises(ValueError):
+                Helm3Client(default_helm_arguments=invalid)
+
+    def test_repo_add(self):
+        Helm3Client(provider=self.dummy_provider).repo_add('new', 'url')
+        self.dummy_provider.execute.assert_called_once
+
+    def test_version_regex(self):
+        invalid = [
+            'not valid',
+        ]
+
+        valid = [
+            ('v3.0+unreleased+g30525d7', '3.0'),
+            ('v3.0.0-alpha.2+g97e7461', '3.0.0'),
+            ('v3.0.0-beta.3+g5cb923e', '3.0.0')
+        ]
+        for stdout in invalid:
+            assert Helm3Client(provider=self.dummy_provider)._find_version(stdout) == None
+
+        for stdout, expected in valid:
+            assert Helm3Client(provider=self.dummy_provider)._find_version(stdout) == expected
+
+    def test_versions_raise_errors(self):
+        self.dummy_provider.execute.return_value = HelmCmdResponse(0, '', 'invalid', '')
+
+        for versions in ['version']:
+            with self.assertRaises(HelmClientException):
+                getattr(Helm3Client(provider=self.dummy_provider), versions)
+
+    # TODO need to write testing for this filter
+    def test_global_argument_filter(self):
+        examples = [
+            {'original': ['--random', '--debug'],
+             'expected': ['--debug']},
+            {'original': ['--hosting newval'],
+             'expected': []}
+        ]
+
+        helm_filter = Helm3Client._clean_non_global_flags
+        for example in examples:
+            helm_filter(example['original'])
+            self.assertEqual(example['expected'], example['original'])
+
+    def test_rollback(self):
+        with self.assertRaises(NotImplementedError):
+            Helm3Client(provider=self.dummy_provider).rollback('broken')
 
     def test_get_version(self):
         with self.assertRaises(HelmClientException):
             provider_mock = mock.Mock(autospec=HelmProvider)
             provider_mock.execute.side_effect = [
                 HelmCmdResponse(1, '', '', None),
-                HelmCmdResponse(0, '', 'v3.0.0-alpha.2+g00000', None),
             ]
-            client = HelmClient(provider=provider_mock)
-            client._get_version('')
+            client = Helm3Client(provider=provider_mock)
+            client._get_version()

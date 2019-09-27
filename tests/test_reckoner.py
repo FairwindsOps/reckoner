@@ -79,7 +79,7 @@ class TestReckonerAttributes(TestBase):
 
 class TestCourseMocks(unittest.TestCase):
     @mock.patch('reckoner.course.yaml_handler', autospec=True)
-    @mock.patch('reckoner.course.HelmClient', autospec=True)
+    @mock.patch('reckoner.course.get_helm_client', autospec=True)
     def test_raises_errors_when_missing_heading(self, mock_helm, mock_yaml):
         course_yml = {
             'namespace': 'fake',
@@ -93,7 +93,8 @@ class TestCourseMocks(unittest.TestCase):
         }
 
         mock_yaml.load.side_effect = [course_yml]
-        helm_instance = mock_helm()
+        helm_args = ['provided args']
+        helm_instance = mock_helm(helm_args)
         helm_instance.client_version = '0.0.0'
 
         instance = reckoner.course.Course(None)
@@ -101,7 +102,7 @@ class TestCourseMocks(unittest.TestCase):
             instance.plot(['a-chart-that-is-not-defined'])
 
     @mock.patch('reckoner.course.yaml_handler', autospec=True)
-    @mock.patch('reckoner.course.HelmClient', autospec=True)
+    @mock.patch('reckoner.course.get_helm_client', autospec=True)
     def test_passes_if_any_charts_exist(self, mock_helm, mock_yaml):
         course_yml = {
             'namespace': 'fake',
@@ -115,7 +116,9 @@ class TestCourseMocks(unittest.TestCase):
         }
 
         mock_yaml.load.side_effect = [course_yml]
-        helm_instance = mock_helm()
+        # this is not okay I assume, I just added args
+        helm_args = ['provided args']
+        helm_instance = mock_helm(helm_args)
         helm_instance.client_version = '0.0.0'
 
         instance = reckoner.course.Course(None)
@@ -296,7 +299,7 @@ class TestCourse(TestBase):
 class TestChart(TestBase):
 
     @mock.patch('reckoner.reckoner.HelmClient', autospec=True)
-    @mock.patch('reckoner.course.HelmClient', autospec=True)
+    @mock.patch('reckoner.course.get_helm_client', autospec=True)
     def setUp(self, mock_helm_client_course_scope, mock_helm_client_reckoner_scope):
         mock_helm_client_course_instance = mock_helm_client_course_scope()
         mock_helm_client_course_instance.client_version = "100.100.100"

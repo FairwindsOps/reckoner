@@ -45,7 +45,7 @@ charts: # list of charts
   datadog:
     version: "0.8.2"
     repository: stable
-    values:
+    set-values:
       datadog.apiKey: notthekey
       list_of_values:
         - value1
@@ -65,7 +65,7 @@ charts: # list of charts
       git: https://github.com/kubernetes/charts.git
       path: stable
     version: aaaf98b
-    values:
+    set-values:
       nested:
         values:
           are: supported
@@ -73,7 +73,7 @@ charts: # list of charts
     chart: vault
     repository: incubator
     namespace: infra
-    values:
+    set-values:
       vault.dev: "false"
       replicaCount: 1
       vault.config.storage.consul.address: "consul-consul.infra.svc:8500"
