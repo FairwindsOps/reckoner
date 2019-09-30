@@ -29,7 +29,7 @@ from reckoner.reckoner import Reckoner
 from reckoner.config import Config
 from reckoner.course import Course
 from reckoner.repository import Repository
-from reckoner.helm.client import HelmClient
+from reckoner.helm.client import Helm2Client
 from reckoner import exception
 
 
@@ -55,8 +55,8 @@ class TestBase(unittest.TestCase):
 # Test properties of the mock
 @mock.patch('reckoner.reckoner.Config', autospec=True)
 @mock.patch('reckoner.reckoner.Course', autospec=True)
-@mock.patch.object(HelmClient, 'server_version')
-@mock.patch.object(HelmClient, 'check_helm_command')
+@mock.patch.object(Helm2Client, 'tiller_version')
+@mock.patch.object(Helm2Client, 'check_helm_command')
 class TestReckonerAttributes(TestBase):
     name = "test-reckoner-attributes"
 
@@ -71,10 +71,6 @@ class TestReckonerAttributes(TestBase):
     def test_course(self, *args):
         reckoner_instance = reckoner.reckoner.Reckoner()
         self.assertTrue(hasattr(reckoner_instance, 'course'))
-
-    def test_helm(self, *args):
-        reckoner_instance = reckoner.reckoner.Reckoner()
-        self.assertTrue(hasattr(reckoner_instance, 'helm'))
 
 
 class TestCourseMocks(unittest.TestCase):
@@ -225,7 +221,7 @@ test_repo_install_return_string = '"test_repo" has been added to your repositori
 
 def setUpModule():
     coloredlogs.install(level="DEBUG")
-    config = Config()
+    Config()
 
     os.makedirs(test_helm_archive)
     os.environ['HELM_HOME'] = test_files_path
@@ -242,11 +238,10 @@ def tearDownModule():
 class TestReckoner(TestBase):
     name = "test-pentagon-base"
 
-    @mock.patch('reckoner.reckoner.HelmClient', autospec=True)
-    @mock.patch('reckoner.course.HelmClient', autospec=True)
-    def setUp(self, mock_helm_client_course_scope, mock_helm_client_reckoner_scope):
-        mock_helm_client_course_instance = mock_helm_client_course_scope()
-        mock_helm_client_course_instance.client_version = "100.100.100"
+    @mock.patch('reckoner.course.get_helm_client', autospec=True)
+    def setUp(self, mock_helm_client_course_scope):
+        mock_helm_client_course_instance = mock_helm_client_course_scope([])
+        mock_helm_client_course_instance.version = "100.100.100"
         super(type(self), self).setUp()
         self.configure_subprocess_mock(test_tiller_present_return_string, '', 0)
         with open(test_course) as f:
@@ -265,10 +260,10 @@ class TestReckoner(TestBase):
 
 class TestCourse(TestBase):
 
-    @mock.patch('reckoner.course.HelmClient', autospec=True)
+    @mock.patch('reckoner.course.get_helm_client', autospec=True)
     def setUp(self, mock_helm_client_course_scope, autospec=True):
-        mock_helm_client_course_instance = mock_helm_client_course_scope()
-        mock_helm_client_course_instance.client_version = '100.100.100'
+        mock_helm_client_course_instance = mock_helm_client_course_scope([])
+        mock_helm_client_course_instance.version = '100.100.100'
         super(type(self), self).setUp()
         self.configure_subprocess_mock(test_repo_update_return_string, '', 0)
         with open(test_course) as f:
@@ -298,11 +293,10 @@ class TestCourse(TestBase):
 
 class TestChart(TestBase):
 
-    @mock.patch('reckoner.reckoner.HelmClient', autospec=True)
     @mock.patch('reckoner.course.get_helm_client', autospec=True)
-    def setUp(self, mock_helm_client_course_scope, mock_helm_client_reckoner_scope):
-        mock_helm_client_course_instance = mock_helm_client_course_scope()
-        mock_helm_client_course_instance.client_version = "100.100.100"
+    def setUp(self, mock_helm_client_course_scope):
+        mock_helm_client_course_instance = mock_helm_client_course_scope([])
+        mock_helm_client_course_instance.version = "100.100.100"
         self.helm_client_mock = mock_helm_client_course_instance
         super(type(self), self).setUp()
         self.configure_subprocess_mock(test_tiller_present_return_string, '', 0)
@@ -341,16 +335,6 @@ class TestChart(TestBase):
                 self.assertIsInstance(chart.values_strings['string'], str)
                 self.assertIsInstance(chart.values_strings['integer'], int)
                 self.assertIsInstance(chart.values_strings['boolean'], bool)
-
-    def test_debug_args(self):
-        chart = self.charts[0]
-
-        chart.config.debug = True
-        self.assertEqual(chart.debug_args, ['--debug'])
-
-        chart.config.debug = False
-        chart.config.dryrun = True
-        self.assertEqual(chart.debug_args, ['--dry-run', '--debug'])
 
     # FIXME: Related to the FIXME in install() of Chart class.
     @unittest.skip("Skipping non-implemented test.")

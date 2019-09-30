@@ -73,7 +73,6 @@ class Chart(object):
     def __init__(self, chart, helm):
         self.helm = helm
         self.config = Config()
-        print(self.config.course_base_directory)
         self._release_name = list(chart.keys())[0]
         self.result = ChartResult(name=self._release_name, failed=False, error_reason="")
         self._chart = chart[self._release_name]

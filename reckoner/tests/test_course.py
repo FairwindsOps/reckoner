@@ -173,3 +173,5 @@ class TestCourse(unittest.TestCase):
         mockGetHelm.side_effect = Exception("it's a mock: had an error starting helm client")
         with self.assertRaises(ReckonerException):
             Course(None)
+
+# TODO: Add test for calling plot against a chart that doesn't exist in your course.yml
