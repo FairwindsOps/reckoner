@@ -130,16 +130,16 @@ class TestCourse(unittest.TestCase):
             }
         }
 
-    def test_plot(self, mockHelm, mockYAML):
+    def test_plot(self, mockGetHelm, mockYAML):
         mockYAML.load.return_value = self.course_yaml
         course = Course(None)
         assert course.plot(['first-chart'])
 
-    def test_str_output(self, mockHelm, mockYAML):
+    def test_str_output(self, mockGetHelm, mockYAML):
         mockYAML.load.return_value = self.course_yaml
         assert Course(None).__str__()
 
-    def test_chart_install_logic(self, mockHelm, mockYAML):
+    def test_chart_install_logic(self, mockGetHelm, mockYAML):
         mockYAML.load.return_value = {
             'charts': {
                 'first-chart': {},
@@ -158,14 +158,18 @@ class TestCourse(unittest.TestCase):
         course.config.continue_on_error = True
         self.assertEqual(len(course.install_charts([chart, chart])), 2)
 
-    def test_course_raises_errors_on_bad_client_response(self, mockHelm, mockYAML, *args):
-        """Make sure helm client exceptions are raised"""
+    def test_course_raises_errors_on_bad_client_response(self, mockGetHelm, mockYAML, *args):
+        """Make sure course wraps get_helm_client exceptions as ReckonerExceptions"""
+        # Load the course "yaml"
+        mockYAML.load.return_value = self.course_yaml
+
         # Check helm client exception checking command
-        mockHelm(['somearg']).side_effect = HelmClientException('broken')
+        mockGetHelm.side_effect = HelmClientException('broken')
         with self.assertRaises(ReckonerException):
             Course(None)
-        # helm_instance.assert_called_once()
+        mockGetHelm.assert_called_once()
+        mockGetHelm.reset_mock()
 
-        mock_helm_client.side_effect = [Exception("it's a mock: had an error starting helm client")]
+        mockGetHelm.side_effect = Exception("it's a mock: had an error starting helm client")
         with self.assertRaises(ReckonerException):
             Course(None)
