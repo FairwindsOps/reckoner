@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="/docs/logo.svg" height="200" alt="Reckoner" style="padding-bottom: 20px" />
+  <img src="/docs/logo.svg" height="120" alt="Reckoner" style="padding-bottom: 20px" />
   <br><br>
 
   [![CircleCI](https://circleci.com/gh/FairwindsOps/reckoner.svg?style=svg)](https://circleci.com/gh/FairwindsOps/reckoner) [![codecov](https://codecov.io/gh/FairwindsOps/reckoner/branch/master/graph/badge.svg)](https://codecov.io/gh/FairwindsOps/reckoner)
