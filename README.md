@@ -29,6 +29,7 @@ For development see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 In course.yaml, write:
 ```yaml
+namespace: kube-system
 charts:
   grafana:
     namespace: grafana
