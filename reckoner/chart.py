@@ -380,8 +380,7 @@ class Chart(object):
         Note: values_file must be relative to the course.yml, or declared with an absolute path
         """
         for values_file in self.files:
-            values_file_path = os.path.join(self.config.course_base_directory, values_file)
-            self._append_arg("-f {}".format(values_file_path))
+            self._append_arg("-f {}".format(os.path.join(self.config.course_base_directory, values_file)))
 
     @staticmethod
     def _interpolate_env_vars_from_string(original_string: str) -> str:
