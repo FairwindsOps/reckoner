@@ -29,6 +29,7 @@ For development see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 In course.yaml, write:
 ```yaml
+namespace: default
 charts:
   grafana:
     namespace: grafana
