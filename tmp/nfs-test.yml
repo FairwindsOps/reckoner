@@ -1,0 +1,18 @@
+---
+namespace: kube-system
+
+repositories:
+  stable:
+    url: https://kubernetes-charts.storage.googleapis.com
+
+repository: stable
+
+charts:
+  nfs-client-provisioner:
+    namespace: nfs-client-provisioner
+    chart: nfs-client-provisioner
+    version: 1.2.6
+    values:
+      test: test
+    files:
+      - /home/nate/values.yml
