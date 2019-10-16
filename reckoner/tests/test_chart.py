@@ -269,13 +269,25 @@ class TestValuesFiles(unittest.TestCase):
     def test_chart_values_file_args(self, chartConfigMock):
         """Assert that helm args include values files"""
 
-        chart = Chart({"fake-chart": {"files": ["fake-file.yaml"]}}, None)
+        chart = Chart({"fake-chart": {"files": [
+            "relative-file.yaml",
+            "../relative-file.yaml",
+            "../../relative-file.yaml",
+            "path/to/nested-file.yaml",
+            "/some/absolute/path/fake-file.yml"]
+        }}, None)
+
         chart.config.dryrun = False
         chartConfig = chartConfigMock()
         chartConfig.course_base_directory = '/some/fake/path'
         chartConfig.dryrun = False
         chart.build_files_list()
-        self.assertEqual(chart.args, ["-f", "/some/fake/path/fake-file.yaml"])
+        self.assertEqual(chart.args, ["-f", "/some/fake/path/relative-file.yaml",
+                                      "-f", "/some/fake/path/../relative-file.yaml",
+                                      "-f", "/some/fake/path/../../relative-file.yaml",
+                                      "-f", "/some/fake/path/path/to/nested-file.yaml",
+                                      "-f", "/some/absolute/path/fake-file.yml"
+                                      ])
 
 
 class TestTemporaryValuesFiles(unittest.TestCase):
