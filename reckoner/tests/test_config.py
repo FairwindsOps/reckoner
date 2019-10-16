@@ -13,24 +13,27 @@
 # limitations under the License.
 
 import unittest
+import mock
 from reckoner.config import Config
 
 
 class TestConfig(unittest.TestCase):
-    def test_course_base_dir_never_empty(self):
+    @mock.patch('os.getcwd')
+    def test_course_base_dir_never_empty(self, mock_dir):
         config = Config()
         config.course_path = 'course.yaml'
         self.assertNotEqual('', config.course_base_directory,
                             "course_base_path has to be None or a real path "
                             "(including '.') because of how it is used in "
                             "Popen. Cannot be an empty string.")
-        self.assertIsNone(config.course_base_directory)
 
         config.course_path = '/some/full/path/course.yml'
         self.assertEqual('/some/full/path', config.course_base_directory)
 
+        mock_dir.return_value = "/some/fake/path"
         config.course_path = './course.yaml'
-        self.assertEqual('.', config.course_base_directory)
+        self.assertEqual('/some/fake/path', config.course_base_directory)
 
+        # relative path to /some/fake/path
         config.course_path = '../../relative/course.yml'
-        self.assertEqual('../../relative', config.course_base_directory)
+        self.assertEqual('/some/relative', config.course_base_directory)
