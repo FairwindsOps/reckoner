@@ -17,7 +17,7 @@
 
 import os
 import logging
-from os.path import dirname
+from os.path import dirname, abspath
 
 from .command_line_caller import call
 
@@ -71,11 +71,7 @@ class Config(object):
 
     @property
     def course_base_directory(self):
-        if self.course_path is None:
-            return_dir = None
-        else:
-            return_dir = dirname(self.course_path) or None
-        return return_dir
+        return dirname(abspath(self.course_path))
 
     def __setattr__(self, name, value):
         object.__setattr__(self, name, value)

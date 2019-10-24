@@ -281,6 +281,34 @@ class TestChartResult(unittest.TestCase):
         self.assertEqual(c.status_string, "Succeeded")
 
 
+class TestValuesFiles(unittest.TestCase):
+    """Test the cases for provided Values Files"""
+
+    @mock.patch('reckoner.chart.Config', autospec=True)
+    def test_chart_values_file_args(self, chartConfigMock):
+        """Assert that helm args include values files"""
+
+        chart = Chart({"fake-chart": {"files": [
+            "relative-file.yaml",
+            "../relative-file.yaml",
+            "../../relative-file.yaml",
+            "path/to/nested-file.yaml",
+            "/some/absolute/path/fake-file.yml"]
+        }}, None)
+
+        chart.config.dryrun = False
+        chartConfig = chartConfigMock()
+        chartConfig.course_base_directory = '/some/fake/path'
+        chartConfig.dryrun = False
+        chart.build_files_list()
+        self.assertEqual(chart.args, ["-f", "/some/fake/path/relative-file.yaml",
+                                      "-f", "/some/fake/path/../relative-file.yaml",
+                                      "-f", "/some/fake/path/../../relative-file.yaml",
+                                      "-f", "/some/fake/path/path/to/nested-file.yaml",
+                                      "-f", "/some/absolute/path/fake-file.yml"
+                                      ])
+
+
 class TestTemporaryValuesFiles(unittest.TestCase):
     """Test the cases for Temporary values files"""
 
