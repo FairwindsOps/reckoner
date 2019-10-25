@@ -121,13 +121,20 @@ class HelmClient(ABC):
         if response.succeeded:
             return response
         else:
-            raise HelmClientException('Command Failed with output below:\nSTDOUT: {}\nSTDERR: {}\nCOMMAND: {}'.format(
+            err = HelmClientException('Command Failed with output below:\nSTDOUT: {}\nSTDERR: {}\nCOMMAND: {}'.format(
                 response.stdout, response.stderr, response.command))
+            logging.debug(err)
+            raise err
 
     @property
     def repositories(self):
+        logging.debug("Listing repositories configured on helm client")
         repository_names = []
-        raw_repositories = self.execute('repo', ['list'], filter_non_global_flags=True).stdout
+        try:
+            raw_repositories = self.execute('repo', ['list'], filter_non_global_flags=True).stdout
+        except HelmClientException:
+            logging.warning("Error getting repositories from client, maybe none have been initialized?")
+            return repository_names
         for line in raw_repositories.splitlines():
             # Try to filter out the header line as a viable repo name
             if HelmClient.repository_header_regex.match(str(line)):
@@ -161,7 +168,6 @@ class HelmClient(ABC):
 
     def repo_update(self):
         """Function to update all the repositories"""
-        pass
         return self.execute('repo', ['update'], filter_non_global_flags=True)
 
     def repo_add(self, name, url):
