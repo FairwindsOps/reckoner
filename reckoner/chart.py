@@ -19,7 +19,6 @@ import os
 from tempfile import NamedTemporaryFile as tempfile
 from .yaml.handler import Handler as yaml_handler
 
-from collections import OrderedDict
 from string import Template
 
 from .exception import ReckonerCommandException
@@ -356,7 +355,12 @@ class Chart(object):
             # create a temporary file on the file-system but don't clean up after you close it
             with tempfile('w+t', suffix=".yml", delete=False) as temp_yaml:
                 # load up the self.values yaml string
-                yaml_output = yaml_handler.dump(self.values)
+
+                # HACK: Ugly hack to get rid of all comments in a temp yaml file so we don't try to env var replace vars in comments
+                yaml_without_comments = yaml_handler.copy_without_comments(self.values)
+
+                # write the yaml to a string
+                yaml_output = yaml_handler.dump(yaml_without_comments)
 
                 # read the yaml_output and interpolate any variables
                 yaml_output = self._interpolate_env_vars_from_string(yaml_output)

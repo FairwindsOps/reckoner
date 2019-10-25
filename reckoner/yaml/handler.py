@@ -16,6 +16,7 @@ from ruamel.yaml import YAML
 from ruamel.yaml.constructor import DuplicateKeyError
 from reckoner.exception import ReckonerConfigException
 import logging
+from copy import deepcopy
 from io import BufferedReader, StringIO
 
 
@@ -41,6 +42,13 @@ class Handler(object):
         temp_file = StringIO()
         cls.yaml.dump(data, temp_file)
         return temp_file.getvalue()
+
+    @staticmethod
+    def copy_without_comments(o: dict):
+        r = deepcopy(o)
+        r._yaml_comment.comment = None
+        r._yaml_comment._items = {}
+        return r
 
 
 def _clean_duplicate_key_message(msg: str):
