@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [2.2.0]
+### Changes
+- Added a warning message when using helm3: NOTE HELM3 IS NOT YET SUPPORTED! Use at your own peril!
+- Added better logging for helm errors (into debug output)
+- Added better handling of uninitialized helm (client side)
+- Fixed issues where helm would try to interpolate variables in comments provided in `values: {}` section of a chart definition
+
+## [2.1.1]
+### Fixes
+- Fixed issues with relative vs absolute paths on files used in course yamls
+
 ## [2.1.0]
 ### Breaking Changes
 - Added Helm 3 detection and added a warning and documentation on helm 3 reckoner support blockers

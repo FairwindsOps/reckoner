@@ -45,10 +45,13 @@ class Handler(object):
 
     @staticmethod
     def copy_without_comments(o: dict):
-        r = deepcopy(o)
-        r._yaml_comment.comment = None
-        r._yaml_comment._items = {}
-        return r
+        if hasattr(o, '_yaml_comment'):
+            r = deepcopy(o)
+            r._yaml_comment.comment = None
+            r._yaml_comment._items = {}
+            return r
+        else:
+            return deepcopy(o)
 
 
 def _clean_duplicate_key_message(msg: str):
