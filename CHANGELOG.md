@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added better logging for helm errors (into debug output)
 - Added better handling of uninitialized helm (client side)
 - Fixed issues where helm would try to interpolate variables in comments provided in `values: {}` section of a chart definition
+- Added better logging for debug when unexpected errors happen in python
+- Added better logging output for debugging yaml parse issues
 
 ## [2.1.1]
 ### Fixes

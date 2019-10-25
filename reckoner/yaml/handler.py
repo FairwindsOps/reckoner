@@ -35,6 +35,10 @@ class Handler(object):
             logging.error(_clean_duplicate_key_message(str(err)))
             raise ReckonerConfigException(
                 "Duplicate key found while loading your course YAML, please remove the duplicate key shown above.")
+        except Exception as err:
+            logging.error("Unexpected error when parsing yaml. See debug for more details.")
+            logging.debug(err)
+            raise err
         return y
 
     @classmethod
