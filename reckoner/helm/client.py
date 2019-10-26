@@ -58,7 +58,7 @@ def get_helm_client(helm_arguments, client_version=None, helm_provider=HelmProvi
                 detected_version = client3.version
                 logging.info('Found Helm Version {}'.format(detected_version))
                 logging.warning('Using the Helm 3 Client is currently experimental. Proceed with with caution.')
-                logging.warning('Track Reckoner + Helm 3 support by following this issue: <placeholder>')
+                logging.warning('Track Reckoner + Helm 3 support by following this document: https://github.com/FairwindsOps/reckoner/blob/master/HELM3_BLOCKERS.md')
                 return client3
     except HelmClientException as e:
         logging.error(e)
