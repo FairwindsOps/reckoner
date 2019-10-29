@@ -22,7 +22,6 @@ from typing import List
 from .config import Config
 from .course import Course
 from .chart import ChartResult
-from .helm.client import HelmClient, HelmClientException
 from .exception import NoChartsToInstall, ReckonerCommandException, ReckonerException
 from io import BufferedReader
 
@@ -78,17 +77,6 @@ class Reckoner(object):
             logging.warn("The --debug flag will be deprecated.  Please use --helm-args or --dry-run instead.")
         if self.config.helm_args:
             logging.warn("Specifying --helm-args on the cli will override helm_args in the course file.")
-
-        try:
-            self.helm = HelmClient(default_helm_arguments=self.config.helm_args)
-        except Exception as e:
-            raise ReckonerException("Helm Client Failed to initialize: {}".format(e))
-
-        try:
-            self.helm.check_helm_command()
-            self.helm.server_version
-        except HelmClientException as e:
-            raise ReckonerException("Helm Client Failed to initialize: {}".format(e))
 
         self.course = Course(course_file)
 

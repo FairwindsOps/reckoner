@@ -22,7 +22,7 @@ import os
 
 from .config import Config
 from git import GitCommandError
-from .helm.client import HelmClientException
+from .helm.client import HelmClientException, HelmClient
 
 
 class Repository(object):
@@ -37,7 +37,7 @@ class Repository(object):
     - path: path in git repository
     """
 
-    def __init__(self, repository, helm_client):
+    def __init__(self, repository, helm_client: HelmClient):
         super(type(self), self).__init__()
         self.config = Config()
         self._repository = {}
@@ -69,6 +69,7 @@ class Repository(object):
 
     def install(self, chart_name=None, version=None):
         """ Install Helm repository """
+        # TODO: This function needs some love - seems like it wants to return T/F and maybe have logic act on that vs raising errors when you cannot install (from this function)
         if self.git is None:
             self._chart_path = "{}/{}".format(self.name, chart_name)
             if self.name not in self._helm_client.repositories:
@@ -76,7 +77,7 @@ class Repository(object):
                     return self._helm_client.repo_add(str(self.name), str(self.url))
                 except HelmClientException as e:
                     logging.warn("Unable to install repository {}: {}".format(self.name, e))
-                    return False
+                    raise e  # changed from `return False` since we always want to raise an error if we can't install a chart
             else:
                 logging.debug("Chart repository {} already installed".format(self.name))
                 return True

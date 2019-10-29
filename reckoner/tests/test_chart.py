@@ -174,10 +174,13 @@ class TestChartHooks(unittest.TestCase):
 class TestCharts(unittest.TestCase):
     """Test charts"""
 
+    @mock.patch('reckoner.chart.Config', autospec=True)
     @mock.patch('reckoner.chart.os')
-    def test_interpolation_of_env_vars(self, environMock):
+    def test_interpolation_of_env_vars(self, environMock, chartConfigMock):
         chart = Chart({'name': {'values': {}}}, None)
-        chart.config.dryrun = False
+        chartConfig = chartConfigMock()
+        chartConfig.course_base_directory = '.'
+        chartConfig.dryrun = False
 
         chart.args = ['thing=${environVar}', 'another=$environVar']
         environMock.environ = {'environVar': 'asdf'}
@@ -186,10 +189,13 @@ class TestCharts(unittest.TestCase):
         self.assertEqual(chart.args[0], 'thing=asdf')
         self.assertEqual(chart.args[1], 'another=asdf')
 
+    @mock.patch('reckoner.chart.Config', autospec=True)
     @mock.patch('reckoner.chart.os')
-    def test_interpolation_of_missing_env_vars(self, environMock):
+    def test_interpolation_of_missing_env_vars(self, environMock, chartConfigMock):
         chart = Chart({'name': {'values': {}}}, None)
-        chart.config.dryrun = False
+        chartConfig = chartConfigMock()
+        chartConfig.course_base_directory = '.'
+        chartConfig.dryrun = False
 
         chart.args = ['thing=${environVar}']
         environMock.environ = {}
@@ -197,10 +203,13 @@ class TestCharts(unittest.TestCase):
         with self.assertRaises(Exception):
             chart._check_env_vars()
 
+    @mock.patch('reckoner.chart.Config', autospec=True)
     @mock.patch('reckoner.chart.os')
-    def test_interpolation_of_env_vars_kube_deploy_spec(self, environMock):
+    def test_interpolation_of_env_vars_kube_deploy_spec(self, environMock, chartConfigMock):
         chart = Chart({'name': {'values': {}}}, None)
-        chart.config.dryrun = False
+        chartConfig = chartConfigMock()
+        chartConfig.course_base_directory = '.'
+        chartConfig.dryrun = False
 
         chart.args = ['thing=$(environVar)']
         environMock.environ = {}
@@ -208,29 +217,39 @@ class TestCharts(unittest.TestCase):
         chart._check_env_vars()
         self.assertEqual(chart.args[0], 'thing=$(environVar)')
 
+    @mock.patch('reckoner.chart.Config', autospec=True)
     @mock.patch('reckoner.chart.Repository')
-    def test_chart_install(self, repositoryMock):
+    def test_chart_install(self, repositoryMock, chartConfigMock):
         repo_mock = repositoryMock()
         repo_mock.chart_path = ""
         helm_client_mock = mock.MagicMock()
 
         chart = Chart({'nameofchart': {'namespace': 'fakenamespace', 'set-values': {}}}, helm_client_mock)
-        chart.config.dryrun = False
+        chartConfig = chartConfigMock()
+        chartConfig.course_base_directory = '.'
+        chartConfig.dryrun = False
 
+        debug_args = mock.PropertyMock(debug_args=['fake'])
+        type(chart).debug_args = debug_args
         chart.install()
         helm_client_mock.upgrade.assert_called_once()
         upgrade_call = helm_client_mock.upgrade.call_args
         self.assertEqual(upgrade_call[0][0], ['nameofchart', '', '--namespace', 'fakenamespace'])
 
+    @mock.patch('reckoner.chart.Config', autospec=True)
     @mock.patch('reckoner.chart.Repository')
-    def test_chart_install_with_plugin(self, repositoryMock):
+    def test_chart_install_with_plugin(self, repositoryMock, chartConfigMock):
         repo_mock = repositoryMock()
         repo_mock.chart_path = ""
         helm_client_mock = mock.MagicMock()
 
         chart = Chart({'nameofchart': {'namespace': 'fakenamespace', 'plugin': 'someplugin', 'set-values': {}}}, helm_client_mock)
-        chart.config.dryrun = False
+        chartConfig = chartConfigMock()
+        chartConfig.course_base_directory = '.'
+        chartConfig.dryrun = False
 
+        debug_args = mock.PropertyMock(debug_args=['fake'])
+        type(chart).debug_args = debug_args
         chart.install()
         helm_client_mock.upgrade.assert_called_once()
         upgrade_call = helm_client_mock.upgrade.call_args
@@ -293,23 +312,35 @@ class TestValuesFiles(unittest.TestCase):
 class TestTemporaryValuesFiles(unittest.TestCase):
     """Test the cases for Temporary values files"""
 
-    def test_chart_initializes_empty_file_paths(self):
+    @mock.patch('reckoner.chart.Config', autospec=True)
+    def test_chart_initializes_empty_file_paths(self, chartConfigMock):
         """Assert that we initialize the empty list for new charts"""
         chart = Chart({"fake-chart": {}}, None)
+        chartConfig = chartConfigMock()
+        chartConfig.course_base_directory = '.'
+        chartConfig.dryrun = False
         self.assertEqual(chart._temp_values_file_paths, [])
 
-    def test_chart_creates_temp_value_files(self):
+    @mock.patch('reckoner.chart.Config', autospec=True)
+    def test_chart_creates_temp_value_files(self, chartConfigMock):
         chart = Chart({"fake-chart": {}}, None)
+        chartConfig = chartConfigMock()
+        chartConfig.course_base_directory = '.'
+        chartConfig.dryrun = False
         chart.values = {"fake-key": "fake-value"}
         self.assertEqual(len(chart._temp_values_file_paths), 0)
 
         chart.build_temp_values_files()
         self.assertEqual(len(chart._temp_values_file_paths), 1)
 
+    @mock.patch('reckoner.chart.Config', autospec=True)
     @mock.patch('reckoner.chart.os', autospec=True)
-    def test_remove_temp_files(self, mock_os):
+    def test_remove_temp_files(self, mock_os, chartConfigMock):
         """Assert that a temp file in the list has os.remove called against it"""
         chart = Chart({"fake-chart": {}}, None)
+        chartConfig = chartConfigMock()
+        chartConfig.course_base_directory = '.'
+        chartConfig.dryrun = False
         chart._temp_values_file_paths.append('non/existent-path')
         chart.clean_up_temp_files()
         mock_os.remove.assert_called_once()
@@ -317,6 +348,8 @@ class TestTemporaryValuesFiles(unittest.TestCase):
 
 class TestBuildSetArguments(unittest.TestCase):
     """Test the build set args for helm chart"""
+
+    maxDiff = None
 
     def setUp(self):
         self.chart_object = {
@@ -327,15 +360,24 @@ class TestBuildSetArguments(unittest.TestCase):
             }
         }
 
-    def test_flat_key_values(self):
+    @mock.patch('reckoner.chart.Config', autospec=True)
+    def test_flat_key_values(self, chartConfigMock):
         chart = Chart(self.chart_object, None)
+        chartConfig = chartConfigMock()
+        chartConfig.course_base_directory = '.'
+        chartConfig.dryrun = False
 
         self.assertEqual(chart.args, [], "self.args should be empty before running")
         chart.build_set_arguments()
         self.assertEqual(chart.args, ["--set", "keyone=valueone"], "Expected build_set_arguments to build --set args correctly.")
 
-    def test_dicts(self):
+    @mock.patch('reckoner.chart.Config', autospec=True)
+    def test_dicts(self, chartConfigMock):
         chart = Chart(self.chart_object, None)
+        chartConfig = chartConfigMock()
+        chartConfig.course_base_directory = '.'
+        chartConfig.dryrun = False
+
         chart.set_values = {
             "levelone": {
                 "leveltwo": "valuetwo",
@@ -358,7 +400,8 @@ class TestBuildSetArguments(unittest.TestCase):
         chart.build_set_arguments()
         self.assertEqual(chart.args, ["--set", "levelone.leveltwo.levelthree.levelfour=value four"])
 
-    def test_yaml_loaded_integration(self):
+    @mock.patch('reckoner.chart.Config', autospec=True)
+    def test_yaml_loaded_integration(self, chartConfigMock):
         yaml_file = StringIO('''
 ---
 charts:
@@ -386,6 +429,11 @@ charts:
 ''')
         course = Handler.load(yaml_file)
         chart = Chart(course["charts"], None)
+
+        chartConfig = chartConfigMock()
+        chartConfig.course_base_directory = '.'
+        chartConfig.dryrun = False
+
         chart.build_set_arguments()
         self.assertEqual(chart.args, [
             "--set", "keyone=value one",
@@ -402,8 +450,13 @@ charts:
             "--set", "deeplynested_objects[1].lists[2].and.a_random_dict=value",
         ])
 
-    def test_null_value(self):
+    @mock.patch('reckoner.chart.Config', autospec=True)
+    def test_null_value(self, chartConfigMock):
         chart = Chart(self.chart_object, None)
+        chartConfig = chartConfigMock()
+        chartConfig.course_base_directory = '.'
+        chartConfig.dryrun = False
+
         chart.set_values = {
             "testnull": None,
         }
@@ -426,15 +479,23 @@ class TestBuildSetStringsArguments(unittest.TestCase):
             }
         }
 
-    def test_flat_key_values(self):
+    @mock.patch('reckoner.chart.Config', autospec=True)
+    def test_flat_key_values(self, chartConfigMock):
         chart = Chart(self.chart_object, None)
+        chartConfig = chartConfigMock()
+        chartConfig.course_base_directory = '.'
+        chartConfig.dryrun = False
 
         self.assertEqual(chart.args, [], "self.args should be empty before running")
         chart.build_set_string_arguments()
         self.assertEqual(chart.args, ["--set-string", "keyone=valueone"], "Expected build_set_arguments to build --set args correctly.")
 
-    def test_dicts(self):
+    @mock.patch('reckoner.chart.Config', autospec=True)
+    def test_dicts(self, chartConfigMock):
         chart = Chart(self.chart_object, None)
+        chartConfig = chartConfigMock()
+        chartConfig.course_base_directory = '.'
+        chartConfig.dryrun = False
         chart.values_strings = {
             "levelone": {
                 "leveltwo": "valuetwo",
@@ -457,7 +518,8 @@ class TestBuildSetStringsArguments(unittest.TestCase):
         chart.build_set_string_arguments()
         self.assertEqual(chart.args, ["--set-string", "levelone.leveltwo.levelthree.levelfour=value four"])
 
-    def test_yaml_loaded_integration(self):
+    @mock.patch('reckoner.chart.Config', autospec=True)
+    def test_yaml_loaded_integration(self, chartConfigMock):
         yaml_file = StringIO('''
 ---
 charts:
@@ -485,6 +547,9 @@ charts:
 ''')
         course = Handler.load(yaml_file)
         chart = Chart(course["charts"], None)
+        chartConfig = chartConfigMock()
+        chartConfig.course_base_directory = '.'
+        chartConfig.dryrun = False
         chart.build_set_string_arguments()
         self.assertEqual(chart.args, [
             "--set-string", "keyone=value one",
@@ -501,8 +566,12 @@ charts:
             "--set-string", "deeplynested_objects[1].lists[2].and.a_random_dict=value",
         ])
 
-    def test_null_value(self):
+    @mock.patch('reckoner.chart.Config', autospec=True)
+    def test_null_value(self, chartConfigMock):
         chart = Chart(self.chart_object, None)
+        chartConfig = chartConfigMock()
+        chartConfig.course_base_directory = '.'
+        chartConfig.dryrun = False
         chart.values_strings = {
             "testnull": None,
         }

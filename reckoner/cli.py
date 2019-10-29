@@ -66,8 +66,8 @@ def plot(ctx, course_file=None, dry_run=False, debug=False, only=None, helm_args
     except Exception as err:
         # This handles exceptions cleanly, no expected stack traces from reckoner code
         click.echo(click.style("⛵🔥 Encountered unexpected error in Reckoner! Run with --log-level debug to see details! ⛵🔥", fg="bright_red"))
-        if debug:
-            click.echo(click.style("{}".format(err)))
+        if 'log_level' in ctx.parent.params and ctx.parent.params['log_level'].lower() in ['debug', 'trace']:
+            click.echo(click.style("{}".format(err), fg='bright_red'))
         ctx.exit(1)
     if r.results.has_errors:
         click.echo(click.style("⛵🔥 Encountered errors while running the course ⛵🔥", fg="bright_red"))

@@ -16,6 +16,7 @@ from ruamel.yaml import YAML
 from ruamel.yaml.constructor import DuplicateKeyError
 from reckoner.exception import ReckonerConfigException
 import logging
+from copy import deepcopy
 from io import BufferedReader, StringIO
 
 
@@ -34,6 +35,10 @@ class Handler(object):
             logging.error(_clean_duplicate_key_message(str(err)))
             raise ReckonerConfigException(
                 "Duplicate key found while loading your course YAML, please remove the duplicate key shown above.")
+        except Exception as err:
+            logging.error("Unexpected error when parsing yaml. See debug for more details.")
+            logging.debug(err)
+            raise err
         return y
 
     @classmethod
@@ -41,6 +46,16 @@ class Handler(object):
         temp_file = StringIO()
         cls.yaml.dump(data, temp_file)
         return temp_file.getvalue()
+
+    @staticmethod
+    def copy_without_comments(o: dict):
+        if hasattr(o, '_yaml_comment'):
+            r = deepcopy(o)
+            r._yaml_comment.comment = None
+            r._yaml_comment._items = {}
+            return r
+        else:
+            return deepcopy(o)
 
 
 def _clean_duplicate_key_message(msg: str):
