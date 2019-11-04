@@ -71,11 +71,16 @@ class Course(object):
             self._repositories.append(Repository(repository, self.helm))
 
         for name, chart in self._dict.get('charts', {}).items():
+            self._set_chart_repository(chart)
             self._charts.append(Chart({name: chart}, self.helm))
 
         for repo in self._repositories:
-            logging.debug("Installing repository: {}".format(repo))
-            repo.install(chart_name=repo._repository['name'], version=repo._repository.get('version'))
+            # Skip install of repo if it is git based since it will be installed from the chart class
+            if repo.git is None:
+                logging.debug("Installing repository: {}".format(repo))
+                repo.install(chart_name=repo._repository['name'], version=repo._repository.get('version'))
+            else:
+                logging.debug("Skipping git install of repository to later be installed at the chart level: {}".format(repo))
 
         self.helm.repo_update()
 
@@ -84,6 +89,25 @@ class Course(object):
         except MinimumVersionException as e:
             logging.error(e)
             sys.exit(1)
+
+    # HACK: This logic is here to try to replace a named reference to a helm repo defined in the main
+    #       course repositories. This is because we want to pass the git repo and some
+    #       other data to the chart (since the chart also tries to install the repo)
+    #
+    # NOTE: The real fix here would be to unify the way repositories are installed and managed instead
+    #       running the install() function twice from the course.yml and from the charts.yml.
+    #
+    # IF: chart has a repository definition that is a string reference, then find that
+    # reference (if exists) from the main repositories for the course and replace the
+    # string definition with the repositories setting.
+    def _set_chart_repository(self, chart: dict):
+        """_set_chart_repository will convert the string reference of a
+        repository into the dictionary configuration of that repository
+        or, if None, or if the string isn't in the repositories section,
+        it will leave it alone."""
+        if isinstance(chart.get('repository', None), str) and chart['repository'] in [x.name for x in self.repositories]:
+            logging.debug('Found a reference to a repository installed via repositories section of course, replacing reference.')
+            chart['repository'] = self._dict['repositories'][chart['repository']]
 
     def __str__(self):
         return str(self._dict)
