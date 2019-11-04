@@ -38,7 +38,7 @@ class Repository(object):
     """
 
     def __init__(self, repository, helm_client: HelmClient):
-        super(type(self), self).__init__()
+        super(type(self), self).__init__()  # TODO: Remove this and test thoroughly, it appears this doesn't do anything.
         self.config = Config()
         self._repository = {}
         self._helm_client = helm_client
