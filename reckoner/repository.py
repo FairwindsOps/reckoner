@@ -67,7 +67,7 @@ class Repository(object):
     def chart_path(self):
         return self._chart_path
 
-    def install(self, chart_name=None, version=None):
+    def install(self, chart_name, version=None):
         """ Install Helm repository """
         # TODO: This function needs some love - seems like it wants to return T/F and maybe have logic act on that vs raising errors when you cannot install (from this function)
         if self.git is None:

@@ -74,9 +74,8 @@ class Course(object):
             self._charts.append(Chart({name: chart}, self.helm))
 
         for repo in self._repositories:
-            type(repo)
             logging.debug("Installing repository: {}".format(repo))
-            repo.install()
+            repo.install(chart_name=repo._repository['name'], version=repo._repository.get('version'))
 
         self.helm.repo_update()
 
