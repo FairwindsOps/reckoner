@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed issues where helm would try to interpolate variables in comments provided in `values: {}` section of a chart definition
 - Added better logging for debug when unexpected errors happen in python
 - Added better logging output for debugging yaml parse issues
+- Fixed repository git support for defining git chart endpoints at the top level and chart level
 
 ## [2.1.1]
 ### Fixes
