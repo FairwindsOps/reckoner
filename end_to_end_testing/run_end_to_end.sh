@@ -239,7 +239,7 @@ function e2e_test_git_chart() {
 
     # Special Clean up of GoHarbor
     helm delete --purge go-harbor
-    kubectl delete pvc -n test --all
+    kubectl delete pvc --all-namespaces --all
 }
 
 function e2e_test_stop_after_first_failure() {

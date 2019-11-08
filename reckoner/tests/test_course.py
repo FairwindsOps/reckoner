@@ -174,4 +174,52 @@ class TestCourse(unittest.TestCase):
         with self.assertRaises(ReckonerException):
             Course(None)
 
+    # This test is intended to test the implementation that repository field in charts is resolved to the repositories settings in course.yml; because the repositories code is brittle.
+    # This is important because if the chart references a git repo from the main course repositories, it breaks the repo install method
+    def test_course_git_repository_handling(self, mockGetHelm, mockYAML):
+        """Assure that course replaces strings with object settings for chart repository settings"""
+        course = mockYAML.load.return_value = self.course_yaml
+        # Add repositories configuration to the course
+        course['repositories'] = {
+            'some-git-repo': {
+                'git': 'https://git.com/my-chart.git',
+                'path': 'charts',
+            },
+            'stablez': {
+                'url': 'https://fake.url.com',
+            }
+        }
+        # Add first chart reference to the repositories settings
+        course['charts']['first-chart']['repository'] = 'some-git-repo'
+        # Add second chart referencing a missing chart (current behavior is to keep the string)
+        course['charts']['second-chart'] = {
+            'repository': 'missingfromrepos',
+            'chart': 'my-chart',
+        }
+        # Add a third chart referring to a non-git repo
+        course['charts']['third-chart'] = {
+            'chart': 'my-chart',
+            'repository': 'stablez',
+        }
+
+        self.assertIsInstance(course['charts']['first-chart']['repository'], str)
+
+        # Mock out the repository helm client
+        with mock.patch('reckoner.repository.HelmClient', mockGetHelm):
+            # Run the course to convert the chart['first-chart']['repository'] reference
+            Course(None)
+
+        # Assert the chart repo setting went from string to dict
+        self.assertIsInstance(course['charts']['first-chart']['repository'], dict)
+
+        # Assert that the dict for the repositories settings is the same as the charts repository setting after course loads
+        self.assertDictEqual(course['charts']['first-chart']['repository'], course['repositories']['some-git-repo'])
+
+        # Assert that second-chart is left alone since it is not in repositories
+        self.assertEqual(course['charts']['second-chart']['repository'], 'missingfromrepos')
+
+        # Assert that third-chart is reconciled to settings from repositories block
+        self.assertDictEqual(course['charts']['third-chart']['repository'], course['repositories']['stablez'])
+
+
 # TODO: Add test for calling plot against a chart that doesn't exist in your course.yml

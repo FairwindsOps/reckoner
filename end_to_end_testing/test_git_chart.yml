@@ -8,6 +8,11 @@ repositories:
     url: https://charts.fairwinds.com/stable
   fairwinds-incubator:
     url: https://charts.fairwinds.com/incubator
+  polaris-repo-test:
+    git: https://github.com/FairwindsOps/charts
+    path: stable
+  the-go-harbor-repo:
+    git: https://github.com/goharbor/harbor-helm.git
 minimum_versions: #set minimum version requirements here
   helm: 0.0.0
   reckoner: 0.0.0
@@ -15,14 +20,22 @@ charts:
   polaris-release:
     namespace: polaris
     chart: polaris
-    repository:
-      git: https://github.com/FairwindsOps/charts
-      path: stable
+    repository: polaris-repo-test
   polaris:
     namespace: another-polaris
     repository:
       git: https://github.com/FairwindsOps/charts.git
       path: stable
   go-harbor:
+    chart: go-harbor
     repository:
       git: https://github.com/goharbor/harbor-helm.git
+    values:
+      persistence:
+        enabled: false
+  go-harbor-two:
+    namespace: a-different-one
+    repository: the-go-harbor-repo
+    values:
+      persistence:
+        enabled: false
