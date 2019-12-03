@@ -14,3 +14,9 @@
 - Helm 3 does not create namespaces.
   - Workaround is to create the namespace in a `pre_install` hook.
   - Non-existent namespaces issue <https://github.com/FairwindsOps/reckoner/issues/75>
+- Error when validating versions
+  ERROR Could not find version!! Could the helm response format have changed?
+                STDOUT: v3.0.0+ge29ce2a
+
+                STDERR:
+
