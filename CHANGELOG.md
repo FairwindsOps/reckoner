@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+### Fixed
+- bug where the helm client version check would fail for helm2 and never proceed to check helm3
+
 ## [2.2.0]
 ### Changes
 - Added a warning message when using helm3: NOTE HELM3 IS NOT YET SUPPORTED! Use at your own peril!
