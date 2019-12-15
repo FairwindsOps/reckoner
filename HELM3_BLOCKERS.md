@@ -8,9 +8,6 @@
   - While this isn’t necessarily  a blocker, Helm 3 performs a three way merge operation when patching. Check this [PR](https://github.com/helm/helm/pull/6124) for more details
   - Some charts may be non-upgradeable depending on how they handle immutable fields
     - For example, the nginx-ingress chart fails to `upgrade` after being installed if some values are unset. See this [issue](https://github.com/helm/helm/issues/6378) for the details and workaround.
-- No `--output json`
-  - Check this [issue](https://github.com/helm/helm/issues/6437) for more details
-  - This breaks the endtoend testing suite.
 - Helm 3 does not create namespaces.
   - Workaround is to create the namespace in a `pre_install` hook.
   - Non-existent namespaces issue <https://github.com/FairwindsOps/reckoner/issues/75>

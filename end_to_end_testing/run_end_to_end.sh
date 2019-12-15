@@ -44,9 +44,17 @@ cd "$(dirname "${0}")"
 function clean_helm() {
     if [ -z "${E2E_LEAVE_INSTALLED_CHARTS}" ]; then
         # Get all installed things in helm and delete/purge them
-        helm list --output json | jq '.Releases[].Name' | xargs -I {} helm delete --purge {}
+        if [ "${HELM_VERSION}" -eq "3" ]; then
+            for namespace in  $(kubectl get ns  -o json | jq -r '.items[].metadata.name'); do
+                helm list --namespace "${namespace}" --output json | jq '.[].name' | xargs -I {} helm delete --namespace "${namespace}" {}
+            done
+        else
+            helm list  --output json | jq '.Releases[].Name' | xargs -I {} helm delete --purge {}
+        fi
     fi
 }
+
+
 
 # Mark the whole suite as failed
 function mark_failed() {
@@ -67,16 +75,44 @@ function helm_has_release_name_in_namespace() {
     local release_name="${1}"
     local namespace="${2}"
 
-    # If json list is empty then the release cannot exit, return false
-    if [ "$(helm list --output json)" == "" ]; then
-        return 1
-    fi
+    if [ "${HELM_VERSION}" -eq "3" ]; then
+        # If json list is empty then the release cannot exist, return false
+        if [ "$(helm list --namespace ${namespace} --output json)" == "" ]; then
+            return 1
+        fi
 
-    # if the release exists and is in the namespace and is DEPLOYED, then return true, otherwise false
-    if helm list --output json | jq -e ".Releases[]|select(.Name == \"${release_name}\")|.Namespace == \"${namespace}\" and .Status == \"DEPLOYED\"" &>/dev/null; then
-        return 0
+        # if the release exists and is in the namespace and is DEPLOYED, then return true, otherwise false
+        if helm list --namespace "${namespace}" --output json | jq -e ".[]|select(.name == \"${release_name}\")|.namespace == \"${namespace}\" and .status == \"deployed\"" &>/dev/null; then
+            return 0
+        else
+            return 1
+        fi
     else
-        return 1
+        # If json list is empty then the release cannot exist, return false
+        if [ "$(helm list --output json)" == "" ]; then
+            return 1
+        fi
+
+        # if the release exists and is in the namespace and is DEPLOYED, then return true, otherwise false
+        if helm list --output json | jq -e ".Releases[]|select(.Name == \"${release_name}\")|.Namespace == \"${namespace}\" and .Status == \"DEPLOYED\"" &>/dev/null; then
+            return 0
+        else
+            return 1
+        fi
+    fi
+}
+
+function release_namespace(){
+    helm list --all-namespaces --output json | jq -r ".[]|select(.name == \"${1}\")|.namespace" | head -n 1
+}
+
+function helm_get_values(){
+
+    if [ "${HELM_VERSION}" -eq "3" ]; then
+        namespace=$(release_namespace ${1})
+        helm get values --output=json --namespace "${namespace}" "${1}" 
+    else
+        helm get values --output=json "${1}"
     fi
 }
 
@@ -85,7 +121,7 @@ function helm_release_has_key_value() {
     local key="${2}"
     local value="${3}"
 
-    if helm get values "${release_name}" --output json | jq -e ".[\"${key}\"] == \"${value}\"" &>/dev/null; then
+    if helm_get_values "${release_name}"  | jq -e ".[\"${key}\"] == \"${value}\"" &>/dev/null; then
         return 0
     else
         return 1
@@ -96,7 +132,7 @@ function helm_release_values_has_key() {
     local release_name="${1}"
     local key="${2}"
 
-    if helm get values "${release_name}" --output json | jq -e ". | has(\"${key}\")" &>/dev/null; then
+    if helm_get_values "${release_name}" --output json | jq -e ". | has(\"${key}\")" &>/dev/null; then
         return 0
     else
         return 1
@@ -108,7 +144,7 @@ function helm_release_key_value_is_type() {
     local key="${2}"
     local type="${3}"
 
-    if helm get values "${release_name}" --output json | jq -e ".[\"${key}\"] | type == \"${type}\"" &>/dev/null; then
+    if helm_get_values "${release_name}" --output json | jq -e ".[\"${key}\"] | type == \"${type}\"" &>/dev/null; then
         return 0
     else
         return 1
@@ -238,7 +274,12 @@ function e2e_test_git_chart() {
     fi
 
     # Special Clean up of GoHarbor
-    helm delete --purge go-harbor
+    if [ "${HELM_VERSION}" -eq "3" ]; then
+        helm delete --namespace test go-harbor
+    else
+        helm delete --purge go-harbor
+    fi
+    
     kubectl delete pvc --all-namespaces --all
 }
 
@@ -297,9 +338,18 @@ function e2e_test_strong_ordering() {
     # Custom check which subtracts the two modified timestamps
     # This will fail if they are modified at the same second...
     local first_chart_timestamp
-    first_chart_timestamp="$(helm ls -a --output json | jq '.Releases[] |select(.Name == "first-chart") | .Updated' -r | sed -E 's/ +/ /g' | xargs -I {} date -d {} +%s)"
+    
     local second_chart_timestamp
-    second_chart_timestamp="$(helm ls -a --output json | jq '.Releases[] |select(.Name == "second-chart") | .Updated' -r | sed -E 's/ +/ /g' | xargs -I {} date -d {} +%s)"
+    
+    
+    if [ "${HELM_VERSION}" -eq "3" ]; then
+        first_chart_timestamp="$(helm ls --namespace test -a --output json | jq '.[] |select(.name == "first-chart") | .updated' -r | awk -F"." '{ print $1 }' | tr -d \\n | xargs -I {} date -d {} +%s)"
+        second_chart_timestamp="$(helm ls --namespace test -a --output json | jq '.[] |select(.name == "second-chart") | .updated' -r | awk -F"." '{ print $1 }' | tr -d \\n | xargs -I {} date -d {} +%s)"
+    else
+        first_chart_timestamp="$(helm ls -a --output json | jq '.Releases[] |select(.Name == "first-chart") | .Updated' -r | sed -E 's/ +/ /g' | xargs -I {} date -d {} +%s)"
+        second_chart_timestamp="$(helm ls -a --output json | jq '.Releases[] |select(.Name == "second-chart") | .Updated' -r | sed -E 's/ +/ /g' | xargs -I {} date -d {} +%s)"
+    fi
+
     if [[ $((first_chart_timestamp-second_chart_timestamp)) -ge 0 ]]; then
         mark_failed "${FUNCNAME[0]}" "Expected timestamp for 'first-chart' to be before 'second-timestamp': Expected 'first-chart' to be installed first..."
     fi
@@ -311,7 +361,12 @@ function e2e_test_strong_typing() {
     fi
 
     local charts
-    charts="$(helm ls --output json | jq -e -r '.Releases[].Name')"
+    if [ "${HELM_VERSION}" -eq "3" ]; then
+        charts="$(helm ls --namespace testing --output json | jq -e -r '.[].name')"
+    else
+        charts="$(helm ls --output json | jq -e -r '.Releases[].Name')"
+    fi
+    
     for _release_install in ${charts}; do
         # Check if the chart is installed
         if ! helm_has_release_name_in_namespace "${_release_install}" "testing"; then
@@ -321,7 +376,13 @@ function e2e_test_strong_typing() {
 
         # Check that all charts have these keys
         local values
-        values="$(helm get values "${_release_install}" --output json | jq -e -r 'keys|.[]')"
+        
+        if [ "${HELM_VERSION}" -eq "3" ]; then
+            values="$(helm get values --namespace testing "${_release_install}" --output json | jq -e -r 'keys|.[]')"
+        else
+            values="$(helm get values "${_release_install}" --output json | jq -e -r 'keys|.[]')"
+        fi
+
         for key in ${values}; do
             # Check if the chart has this key
             if ! helm_release_values_has_key "${_release_install}" "${key}"; then
@@ -354,7 +415,7 @@ function e2e_test_strong_typing() {
             esac
 
             if ! helm_release_key_value_is_type "${_release_install}" "${key}" "${_expected_type}"; then
-                mark_failed "${FUNCNAME[0]}" "Expected chart (${_release_install}) value for key (${key}) to be (${_expected_type}). Got ($(helm get values "${_release_install}" --output json | jq -cr ".[\"${key}\"]|type"))"
+                mark_failed "${FUNCNAME[0]}" "Expected chart (${_release_install}) value for key (${key}) to be (${_expected_type}). Got ($(helm get values --namespace test "${_release_install}" --output json | jq -cr ".[\"${key}\"]|type"))"
             fi
         done
     done

@@ -142,7 +142,7 @@ jobs:
       - store_artifacts:
           path: installer/dist/reckoner
           destination: reckoner-darwin
-  end-to-end:
+  end-to-end-helmv2:
     executor: vm
     working_directory: ~/reckoner
     resource_class: medium
@@ -152,10 +152,24 @@ jobs:
           at: /tmp/binaries
       - run:
           name: Setup Testing Environment
-          command: "./end_to_end_testing/setup.sh"
+          command: "./end_to_end_testing/setup_helm2.sh"
       - run:
           name: Run end to end tests
-          command: "./end_to_end_testing/run_end_to_end.sh"
+          command: HELM_VERSION=2 "./end_to_end_testing/run_end_to_end.sh"
+  end-to-end-helmv3:
+    executor: vm
+    working_directory: ~/reckoner
+    resource_class: medium
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/binaries
+      - run:
+          name: Setup Testing Environment
+          command: "./end_to_end_testing/setup_helm3.sh"
+      - run:
+          name: Run end to end tests
+          command: HELM_VERSION=3 "./end_to_end_testing/run_end_to_end.sh"
   publish-binaries:
     executor: python-3-7
     steps:
@@ -215,7 +229,16 @@ workflows:
               only: /.*/
             branches:
               only: /.*/
-      - end-to-end:
+      - end-to-end-helmv2:
+          requires:
+            - compile
+            - compile-darwin
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              only: /.*/
+      - end-to-end-helmv3:
           requires:
             - compile
             - compile-darwin
@@ -226,7 +249,7 @@ workflows:
               only: /.*/
       - release:
           requires:
-            - end-to-end
+            - end-to-end-helmv2
           filters:
             tags:
               only: /.*/
@@ -234,7 +257,7 @@ workflows:
               ignore: /.*/
       - publish-binaries:
           requires:
-            - end-to-end
+            - end-to-end-helmv2
           filters:
             tags:
               only: /.*/

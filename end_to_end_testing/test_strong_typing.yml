@@ -3,6 +3,9 @@ namespace: testing #namespace to install the chart in, defaults to 'kube-system'
 minimum_versions: #set minimum version requirements here
   helm: 0.0.0
   reckoner: 0.0.0
+repositories:
+  stable:
+    url: https://kubernetes-charts.storage.googleapis.com
 charts:
   chart-values:
     repository: stable
