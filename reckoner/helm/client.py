@@ -52,8 +52,9 @@ def get_helm_client(helm_arguments, client_version=None, helm_provider=HelmProvi
                 logging.info('Found Helm Version {}'.format(detected_version))
                 logging.info('Tiller version {}'.format(client2.tiller_version))
                 return client2
-            except HelmVersionException:
+            except (HelmClientException, HelmVersionException) as e:
                 logging.debug('Helm 2 check failed')
+                logging.debug(e)
                 logging.debug('Checking for Helm 3 client')
                 detected_version = client3.version
                 logging.info('Found Helm Version {}'.format(detected_version))
