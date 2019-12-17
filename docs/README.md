@@ -17,7 +17,7 @@ We'll be breaking this documentation down into sections to make reference easier
 - `repository` _(string)_  
     The default remote repository for charts in this course if one is not defined in the chart definition
 - `context` _(string)_  
-    The `kubectl` context to use for this course (found with `kubectl get current-context`)
+    The `kubectl` context to use for this course (found with `kubectl config current-context`)
 - `_references` _(object)_  
     An area in which you can put repeat code to be used throughout your course YAML. (See [this article on anchors](https://medium.com/@kinghuang/docker-compose-anchors-aliases-extensions-a1e4105d70bd))
 - `helm_args` _(string)_  
