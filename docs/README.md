@@ -154,23 +154,26 @@ Commands:
 You can add `--help` to any `Command` and get output like the one below:
 ```text
 $> reckoner plot --help
-
 Usage: reckoner plot [OPTIONS] COURSE_FILE
 
   Install charts with given arguments as listed in yaml file argument
 
 Options:
-  --dry-run                      Pass --dry-run to helm so no action is taken.
-                                 Implies --debug and skips hooks.
-  --debug                        DEPRECATED - use --dry-run instead, or pass
-                                 to --helm-args
-  -o, --only, --heading <chart>  Only run a specific chart by name
-  --helm-args TEXT               Passes the following arg on to helm, can be
-                                 used more than once. WARNING: Setting this
-                                 will completely override any helm_args in the
-                                 course. Also cannot be used for configuring
-                                 how helm connects to tiller.
-  --continue-on-error            Attempt to install all charts in the course,
-                                 even if any charts or hooks fail to run.
-  --help                         Show this message and exit.
+  --dry-run                       Pass --dry-run to helm so no action is
+                                  taken. Implies --debug and skips hooks.
+  --debug                         DEPRECATED - use --dry-run instead, or pass
+                                  to --helm-args
+  -o, --only, --heading <chart>   Only run a specific chart by name
+  --helm-args TEXT                Passes the following arg on to helm, can be
+                                  used more than once. WARNING: Setting this
+                                  will completely override any helm_args in
+                                  the course. Also cannot be used for
+                                  configuring how helm connects to tiller.
+  --continue-on-error             Attempt to install all charts in the course,
+                                  even if any charts or hooks fail to run.
+  --create-namespace / --no-create-namespace
+                                  Will create the specified nameaspace if it
+                                  does not already exist. Replaces
+                                  functionality lost in Helm3
+  --help                          Show this message and exit.
 ```
