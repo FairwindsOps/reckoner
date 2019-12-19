@@ -43,7 +43,6 @@ cd "$(dirname "${0}")"
 
 # Helper to clean out all the stuff between tests
 function clean_helm() {
-    echo $HELM_VERSION
     if [ -z "${E2E_LEAVE_INSTALLED_CHARTS}" ]; then
         # Get all installed things in helm and delete/purge them
         if [ "${HELM_VERSION}" -eq "3" ]; then
