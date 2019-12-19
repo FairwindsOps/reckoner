@@ -48,14 +48,16 @@ def cli(ctx, log_level, *args, **kwargs):
                                   'configuring how helm connects to tiller.', multiple=True)
 @click.option("--continue-on-error", is_flag=True, default=False,
               help="Attempt to install all charts in the course, even if any charts or hooks fail to run.")
-def plot(ctx, course_file=None, dry_run=False, debug=False, only=None, helm_args=None, continue_on_error=False):
+@click.option("--create-namespace/-no-create-namespace", is_flag=True, default=True,
+              help="Will create the specified nameaspace if it does not already exist. Replaces functionality lost in Helm3")
+def plot(ctx, course_file=None, dry_run=False, debug=False, only=None, helm_args=None, continue_on_error=False, create_namespace=True):
     """ Install charts with given arguments as listed in yaml file argument """
     try:
         # Check Schema of Course FileA
         with open(course_file.name, 'rb') as course_file_stream:
             validate_course_file(course_file_stream)
         # Load Reckoner
-        r = Reckoner(course_file=course_file, dryrun=dry_run, debug=debug, helm_args=helm_args, continue_on_error=continue_on_error)
+        r = Reckoner(course_file=course_file, dryrun=dry_run, debug=debug, helm_args=helm_args, continue_on_error=continue_on_error, create_namespace=create_namespace)
         # Convert tuple to list
         only = list(only)
         r.install(only)

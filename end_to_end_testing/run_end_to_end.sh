@@ -15,6 +15,7 @@ set -o errtrace
 E2E_FAILED_TESTS=false
 E2E_FAILED_MESSAGES=()
 E2E_SKIPPED_MESSAGES=()
+HELM_VERSION="${HELM_VERSION:-2}"
 
 function print_status_end_exit() {
     if [ "${#E2E_SKIPPED_MESSAGES[@]}" -gt 0 ]; then echo -e "* * *\nSkipped Tests:"; fi
@@ -42,6 +43,7 @@ cd "$(dirname "${0}")"
 
 # Helper to clean out all the stuff between tests
 function clean_helm() {
+    echo $HELM_VERSION
     if [ -z "${E2E_LEAVE_INSTALLED_CHARTS}" ]; then
         # Get all installed things in helm and delete/purge them
         if [ "${HELM_VERSION}" -eq "3" ]; then
