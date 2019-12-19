@@ -48,7 +48,7 @@ def cli(ctx, log_level, *args, **kwargs):
                                   'configuring how helm connects to tiller.', multiple=True)
 @click.option("--continue-on-error", is_flag=True, default=False,
               help="Attempt to install all charts in the course, even if any charts or hooks fail to run.")
-@click.option("--create-namespace/-no-create-namespace", is_flag=True, default=True,
+@click.option("--create-namespace/--no-create-namespace", default=True,
               help="Will create the specified nameaspace if it does not already exist. Replaces functionality lost in Helm3")
 def plot(ctx, course_file=None, dry_run=False, debug=False, only=None, helm_args=None, continue_on_error=False, create_namespace=True):
     """ Install charts with given arguments as listed in yaml file argument """

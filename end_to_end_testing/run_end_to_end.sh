@@ -153,6 +153,28 @@ function helm_release_key_value_is_type() {
     fi
 }
 
+function e2e_test_namespace_creation_flag_on_chart_install() {
+    if [ "${HELM_VERSION}" -eq "3" ]; then
+        if reckoner plot --no-create-namespace test_create_namespace.yml; then
+            mark_failed "${FUNCNAME[0]}" "With --no-create-namespace set, this should have failed"
+        fi
+
+        if helm_has_release_name_in_namespace "namespace-test" "farglebargle"; then
+            mark_failed "${FUNCNAME[0]}" "Found namespace_test in farglebargle namespace after install and should not have"
+        fi
+
+        if ! reckoner plot test_create_namespace.yml; then
+            mark_failed "${FUNCNAME[0]}" "Without --no-create-namespace set, this should not have failed"
+        fi
+
+        if ! helm_has_release_name_in_namespace "namespace-test" "farglebargle"; then
+            mark_failed "${FUNCNAME[0]}" "Did not find namespace_test in farglebargle namespace after install."
+        fi
+    fi
+
+ 
+}
+
 function e2e_test_basic_chart_install() {
     if ! reckoner plot test_basic.yml; then
         mark_failed "${FUNCNAME[0]}" "Plot had a bad exit code"
