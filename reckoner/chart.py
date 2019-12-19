@@ -249,10 +249,10 @@ class Chart(object):
         """
         
         if self.config.create_namespace:
-            if self.config.current_namespaces is None:
+            if self.config.cluster_namespaces is None:
                 self.config.cluster_namespaces = list_namespace_names()
 
-            if self.namespace not in self.config.cluster_namespaces:
+            if self.namespace not in self.config.cluster_namespaces and not self.dryrun:
                 if create_namespace(self.namespace):
                     logging.info('Namespace {} not found. Creating it now.'.format(self.namespace))
                     self.config.cluster_namespaces.append(self.namespace)
