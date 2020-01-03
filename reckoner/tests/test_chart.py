@@ -29,6 +29,7 @@ from io import StringIO
 # would be more easily mockable
 @mock.patch('reckoner.chart.call')
 class TestChartHooks(unittest.TestCase):
+
     def get_chart(self, *args):
         chart = Chart(
             {'name': {
@@ -217,6 +218,8 @@ class TestCharts(unittest.TestCase):
         chart._check_env_vars()
         self.assertEqual(chart.args[0], 'thing=$(environVar)')
 
+    @mock.patch('reckoner.chart.create_namespace', mock.MagicMock(return_value=True))
+    @mock.patch('reckoner.chart.list_namespace_names', mock.MagicMock(return_value=[]))
     @mock.patch('reckoner.chart.Config', autospec=True)
     @mock.patch('reckoner.chart.Repository')
     def test_chart_install(self, repositoryMock, chartConfigMock):
@@ -228,6 +231,8 @@ class TestCharts(unittest.TestCase):
         chartConfig = chartConfigMock()
         chartConfig.course_base_directory = '.'
         chartConfig.dryrun = False
+        chartConfig.create_namespace = True
+        chartConfig.cluster_namespaces = []
 
         debug_args = mock.PropertyMock(debug_args=['fake'])
         type(chart).debug_args = debug_args
@@ -236,6 +241,8 @@ class TestCharts(unittest.TestCase):
         upgrade_call = helm_client_mock.upgrade.call_args
         self.assertEqual(upgrade_call[0][0], ['nameofchart', '', '--namespace', 'fakenamespace'])
 
+    @mock.patch('reckoner.chart.create_namespace', mock.MagicMock(return_value=True))
+    @mock.patch('reckoner.chart.list_namespace_names', mock.MagicMock(return_value=[]))
     @mock.patch('reckoner.chart.Config', autospec=True)
     @mock.patch('reckoner.chart.Repository')
     def test_chart_install_with_plugin(self, repositoryMock, chartConfigMock):
@@ -247,6 +254,8 @@ class TestCharts(unittest.TestCase):
         chartConfig = chartConfigMock()
         chartConfig.course_base_directory = '.'
         chartConfig.dryrun = False
+        chartConfig.create_namespace = True
+        chartConfig.cluster_namespaces = []
 
         debug_args = mock.PropertyMock(debug_args=['fake'])
         type(chart).debug_args = debug_args
@@ -258,6 +267,7 @@ class TestCharts(unittest.TestCase):
 
 
 class TestChartResult(unittest.TestCase):
+
     def test_initialize(self):
         c = ChartResult(
             name="fake-result",

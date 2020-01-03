@@ -51,8 +51,9 @@ class TestBase(unittest.TestCase):
     def tearDown(self):
         self.subprocess_mock_patch.stop()
 
-
 # Test properties of the mock
+
+
 @mock.patch('reckoner.reckoner.Config', autospec=True)
 @mock.patch('reckoner.reckoner.Course', autospec=True)
 @mock.patch.object(Helm2Client, 'tiller_version')
@@ -73,7 +74,10 @@ class TestReckonerAttributes(TestBase):
         self.assertTrue(hasattr(reckoner_instance, 'course'))
 
 
+@mock.patch('reckoner.chart.create_namespace', mock.MagicMock(return_value=True))
+@mock.patch('reckoner.chart.list_namespace_names', mock.MagicMock(return_value=[]))
 class TestCourseMocks(unittest.TestCase):
+
     @mock.patch('reckoner.course.yaml_handler', autospec=True)
     @mock.patch('reckoner.course.get_helm_client', autospec=True)
     def test_raises_errors_when_missing_heading(self, mock_helm, mock_yaml):
@@ -235,6 +239,8 @@ def tearDownModule():
     shutil.rmtree(test_files_path)
 
 
+@mock.patch('reckoner.chart.create_namespace', mock.MagicMock(return_value=True))
+@mock.patch('reckoner.chart.list_namespace_names', mock.MagicMock(return_value=[]))
 class TestReckoner(TestBase):
     name = "test-pentagon-base"
 
@@ -258,6 +264,8 @@ class TestReckoner(TestBase):
         self.assertEqual(self.a.install(), None)
 
 
+@mock.patch('reckoner.chart.create_namespace', mock.MagicMock(return_value=True))
+@mock.patch('reckoner.chart.list_namespace_names', mock.MagicMock(return_value=[]))
 class TestCourse(TestBase):
 
     @mock.patch('reckoner.course.get_helm_client', autospec=True)
@@ -291,6 +299,8 @@ class TestCourse(TestBase):
         self.assertEqual(self.c._charts_to_install, self.c.charts)
 
 
+@mock.patch('reckoner.chart.create_namespace', mock.MagicMock(return_value=True))
+@mock.patch('reckoner.chart.list_namespace_names', mock.MagicMock(return_value=[]))
 class TestChart(TestBase):
 
     @mock.patch('reckoner.course.get_helm_client', autospec=True)
@@ -398,6 +408,7 @@ class TestChart(TestBase):
 
 
 class TestRepository(TestBase):
+
     @mock.patch('reckoner.repository.git', autospec=True)
     def test_git_repository(self, mock_git_lib):
         helm_mock = mock.Mock()

@@ -26,6 +26,7 @@ from reckoner.exception import ReckonerException
 @mock.patch('reckoner.course.get_helm_client', autospec=True)
 @mock.patch('reckoner.course.Config', autospec=True)
 class TestMinVersion(unittest.TestCase):
+
     def test_init_error_fails_min_version_reckoner(self, configMock, helmClientMock, yamlLoadMock, sysMock, repoMock):
         """Tests that minimum version will throw an exit."""
         c = configMock()
@@ -76,6 +77,9 @@ class TestMinVersion(unittest.TestCase):
 
 
 class TestIntegrationWithChart(unittest.TestCase):
+
+    @mock.patch('reckoner.chart.create_namespace', mock.MagicMock(return_value=True))
+    @mock.patch('reckoner.chart.list_namespace_names', mock.MagicMock(return_value=[]))
     @mock.patch('reckoner.chart.Config', autospec=True)
     @mock.patch('reckoner.chart.call', autospec=True)
     @mock.patch('reckoner.repository.Repository', autospec=True)
@@ -92,6 +96,9 @@ class TestIntegrationWithChart(unittest.TestCase):
         chartConfig = chartConfigMock()
         chartConfig.course_base_directory = '.'
         chartConfig.dryrun = False
+        chartConfig.create_namespace = True
+        chartConfig.cluster_namespaces = []
+
         h = helmClientMock(c.helm_args)
         h.client_version = '0.0.1'
 
@@ -119,6 +126,7 @@ class TestIntegrationWithChart(unittest.TestCase):
 @mock.patch('reckoner.course.yaml_handler', autospec=True)
 @mock.patch('reckoner.course.get_helm_client', autospec=True)
 class TestCourse(unittest.TestCase):
+
     def setUp(self):
         self.course_yaml = {
             'charts': {

@@ -16,6 +16,8 @@
 
 import logging
 import os
+
+from .kube import create_namespace, list_namespace_names
 from tempfile import NamedTemporaryFile as tempfile
 from .yaml.handler import Handler as yaml_handler
 
@@ -26,10 +28,12 @@ from .config import Config
 from .repository import Repository
 from .command_line_caller import call
 
+
 default_repository = {'name': 'stable', 'url': 'https://kubernetes-charts.storage.googleapis.com'}
 
 
 class ChartResult:
+
     def __init__(self, name: str, failed: bool, error_reason: str):
         self.name = name
         self.failed = failed
@@ -238,6 +242,21 @@ class Chart(object):
             except ReckonerCommandException as error:
                 logging.warn("Unable to update chart dependencies: {}".format(error.stderr))
 
+    def create_namespace_if_needed(self):
+        """ Creates the charts specified namespace if it does not already exist
+        Requires `self.config.create_namespace` to true. Caches the existing namespace list
+        in the self.config option to avoid going back to the api for each chart. 
+        """
+        
+        if self.config.create_namespace:
+            if self.config.cluster_namespaces is None:
+                self.config.cluster_namespaces = list_namespace_names()
+
+            if self.namespace not in self.config.cluster_namespaces and not self.dryrun:
+                if create_namespace(self.namespace):
+                    logging.info('Namespace {} not found. Creating it now.'.format(self.namespace))
+                    self.config.cluster_namespaces.append(self.namespace)
+
     def install(self, namespace=None, context=None) -> None:
         """
         Description:
@@ -257,6 +276,8 @@ class Chart(object):
 
         # Try to run the install process for mark the result as failed
         try:
+            self.create_namespace_if_needed()
+
             # Fire the pre_install_hook
             self.pre_install_hook()
 

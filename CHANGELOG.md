@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## Unreleased
 ### Fixed
 - bug where the helm client version check would fail for helm2 and never proceed to check helm3
+- added create namespace functionality because they removed it from helm3
 
 ## [2.2.0]
 ### Changes
