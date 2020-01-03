@@ -16,7 +16,6 @@ def create_namespace(namespace):
     Raises error in case of failure
 
     """
-    print("HERE")
     try:
         config.load_kube_config()
         v1 = client.CoreV1Api()
@@ -33,8 +32,8 @@ def create_namespace(namespace):
 
 
 def list_namespace_names():
-    """ Lists namespace in the configured kubernetes cluster.
-    No agruments
+    """ Lists namespaces in the configured kubernetes cluster.
+    No arguments
     Returns list
     """
     try:
