@@ -9,5 +9,4 @@
   - Some charts may be non-upgradeable depending on how they handle immutable fields
     - For example, the nginx-ingress chart fails to `upgrade` after being installed if some values are unset. See this [issue](https://github.com/helm/helm/issues/6378) for the details and workaround.
 - Helm 3 does not create namespaces.
-  - Workaround is to create the namespace in a `pre_install` hook.
-  - Non-existent namespaces issue <https://github.com/FairwindsOps/reckoner/issues/75>
+  - Reckoner will do it for you as of v3.0.0
