@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 - bug where the helm client version check would fail for helm2 and never proceed to check helm3
 - added create namespace functionality because they removed it from helm3
+- removed beta warnings about Helm 3
 
 ## [2.2.0]
 ### Changes
@@ -38,14 +39,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [2.0.0]
 ### Breaking Changes
-- Changes to `values: {}` behavior:  
+- Changes to `values: {}` behavior:
   The chart: {values: {}} config block and chart: {set-values:{}} config block now have different behavior. set-values: {} always gets translated into helm arguments as --set key=value. The values: {} now gets applied to helm arguments as -f temporary_values_name.yml. The values: {} config block is now fully consistent with intended types and would behave as though you are using a -f my_values.yml in your helm command. Prior to this change you would see inconsistent type casting for float, bool and integer config settings. For more information on the behavior differences between `values`, `set-values`, and `values-strings` you can look at our [end to end testing test course.yml](/end_to_end_testing/test_strong_typing.yml).
 - BUG FIX: Using `"null"`, `null`, `"Null"`, and `"NULL"` as values in `set-values: {}` will be interpreted as `null` (void of value) in the `--set` value. Previously, if you set `null` as the yaml value, you would get `--set key=None` due to python interpreting the value as `None` and thus would show up as `{"key": "None"}` in the helm values. This fix more closely aligns with expected behavior in helm.
 
 ## [1.4.0]
 ### Breaking Changes
 - Removed the `--local-development` flag from `plot` command (unused) and cleaned up test dependencies
-- Reckoner now has exit codes that reflect the state of the course run.  
+- Reckoner now has exit codes that reflect the state of the course run.
   Reckoner will immediately exit with a non-zero exit code when a chart or hook fails to run. Previous
   behavior to continue on error can be enabled by using the `--continue-on-error` flag on your `plot`.
 
@@ -96,7 +97,7 @@ Python2 support is now ended.  Pip install will now require python ~= 3.6.  In a
 
 ### Fixed
 * Reckoner would silently fail when a --only or --heading was defined for a
-  chart that didn't exist in your course.  
+  chart that didn't exist in your course.
   This behavior will still succeed if you provide at least one valid --heading
   value. If no values are in your course then this bubbles up an error
 * Internal Fix: Reckoner Errors now are a single parent exception class
