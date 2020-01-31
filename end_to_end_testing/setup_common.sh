@@ -4,6 +4,7 @@ set -e
 set -o pipefail
 
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 78BD65473CB3BD13
+wget -qO - https://packagecloud.io/circleci/trusty/gpgkey | sudo apt-key add -
 
 echo "Installing git and jq"
 sudo apt-get update
