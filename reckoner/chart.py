@@ -409,7 +409,7 @@ class Chart(object):
     def _interpolate_env_vars_from_string(original_string: str) -> str:
 
         # We should never interpolate an env var in a comment. Strip comments from the string before interpolating.
-        comments_removed = re.sub(r'([^#]*)(#.*)', r"\g<1>", original_string)
+        comments_removed = re.sub(r'([^#]*)(#.*)', r'\g<1>', original_string)
         try:
             interpolated_string = Template(comments_removed).substitute(os.environ)
         except KeyError as err:
