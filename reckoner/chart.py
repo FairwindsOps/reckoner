@@ -16,6 +16,7 @@
 
 import logging
 import os
+import re
 
 from .kube import create_namespace, list_namespace_names
 from tempfile import NamedTemporaryFile as tempfile
@@ -377,11 +378,8 @@ class Chart(object):
             with tempfile('w+t', suffix=".yml", delete=False) as temp_yaml:
                 # load up the self.values yaml string
 
-                # HACK: Ugly hack to get rid of all comments in a temp yaml file so we don't try to env var replace vars in comments
-                yaml_without_comments = yaml_handler.copy_without_comments(self.values)
-
                 # write the yaml to a string
-                yaml_output = yaml_handler.dump(yaml_without_comments)
+                yaml_output = yaml_handler.dump(self.values)
 
                 # read the yaml_output and interpolate any variables
                 yaml_output = self._interpolate_env_vars_from_string(yaml_output)
@@ -409,8 +407,11 @@ class Chart(object):
 
     @staticmethod
     def _interpolate_env_vars_from_string(original_string: str) -> str:
+
+        # We should never interpolate an env var in a comment. Strip comments from the string before interpolating.
+        comments_removed = re.sub(r'([^#]*)(#.*)', r'\g<1>', original_string)
         try:
-            interpolated_string = Template(original_string).substitute(os.environ)
+            interpolated_string = Template(comments_removed).substitute(os.environ)
         except KeyError as err:
             raise Exception("Missing required environment variable: {}".format(", ".join(err.args)))
         except ValueError:

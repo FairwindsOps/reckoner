@@ -14,11 +14,15 @@ charts:
     namespace: infra
     values:
       non-used: "${myvar}"
+      comment-problem-detector:
+        # This is a comment "${this_var_should_not_be_parsed}"
+        - test-value
   check-set-values:
     repository: stable
     chart: nginx-ingress
-    namespace: infra
+    namespace: infra # ${dont_parse_me}
     set-values:
+      # This comment ${should_also_not_be_parsed}
       non-used: "${myvar}"
   check-values-strings:
     repository: stable

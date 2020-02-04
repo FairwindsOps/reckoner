@@ -10,6 +10,13 @@ minimum_versions: #set minimum version requirements here
 helm_args:
   - --recreate-pods
 charts:
+  values-test-deeply-nested-comment:
+    repository: stable
+    version: "0.0.0"
+    values:
+      args:
+        # Comment ${dne}
+        - test
   cluster-autoscaler:
     repository: stable
     version: "0.2.1"
@@ -52,4 +59,4 @@ charts:
   redis:
     namespace: redis-test-namespace
     set-values:
-      test_environ_var: ${test_environ_var}
+      test_environ_var: ${test_environ_var} # test "${no_env_var}"
