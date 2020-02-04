@@ -21,7 +21,7 @@ sudo mv kind-linux-amd64 /usr/local/bin/kind
 kind version
 
 echo "Installing Kubectl"
-curl -sLO https://storage.googleapis.com/kubernetes-release/release/v1.14.4/bin/linux/amd64/kubectl
+curl -sLO https://storage.googleapis.com/kubernetes-release/release/v1.15.7/bin/linux/amd64/kubectl
 chmod 0755 kubectl
 sudo mv kubectl /usr/local/bin/
 kubectl version --client
