@@ -8,6 +8,7 @@ We'll be breaking this documentation down into sections to make reference easier
 # Top Level Keys
 - `namespace` _(string)_ _**(required)**_  
     The default namespace for any chart definitions in your course
+- `namespace_management` _(object)_ **(optional)** a structure the defines default annotations and labels to the namespaces that Reckoner will create
 - `charts` _(object)_ _**(required)**_  
     The charts and chart definitions to install with this course, must be alphanumeric between 1 and 63 characters (also allows underscore and dash)
 - `repositories` _(object)_  
@@ -26,6 +27,15 @@ We'll be breaking this documentation down into sections to make reference easier
 Example:
 ```yaml
 namespace: kube-system
+namespace_management:
+  default:
+    metadata:
+      annotations:
+        ManagedBy: com.fairwinds.reckoner
+      labels:
+        labelName: labelValue
+    settings:
+      overwrite: True
 context: my-kube-cluster
 repositories:
   stable:
@@ -41,6 +51,7 @@ The `charts` block in your course define all the charts you'd like to install an
 
 - `namespace` _(string)_  
     The namespace in which to install this chart (overrides root level `namespace` definition)
+- `namespace_management` _(object)_ **(optional)** a structure the defines default annotations and labels to the namespace that Reckoner will create. Structure matches the `default` structure at the top level `namespace_managment` block.
 - `chart` _(string)_  
     The name of the chart in the remote chart respository (example: `nginx-ingress`) and when using git repositories this is the folder in which the chart files exist
 - `repository` _(string)_ or _(object)_  
@@ -64,8 +75,17 @@ The `charts` block in your course define all the charts you'd like to install an
 ...
 charts:
   my-release-name:
-    chart: ngixn-ingress
+    chart: nginx-ingress
     version: "0.25.1"
+    namespace: nginx-ingress
+    namespace_management:
+      metadata:
+        annotations:
+          ManagedBy: com.fairwinds.reckoner
+        labels:
+          labelName: labelValue
+      settings:
+        overwrite: True
     repository: stable
     hooks:
       pre_install: echo hi
@@ -135,6 +155,22 @@ minimum_versions:
   reckoner: 2.1.0
 ```
 
+## Namespace Management
+
+When you wish to manage annotations or labels for the namespaces you are installing into with Reckoner, this `namespace_management` block to define default namespace metadata and the whether or not it should overwrite the values that exist.
+
+Example:
+```yaml
+namespace_management:
+  default:
+    metadata:
+      annotations:
+        ManagedBy: com.fairwinds.reckoner
+      labels:
+        labelName: labelValue
+    settings:
+      overwrite: True
+```
 
 # CLI Usage
 
