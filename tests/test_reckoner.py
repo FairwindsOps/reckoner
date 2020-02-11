@@ -74,8 +74,7 @@ class TestReckonerAttributes(TestBase):
         self.assertTrue(hasattr(reckoner_instance, 'course'))
 
 
-@mock.patch('reckoner.chart.create_namespace', mock.MagicMock(return_value=True))
-@mock.patch('reckoner.chart.list_namespace_names', mock.MagicMock(return_value=[]))
+@mock.patch('reckoner.chart.NamespaceManager.create_and_manage', mock.MagicMock(return_value=True))
 class TestCourseMocks(unittest.TestCase):
 
     @mock.patch('reckoner.course.yaml_handler', autospec=True)
@@ -239,8 +238,7 @@ def tearDownModule():
     shutil.rmtree(test_files_path)
 
 
-@mock.patch('reckoner.chart.create_namespace', mock.MagicMock(return_value=True))
-@mock.patch('reckoner.chart.list_namespace_names', mock.MagicMock(return_value=[]))
+@mock.patch('reckoner.chart.NamespaceManager.create_and_manage', mock.MagicMock(return_value=True))
 class TestReckoner(TestBase):
     name = "test-pentagon-base"
 
@@ -264,8 +262,7 @@ class TestReckoner(TestBase):
         self.assertEqual(self.a.install(), None)
 
 
-@mock.patch('reckoner.chart.create_namespace', mock.MagicMock(return_value=True))
-@mock.patch('reckoner.chart.list_namespace_names', mock.MagicMock(return_value=[]))
+@mock.patch('reckoner.chart.NamespaceManager.create_and_manage', mock.MagicMock(return_value=True))
 class TestCourse(TestBase):
 
     @mock.patch('reckoner.course.get_helm_client', autospec=True)
@@ -299,8 +296,7 @@ class TestCourse(TestBase):
         self.assertEqual(self.c._charts_to_install, self.c.charts)
 
 
-@mock.patch('reckoner.chart.create_namespace', mock.MagicMock(return_value=True))
-@mock.patch('reckoner.chart.list_namespace_names', mock.MagicMock(return_value=[]))
+@mock.patch('reckoner.chart.NamespaceManager.create_and_manage', mock.MagicMock(return_value=True))
 class TestChart(TestBase):
 
     @mock.patch('reckoner.course.get_helm_client', autospec=True)

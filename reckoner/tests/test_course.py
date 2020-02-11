@@ -78,8 +78,7 @@ class TestMinVersion(unittest.TestCase):
 
 class TestIntegrationWithChart(unittest.TestCase):
 
-    @mock.patch('reckoner.chart.create_namespace', mock.MagicMock(return_value=True))
-    @mock.patch('reckoner.chart.list_namespace_names', mock.MagicMock(return_value=[]))
+    @mock.patch('reckoner.chart.NamespaceManager.create_and_manage', mock.MagicMock(return_value=True))
     @mock.patch('reckoner.chart.Config', autospec=True)
     @mock.patch('reckoner.chart.call', autospec=True)
     @mock.patch('reckoner.repository.Repository', autospec=True)
