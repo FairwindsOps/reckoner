@@ -117,6 +117,17 @@ class Course(object):
         """ Course repositories """
         return self._repositories
 
+    @property
+    def namespace_management(self):
+        """ The default namespace manager block from the course if it exists
+        Otherwise, returns {} """
+        _namespace_management = self._dict.get('namespace_management')
+
+        if _namespace_management is None:
+            return {}
+        else:
+            return _namespace_management.get('default', {})
+
     def __getattr__(self, key):
         return self._dict.get(key)
 
@@ -130,17 +141,10 @@ class Course(object):
         for chart in charts_to_install:
             logging.info("Installing {}".format(chart.release_name))
             try:
-                if self.namespace_management is None:
-                    default_namespace_management = {}
-                else:
-                    default_namespace_management = self.namespace_management.get(
-                        'default',
-                        {}
-                    )
 
                 chart.install(
                     default_namespace=self.namespace,
-                    default_namespace_management=default_namespace_management,
+                    default_namespace_management=self.namespace_management,
                     context=self.context
                 )
             except (Exception, ReckonerCommandException) as e:
