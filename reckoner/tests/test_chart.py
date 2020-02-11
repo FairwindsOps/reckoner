@@ -21,6 +21,8 @@ from reckoner.exception import ReckonerCommandException
 from reckoner.yaml.handler import Handler
 from io import StringIO
 
+from .namespace_manager_mock import NamespaceManagerMock
+
 
 @mock.patch('reckoner.chart.Repository')
 @mock.patch('reckoner.chart.Config')
@@ -218,7 +220,7 @@ class TestCharts(unittest.TestCase):
         chart._check_env_vars()
         self.assertEqual(chart.args[0], 'thing=$(environVar)')
 
-    @mock.patch('reckoner.chart.NamespaceManager.create_and_manage', mock.MagicMock(return_value=True))
+    @mock.patch('reckoner.chart.NamespaceManager', NamespaceManagerMock)
     @mock.patch('reckoner.chart.Config', autospec=True)
     @mock.patch('reckoner.chart.Repository')
     def test_chart_install(self, repositoryMock, chartConfigMock):
@@ -240,7 +242,7 @@ class TestCharts(unittest.TestCase):
         upgrade_call = helm_client_mock.upgrade.call_args
         self.assertEqual(upgrade_call[0][0], ['nameofchart', '', '--namespace', 'fakenamespace'])
 
-    @mock.patch('reckoner.chart.NamespaceManager.create_and_manage', mock.MagicMock(return_value=True))
+    @mock.patch('reckoner.chart.NamespaceManager', NamespaceManagerMock)
     @mock.patch('reckoner.chart.Config', autospec=True)
     @mock.patch('reckoner.chart.Repository')
     def test_chart_install_with_plugin(self, repositoryMock, chartConfigMock):

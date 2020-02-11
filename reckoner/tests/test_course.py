@@ -19,6 +19,7 @@ from reckoner.command_line_caller import Response
 from reckoner.helm.client import HelmClientException
 from reckoner.exception import ReckonerException
 
+from .namespace_manager_mock import NamespaceManagerMock
 
 @mock.patch('reckoner.repository.Repository', autospec=True)
 @mock.patch('reckoner.course.sys')
@@ -78,7 +79,7 @@ class TestMinVersion(unittest.TestCase):
 
 class TestIntegrationWithChart(unittest.TestCase):
 
-    @mock.patch('reckoner.chart.NamespaceManager.create_and_manage', mock.MagicMock(return_value=True))
+    @mock.patch('reckoner.chart.NamespaceManager', NamespaceManagerMock)    
     @mock.patch('reckoner.chart.Config', autospec=True)
     @mock.patch('reckoner.chart.call', autospec=True)
     @mock.patch('reckoner.repository.Repository', autospec=True)
