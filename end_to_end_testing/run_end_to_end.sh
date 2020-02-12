@@ -103,6 +103,45 @@ function helm_has_release_name_in_namespace() {
     fi
 }
 
+
+function namespace_has_annotation_with_value() {
+    local annotation_value="${3}"
+    local annotation_name="${2}"
+    local namespace="${1}"
+
+    annotations=($(kubectl get namespace ${namespace}  -o json | jq -r '.metadata.annotations | keys[]'))
+    values=($(kubectl get namespace ${namespace}  -o json | jq -r '.metadata.annotations[]'))
+
+    for i in "${!annotations[@]}"; do 
+        if [ "${annotations[i]}" == "$annotation_name" ]; then
+            if [ "${values[i]}" == "$annotation_value" ]; then
+                return 0
+            fi
+        fi
+    done
+    return 1
+}
+
+
+function namespace_has_label_with_value() {
+    local label_value="${3}"
+    local label_name="${2}"
+    local namespace="${1}"
+
+    labels=($(kubectl get namespace ${namespace}  -o json | jq -r '.metadata.labels | keys[]'))
+    values=($(kubectl get namespace ${namespace}  -o json | jq -r '.metadata.labels[]'))
+
+    for i in "${!labels[@]}"; do 
+        if [ "${labels[i]}" == "$label_name" ]; then
+            if [ "${values[i]}" == "$label_value" ]; then
+                return 0
+            fi
+        fi
+    done
+    return 1
+}
+
+# check for deployed release in namespace
 function release_namespace(){
     helm list --all-namespaces --output json | jq -r ".[]|select(.name == \"${1}\")|.namespace" | head -n 1
 }
@@ -463,6 +502,48 @@ function e2e_test_files_in_folders() {
 
     if ! helm_release_has_key_value "chart-one" "new_key" "new_value"; then
         mark_failed "${FUNCNAME[0]}" "Expected file values yaml in a subfolder to work."
+    fi
+}
+
+function e2e_test_default_namespace_management(){
+    if ! reckoner plot test_default_namespace_annotation_and_labels.yml; then
+        mark_failed "${FUNCNAME[0]}" "Expected to run without an error."
+    fi
+
+    if ! namespace_has_annotation_with_value annotatednamespace reckoner rocks; then
+        mark_failed "${FUNCNAME[0]}" "Expected annotation on namespace."
+    fi
+
+    if ! namespace_has_label_with_value annotatednamespace rocks reckoner; then
+        mark_failed "${FUNCNAME[0]}" "Expected label on namespace."
+    fi
+}
+
+function e2e_test_overwrite_namespace_management(){
+    if ! reckoner plot test_overwrite_namespace_annotation_and_labels.yml; then
+        mark_failed "${FUNCNAME[0]}" "Expected to run without an error."
+    fi
+
+    if ! namespace_has_annotation_with_value annotatednamespace reckoner doesnotrock; then
+        mark_failed "${FUNCNAME[0]}" "Expected annotation on namespace."
+    fi
+
+    if ! namespace_has_label_with_value annotatednamespace rocks reckonerstill; then
+        mark_failed "${FUNCNAME[0]}" "Expected label on namespace."
+    fi
+}
+
+function e2e_test_does_not_overwrite_namespace_management(){
+    if ! reckoner plot test_overwrite_namespace_annotation_and_labels.yml; then
+        mark_failed "${FUNCNAME[0]}" "Expected to run without an error."
+    fi
+
+    if ! namespace_has_annotation_with_value annotatednamespace reckoner doesnotrock; then
+        mark_failed "${FUNCNAME[0]}" "Expected annotation on namespace."
+    fi
+
+    if ! namespace_has_label_with_value annotatednamespace rocks reckonerstill; then
+        mark_failed "${FUNCNAME[0]}" "Expected label on namespace."
     fi
 }
 

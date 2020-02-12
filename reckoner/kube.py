@@ -85,14 +85,14 @@ class NamespaceManager(object):
             logging.debug("Overwiting Namespace Metadata")
         else:
             annotations = {}
-            for annotation_name, annotation_value in self.metadata.get('annotations').items():
+            for annotation_name, annotation_value in self.metadata.get('annotations', {}).items():
                 try:
                     self.namespace.metadata.annotations[annotation_name]
                 except (TypeError, KeyError):
                     annotations[annotation_name] = annotation_value
 
             labels = {}
-            for label_name, label_value in self.metadata.get('labels').items():
+            for label_name, label_value in self.metadata.get('labels', {}).items():
                 try:
                     self.namespace.metadata.labels[label_name]
                 except (TypeError, KeyError):
