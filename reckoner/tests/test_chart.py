@@ -26,9 +26,6 @@ from .namespace_manager_mock import NamespaceManagerMock
 
 @mock.patch('reckoner.chart.Repository')
 @mock.patch('reckoner.chart.Config')
-# I have to strictly design the mock for Reckoner due to the nature of the
-# key/val class setup. If the class actually had attributes then this
-# would be more easily mockable
 @mock.patch('reckoner.chart.call')
 class TestChartHooks(unittest.TestCase):
 
@@ -167,13 +164,6 @@ class TestChartHooks(unittest.TestCase):
         chart.run_hook('pre_install')
         mock_cmd_call.assert_called_once()
 
-
-# @mock.patch('reckoner.chart.Repository')
-# @mock.patch('reckoner.chart.Config')
-# # I have to strictly design the mock for Reckoner due to the nature of the
-# # key/val class setup. If the class actually had attributes then this
-# # would be more easily mockable
-# @mock.patch('reckoner.chart.call')
 class TestCharts(unittest.TestCase):
     """Test charts"""
 
