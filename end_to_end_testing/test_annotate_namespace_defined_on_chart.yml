@@ -16,8 +16,9 @@ charts:
     repository: stable
     chart: nginx-ingress
     namespace: annotatednamespaceagain
-    namespace_managment:
-      annotations: 
-        defined: inchart
-      label:
-        label: onchart
+    namespace_management:
+      metadata:
+        annotations: 
+          defined: inchart
+        labels:
+          label: onchart

@@ -548,7 +548,7 @@ function e2e_test_does_not_overwrite_namespace_management(){
 }
 
 function e2e_test_annotate_namespace_defined_on_chart(){
-    if ! reckoner plot test_annotate_namespace_defined_on_chart.yml; then
+    if ! reckoner --log-level=DEBUG plot test_annotate_namespace_defined_on_chart.yml; then
         mark_failed "${FUNCNAME[0]}" "Expected to run without an error."
     fi
 
