@@ -51,7 +51,7 @@ The `charts` block in your course define all the charts you'd like to install an
 
 - `namespace` _(string)_  
     The namespace in which to install this chart (overrides root level `namespace` definition)
-- `namespace_management` _(object)_ **(optional)** a structure the defines default annotations and labels to the namespace that Reckoner will create. Structure matches the `default` structure at the top level `namespace_managment` block.
+- `namespace_management` _(object)_ **(optional)** a structure the defines default annotations and labels to the namespace that Reckoner will create. Structure matches the `default` structure at the top level `namespace_management` block.
 - `chart` _(string)_  
     The name of the chart in the remote chart respository (example: `nginx-ingress`) and when using git repositories this is the folder in which the chart files exist
 - `repository` _(string)_ or _(object)_  

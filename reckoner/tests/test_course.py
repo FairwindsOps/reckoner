@@ -255,7 +255,7 @@ class TestCourse(unittest.TestCase):
             default_namespace_management=c.namespace_management
         )
 
-    def test_course_namespace_and_managment_handling(self, mockGetHelm, mockYAML):
+    def test_course_namespace_and_management_handling(self, mockGetHelm, mockYAML):
         """Assure that course replaces strings with object settings for chart repository settings"""
         course = mockYAML.load.return_value = self.course_yaml
         course['namespace'] = "test-namespace"

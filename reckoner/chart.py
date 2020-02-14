@@ -90,6 +90,7 @@ class Chart(object):
         self.args = []
 
         self._namespace = self._chart.get('namespace')
+        self._namespace_management = self._chart.get('namespace_management', {})
         self._context = self._chart.get('context')
         value_strings = self._chart.get('values-strings', {})
         self._chart['values_strings'] = value_strings
@@ -274,7 +275,7 @@ class Chart(object):
         if self.namespace is None:
             self._namespace = default_namespace
 
-        # Set the namespace-managment settings
+        # Set the namespace-management settings
         if self.namespace_management is None:
             self._namespace_management = default_namespace_management
 

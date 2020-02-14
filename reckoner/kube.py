@@ -61,12 +61,12 @@ class NamespaceManager(object):
         return self._overwrite
 
     def __load_config(self):
-        """ Protected method do load kubernetes config"""
+        """ Protected method to load kubernetes config"""
         try:
             config.load_kube_config()
             self.v1client = client.CoreV1Api()
         except Exception as e:
-            logging.error('Unable to load kuberentes configuration')
+            logging.error('Unable to load kubernetes configuration')
             logging.debug(traceback.format_exc())
             raise e
 
@@ -76,13 +76,13 @@ class NamespaceManager(object):
         self.patch_metadata()
 
     def patch_metadata(self):
-        """ Patch namepace with metadata respecting overwrite setting.
+        """ Patch namespace with metadata respecting overwrite setting.
         Returns True on success
         Raises error on failure
         """
         if self.overwrite:
             patch_metadata = self.metadata
-            logging.debug("Overwiting Namespace Metadata")
+            logging.debug("Overwriting Namespace Metadata")
         else:
             annotations = {}
             for annotation_name, annotation_value in self.metadata.get('annotations', {}).items():

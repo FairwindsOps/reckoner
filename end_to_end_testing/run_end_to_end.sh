@@ -547,6 +547,20 @@ function e2e_test_does_not_overwrite_namespace_management(){
     fi
 }
 
+function e2e_test_annotate_namespace_defined_on_chart(){
+    if ! reckoner plot test_annotate_namespace_defined_on_chart.yml; then
+        mark_failed "${FUNCNAME[0]}" "Expected to run without an error."
+    fi
+
+    if ! namespace_has_annotation_with_value annotatednamespaceagain defined inchart; then
+        mark_failed "${FUNCNAME[0]}" "Expected annotation on namespace."
+    fi
+
+    if ! namespace_has_label_with_value annotatednamespaceagain label onchart; then
+        mark_failed "${FUNCNAME[0]}" "Expected label on namespace."
+    fi
+}
+
 function run_test() {
     local test_name
     test_name="${1}"
