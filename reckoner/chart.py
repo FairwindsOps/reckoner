@@ -14,22 +14,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import os
 import re
 import logging
 import traceback
 
+from .hooks import Hook
+from .config import Config
+from .repository import Repository
 from .kube import NamespaceManager
-from tempfile import NamedTemporaryFile as tempfile
+from .command_line_caller import call
+from .exception import ReckonerCommandException
 from .yaml.handler import Handler as yaml_handler
 
 from string import Template
-
-from .exception import ReckonerCommandException
-from .config import Config
-from .repository import Repository
-from .command_line_caller import call
+from tempfile import NamedTemporaryFile as tempfile
 
 
 default_repository = {'name': 'stable', 'url': 'https://kubernetes-charts.storage.googleapis.com'}
@@ -88,6 +87,8 @@ class Chart(object):
         self._temp_values_file_paths = []
         self._chart['set_values'] = self._chart.get('set-values', {})
         self.args = []
+
+        self._hooks = self._chart.get('hooks', {})
 
         self._namespace = self._chart.get('namespace')
         self._namespace_management = None
@@ -163,75 +164,28 @@ class Chart(object):
         """ Helm plugin name parsed from course chart """
         return self._plugin
 
+    @property
+    def hooks(self):
+        return self._hooks
+
+    def run_hook(self, hook_type):
+        _hook_commands = self.hooks.get(hook_type)
+        if _hook_commands is not None:
+            _hook = Hook(
+                _hook_commands,
+                'Release {} pre install'.format(self.name),
+                self.config.course_base_directory
+            )
+            if self.config.dryrun:
+                logging.warning("Hook not run due to --dry-run: {}".format(_hook.name))
+            else:
+                _hook.run()
+
     def pre_install_hook(self):
         self.run_hook('pre_install')
 
     def post_install_hook(self):
         self.run_hook('post_install')
-
-    def run_hook(self, hook_type):
-        """ Hook Type. Runs the commands defined by the hook """
-        commands = self._get_hook(hook_type)
-        if commands is None:
-            return commands
-        if type(commands) == str:
-            commands = [commands]
-
-        for command in commands:
-            if self.config.dryrun:
-                logging.warning("Hook not run due to --dry-run: {}".format(command))
-                continue
-            else:
-                logging.info("Running {} hook...".format(hook_type))
-
-            try:
-                result = call(
-                    command,
-                    shell=True,
-                    executable="/bin/bash",
-                    path=self.config.course_base_directory
-                )
-            except Exception as error:
-                # NOTE This block is only used when we cannot send the call or
-                #      have other unexpected errors running the command.
-                #      The call()->Response should pass a Response object back
-                #      even when the exit code != 0.
-                logging.error("Critical Error running the command hook.")
-                logging.error(error)
-                raise ReckonerCommandException(
-                    "Uncaught exception while running hook "
-                    "'{}'".format(command)
-                )
-
-            command_successful = result.exitcode == 0
-
-            logging.info("Ran Hook: '{}'".format(result.command_string))
-            _output_level = logging.INFO  # The level to log the command output
-
-            if command_successful:
-                logging.info("{} hook ran successfully".format(hook_type))
-            else:
-                logging.error("{} hook failed to run".format(hook_type))
-                logging.error("Returned exit code: {}".format(result.exitcode))
-                # Override message level response to bubble up error visibility
-                _output_level = logging.ERROR
-
-            # only print stdout if there is content
-            if result.stdout:
-                logging.log(_output_level,
-                            "Returned stdout: {}".format(result.stdout))
-            # only print stderr if there is content
-            if result.stderr:
-                logging.log(_output_level,
-                            "Returned stderr: {}".format(result.stderr))
-
-            # Always raise an error after failures
-            if not command_successful:
-                raise ReckonerCommandException(
-                    "Hook ({}) failed to run".format(result.command_string),
-                    stdout=result.stdout,
-                    stderr=result.stderr,
-                )
 
     def rollback(self):
         """ Rollsback most recent release of the course chart """
@@ -254,9 +208,8 @@ class Chart(object):
     def manage_namespace(self):
         """ Creates the charts specified namespace if it does not already exist
         Requires `self.config.create_namespace` to true. Caches the existing namespace list
-        in the self.config option to avoid going back to the api for each chart. 
+        in the self.config option to avoid going back to the api for each chart.
         """
-
         if self.config.create_namespace and not self.dryrun:
             nsm = NamespaceManager(self.namespace, self.namespace_management)
             nsm.create_and_manage()
@@ -493,10 +446,6 @@ class Chart(object):
 
     def __str__(self):
         return str(dict(self._chart))
-
-    def _get_hook(self, hook_type):
-        if self.hooks is not None:
-            return self.hooks.get(hook_type)
 
     def _check_env_vars(self):
         """

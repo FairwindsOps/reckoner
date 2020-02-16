@@ -13,13 +13,15 @@
 # limitations under the License.
 
 """Test the chart functions directly"""
-import unittest
 import mock
+import unittest
+
+
+from io import StringIO
+from reckoner.yaml.handler import Handler
 from reckoner.chart import Chart, ChartResult
 from reckoner.command_line_caller import Response
 from reckoner.exception import ReckonerCommandException
-from reckoner.yaml.handler import Handler
-from io import StringIO
 
 from .namespace_manager_mock import NamespaceManagerMock
 
@@ -86,83 +88,6 @@ class TestChartHooks(unittest.TestCase):
             command_string='mock --command',
         )
 
-        chart = self.get_chart()
-        chart.hooks['pre_install'] = ['', '', '']
-
-        mock_cmd_call.side_effect = [good_response, bad_response, good_response]
-
-        with self.assertRaises(ReckonerCommandException):
-            chart.run_hook('pre_install')
-
-        self.assertEqual(mock_cmd_call.call_count, 2, "Call two should fail and not run the third hook.")
-
-    @mock.patch('reckoner.chart.logging', autospec=True)
-    def test_logging_info_and_errors(self, mock_logging, mock_cmd_call, *args):
-        """Verify we log the right info when call() fails and succeeds"""
-        chart = self.get_chart()
-
-        # This is actually not a good test because it tightly couples the
-        # implementation of logging to the test. Not sure how to do this any
-        # better.
-        # What I really want to test is that we're sending our info to the cli
-        # user when hooks run.
-        bad_response = mock.Mock(Response,
-                                 exitcode=1,
-                                 stderr='some error',
-                                 stdout='some info',
-                                 command_string='my --command')
-        good_response = mock.Mock(Response,
-                                  exitcode=0,
-                                  stderr='',
-                                  stdout='some info',
-                                  command_string='my --command')
-        mock_cmd_call.side_effect = [good_response]
-        chart.run_hook('pre_install')
-        mock_logging.error.assert_not_called()
-        mock_logging.info.assert_called()
-
-        mock_cmd_call.side_effect = [good_response, bad_response]
-        mock_logging.reset_mock()
-        with self.assertRaises(ReckonerCommandException):
-            chart.run_hook('post_install')
-        mock_logging.error.assert_called()
-        mock_logging.info.assert_called()
-        mock_logging.log.assert_called()
-
-    def test_skipping_due_to_dryrun(self, mock_cmd_call, *args):
-        """Verify that we do NOT run the actual calls when dryrun is enabled"""
-        chart = self.get_chart()
-        chart.config.dryrun = True
-        chart.run_hook('pre_install')
-        mock_cmd_call.assert_not_called()
-
-    def test_hooks_support_list(self, mock_cmd_call, *args):
-        """Assert that hooks can be defined as lists"""
-        chart = self.get_chart()
-        chart.hooks = {
-            'pre_install': [
-                'works',
-                'twice works',
-            ]
-        }
-
-        mock_cmd_call.side_effect = [
-            Response(command_string='command', stderr='err-output', stdout='output', exitcode=0),
-            Response(command_string='command', stderr='err-output', stdout='output', exitcode=0),
-        ]
-        chart.run_hook('pre_install')
-        self.assertTrue(mock_cmd_call.call_count == 2)
-
-    def test_hooks_support_strings(self, mock_cmd_call, *args):
-        """Assert that hooks can be defined as a string"""
-        chart = self.get_chart()
-        chart.hooks = {
-            'pre_install': 'works'
-        }
-
-        mock_cmd_call.side_effect = [Response(command_string='command', stderr='err-output', stdout='output', exitcode=0)]
-        chart.run_hook('pre_install')
-        mock_cmd_call.assert_called_once()
 
 class TestCharts(unittest.TestCase):
     """Test charts"""

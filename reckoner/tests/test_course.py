@@ -82,13 +82,14 @@ class TestIntegrationWithChart(unittest.TestCase):
 
     @mock.patch('reckoner.chart.NamespaceManager', NamespaceManagerMock)
     @mock.patch('reckoner.chart.Config', autospec=True)
+    @mock.patch('reckoner.hooks.call', autospec=True)
     @mock.patch('reckoner.chart.call', autospec=True)
     @mock.patch('reckoner.repository.Repository', autospec=True)
     @mock.patch('reckoner.course.sys')
     @mock.patch('reckoner.course.yaml_handler', autospec=True)
     @mock.patch('reckoner.course.get_helm_client', autospec=True)
     @mock.patch('reckoner.course.Config', autospec=True)
-    def test_failed_pre_install_hooks_fail_chart_installation(self, configMock, helmClientMock, yamlLoadMock, sysMock, repoMock, chartCallMock, chartConfigMock):
+    def test_failed_pre_install_hooks_fail_chart_installation(self, configMock, helmClientMock, yamlLoadMock, sysMock, repoMock, hookCallMock, chartCallMock, chartConfigMock):
         """Test that the chart isn't installed when the pre_install hooks return any non-zero responses. This also assures we don't raise python errors with hook errors."""
         c = configMock()
         # TODO Fix how this mock is autospecced - something fishy with having this class attribs all come from dict options
