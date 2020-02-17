@@ -88,7 +88,25 @@ class Chart(object):
         self._chart['set_values'] = self._chart.get('set-values', {})
         self.args = []
 
+        # Parsing and prepping hooks from chart
         self._hooks = self._chart.get('hooks', {})
+        self._pre_install_hook = Hook(
+            self.hooks.get(
+                'pre_install',
+                []
+            ),
+            'Release {} pre install'.format(self.name),
+            self.config.course_base_directory
+        )
+
+        self._post_install_hook = Hook(
+            self.hooks.get(
+                'post_install',
+                []
+            ),
+            'Releae {} post install'.format(self.name),
+            self.config.course_base_directory
+        )
 
         self._namespace = self._chart.get('namespace')
         self._namespace_management = None
@@ -181,11 +199,13 @@ class Chart(object):
             else:
                 _hook.run()
 
+    @property
     def pre_install_hook(self):
-        self.run_hook('pre_install')
+        return self._pre_install_hook
 
+    @property
     def post_install_hook(self):
-        self.run_hook('post_install')
+        return self._post_install_hook
 
     def rollback(self):
         """ Rollsback most recent release of the course chart """
@@ -241,7 +261,7 @@ class Chart(object):
             self.manage_namespace()
 
             # Fire the pre_install_hook
-            self.pre_install_hook()
+            self.pre_install_hook.run()
 
             # TODO: Improve error handling of a repository installation
             #       Thoughts here, perhaps it would be better to install the
@@ -269,7 +289,7 @@ class Chart(object):
             logging.info(helm_command_response.stdout)
 
             # Fire the post_install_hook
-            self.post_install_hook()
+            self.post_install_hook.run()
         except Exception as err:
             logging.debug("Saving encountered error to chart result. See Below:")
             logging.debug("{}".format(err))

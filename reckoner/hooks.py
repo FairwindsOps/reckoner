@@ -10,7 +10,7 @@ from .exception import ReckonerCommandException
 
 class Hook(object):
 
-    def __init__(self, commands: (str, list) = None, name: str = '', base_directory: str = './'):
+    def __init__(self, commands: (str, list) = [], name: str = '', base_directory: str = './'):
         if not isinstance(commands, (str, list)):
             raise AttributeError(
                 "Commands for hook must be of type string "
@@ -21,6 +21,7 @@ class Hook(object):
         self._commands = commands
         self._base_directory = base_directory
         self._name = name
+        self._config = Config()
 
     @property
     def name(self) -> str:
@@ -37,7 +38,15 @@ class Hook(object):
     def base_directory(self) -> str:
         return self._base_directory
 
+    @property
+    def config(self):
+        return self._config
+
     def run(self):
+        if self.config.dryrun:
+            logging.warning("Hook not run due to --dry-run: {}".format(self.name))
+            return
+
         for command in self.commands:
             logging.info("Running {} hook...".format(self.name))
 

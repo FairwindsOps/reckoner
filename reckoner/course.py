@@ -74,7 +74,25 @@ class Course(object):
             self._set_chart_repository(chart)
             self._charts.append(Chart({name: chart}, self.helm))
 
+        # Parsing and prepping hooks from course.yml
         self._hooks = self._dict.get('hooks', {})
+        self._pre_install_hook = Hook(
+            self.hooks.get(
+                'pre_install',
+                []
+            ),
+            'Course pre install',
+            self.config.course_base_directory
+        )
+
+        self._post_install_hook = Hook(
+            self.hooks.get(
+                'post_install',
+                []
+            ),
+            'Course post install',
+            self.config.course_base_directory
+        )
 
         for repo in self._repositories:
             # Skip install of repo if it is git based since it will be installed from the chart class
@@ -142,24 +160,13 @@ class Course(object):
         """ List of Chart() instances """
         return self._charts
 
-    def run_hook(self, hook_type):
-        _hook_commands = self.hooks.get(hook_type)
-        if _hook_commands is not None:
-            _hook = Hook(
-                _hook_commands,
-                'Course pre install',
-                self.config.course_base_directory
-            )
-            if self.config.dryrun:
-                logging.warning("Hook not run due to --dry-run: {}".format(_hook.name))
-            else:
-                _hook.run()
-
+    @property
     def pre_install_hook(self):
-        self.run_hook('pre_install')
+        return self._pre_install_hook
 
+    @property
     def post_install_hook(self):
-        self.run_hook('post_install')
+        return self._post_install_hook
 
     def install_charts(self, charts_to_install: list) -> List[ChartResult]:
         results = []
@@ -220,15 +227,15 @@ class Course(object):
         # Check to assure out install list has charts in it
         self._check_for_empty_install_list(charts_requested_to_install)
 
-        # return the results of the charts installation
-        self.pre_install_hook()
+        # return the results of the charts installation, exit on error to prevent post install hook run
+        self.pre_install_hook.run()
         results = self.install_charts(self._charts_to_install)
-        if self.hooks is not None and self.hooks.get('post_install') is not None:
-            for chart in results:
-                if chart.failed == True and not self.config.continue_on_error:
-                    logging.error("Not running Course post_install hook due to a chart install error!")
-                    return results
-            self.post_install_hook()
+        for chart in results:
+            if chart.failed == True and not self.config.continue_on_error:
+                logging.error("Not running Course post_install hook due to a chart install error!")
+                return results
+
+        self.post_install_hook.run()
         return results
 
     def _check_for_empty_install_list(self, requested_charts):
