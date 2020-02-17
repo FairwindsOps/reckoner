@@ -16,8 +16,9 @@
 import mock
 import unittest
 
-
 from io import StringIO
+
+from reckoner.hooks import Hook
 from reckoner.yaml.handler import Handler
 from reckoner.chart import Chart, ChartResult
 from reckoner.command_line_caller import Response
@@ -48,7 +49,6 @@ class TestChartHooks(unittest.TestCase):
             None,
         )
         chart.config.dryrun = False
-
         return chart
 
     def test_execution_directory(self, mock_cmd_call, *args):
@@ -179,6 +179,21 @@ class TestCharts(unittest.TestCase):
         upgrade_call = helm_client_mock.upgrade.call_args
         self.assertEqual(upgrade_call[0][0], ['nameofchart', '', '--namespace', 'fakenamespace'])
         self.assertEqual(upgrade_call[1], {'plugin': 'someplugin'})
+
+    @mock.patch('reckoner.chart.Config', autospec=True)
+    def test_hooks_parsed(self, chartConfigMock):
+        helm_client_mock = mock.MagicMock()
+        chartConfig = chartConfigMock()
+        chartConfig.course_base_directory = '.'
+        chart = Chart({'nameofchart': {'namespace': 'fakenamespace', 'hooks': {'pre_install': 'command'},
+                                       'plugin': 'someplugin', 'set-values': {}}}, helm_client_mock)
+
+        self.assertIsInstance(chart.hooks, (dict))
+        self.assertIsInstance(chart.pre_install_hook, (Hook))
+        self.assertIsInstance(chart.post_install_hook, (Hook))
+
+        self.assertEqual(chart.pre_install_hook.commands, ['command'])
+        self.assertEqual(chart.post_install_hook.commands, [])
 
 
 class TestChartResult(unittest.TestCase):

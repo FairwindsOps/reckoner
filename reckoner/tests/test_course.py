@@ -14,6 +14,7 @@
 
 import mock
 import unittest
+from reckoner.hooks import Hook
 from reckoner.course import Course
 from reckoner.command_line_caller import Response
 from reckoner.helm.client import HelmClientException
@@ -83,16 +84,14 @@ class TestIntegrationWithChart(unittest.TestCase):
     @mock.patch('reckoner.chart.NamespaceManager', NamespaceManagerMock)
     @mock.patch('reckoner.chart.Config', autospec=True)
     @mock.patch('reckoner.hooks.call', autospec=True)
-    @mock.patch('reckoner.chart.call', autospec=True)
     @mock.patch('reckoner.repository.Repository', autospec=True)
     @mock.patch('reckoner.course.sys')
     @mock.patch('reckoner.course.yaml_handler', autospec=True)
     @mock.patch('reckoner.course.get_helm_client', autospec=True)
     @mock.patch('reckoner.course.Config', autospec=True)
-    def test_failed_pre_install_hooks_fail_chart_installation(self, configMock, helmClientMock, yamlLoadMock, sysMock, repoMock, hookCallMock, chartCallMock, chartConfigMock):
+    def test_failed_pre_install_hooks_fail_chart_installation(self, configMock, helmClientMock, yamlLoadMock, sysMock, repoMock, hookCallMock, chartConfigMock):
         """Test that the chart isn't installed when the pre_install hooks return any non-zero responses. This also assures we don't raise python errors with hook errors."""
         c = configMock()
-        # TODO Fix how this mock is autospecced - something fishy with having this class attribs all come from dict options
         c.continue_on_error = False
         c.helm_args = ['provided args']
         chartConfig = chartConfigMock()
@@ -116,17 +115,15 @@ class TestIntegrationWithChart(unittest.TestCase):
             }
         }
 
-        chartCallMock.return_value = Response(exitcode=1, command_string='mocked', stderr=' ', stdout=' ')
-
         course = Course(None)
         results = course.plot(['first-chart'])
 
-        self.assertEqual(chartCallMock.call_count, 1)
         self.assertEqual(len([result for result in results if result.failed]), 1, "We should have only one failed chart install due to hook failure.")
 
 
 @mock.patch('reckoner.course.yaml_handler', autospec=True)
 @mock.patch('reckoner.course.get_helm_client', autospec=True)
+@mock.patch('reckoner.course.Hook.run', autospec=True)
 class TestCourse(unittest.TestCase):
 
     def setUp(self):
@@ -137,19 +134,35 @@ class TestCourse(unittest.TestCase):
                     'chart': 'nonexistant',
                     'version': '0.0.0',
                 }
+            },
+            'hooks':
+            {
+                "pre_install": ['command1', 'command2'],
+                "post_install": ['command3', 'command4'],
             }
         }
 
-    def test_plot(self, mockGetHelm, mockYAML):
+    def test_hooks_parsed(self, mockHook, mockGetHelm, mockYAML):
+        mockYAML.load.return_value = self.course_yaml
+        course = Course(None)
+
+        self.assertIsInstance(course.hooks, (dict))
+        self.assertIsInstance(course.pre_install_hook, (Hook))
+        self.assertIsInstance(course.post_install_hook, (Hook))
+
+        self.assertEqual(course.pre_install_hook.commands, ['command1', 'command2'])
+        self.assertEqual(course.post_install_hook.commands, ['command3', 'command4'])
+
+    def test_plot(self, mockHook, mockGetHelm, mockYAML):
         mockYAML.load.return_value = self.course_yaml
         course = Course(None)
         assert course.plot(['first-chart'])
 
-    def test_str_output(self, mockGetHelm, mockYAML):
+    def test_str_output(self, mockHook, mockGetHelm, mockYAML):
         mockYAML.load.return_value = self.course_yaml
         assert Course(None).__str__()
 
-    def test_chart_install_logic(self, mockGetHelm, mockYAML):
+    def test_chart_install_logic(self, mockHook, mockGetHelm, mockYAML):
         mockYAML.load.return_value = {
             'charts': {
                 'first-chart': {},
@@ -168,7 +181,7 @@ class TestCourse(unittest.TestCase):
         course.config.continue_on_error = True
         self.assertEqual(len(course.install_charts([chart, chart])), 2)
 
-    def test_course_raises_errors_on_bad_client_response(self, mockGetHelm, mockYAML, *args):
+    def test_course_raises_errors_on_bad_client_response(self, mockHook, mockGetHelm, mockYAML, *args):
         """Make sure course wraps get_helm_client exceptions as ReckonerExceptions"""
         # Load the course "yaml"
         mockYAML.load.return_value = self.course_yaml
@@ -186,7 +199,7 @@ class TestCourse(unittest.TestCase):
 
     # This test is intended to test the implementation that repository field in charts is resolved to the repositories settings in course.yml; because the repositories code is brittle.
     # This is important because if the chart references a git repo from the main course repositories, it breaks the repo install method
-    def test_course_git_repository_handling(self, mockGetHelm, mockYAML):
+    def test_course_git_repository_handling(self, mockHook, mockGetHelm, mockYAML):
         """Assure that course replaces strings with object settings for chart repository settings"""
         course = mockYAML.load.return_value = self.course_yaml
         # Add repositories configuration to the course
