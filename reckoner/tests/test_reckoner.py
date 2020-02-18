@@ -39,6 +39,7 @@ class TestReckoner(unittest.TestCase):
 
 
 class TestReckonerInstallResults(unittest.TestCase):
+
     def test_blank_results(self):
         r = ReckonerInstallResults()
         self.assertEqual(len(r.results), 0)

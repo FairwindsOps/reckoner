@@ -14,11 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
+
 import os
 import re
+import logging
+import traceback
 
-from .kube import create_namespace, list_namespace_names
+from .kube import NamespaceManager
 from tempfile import NamedTemporaryFile as tempfile
 from .yaml.handler import Handler as yaml_handler
 
@@ -88,6 +90,7 @@ class Chart(object):
         self.args = []
 
         self._namespace = self._chart.get('namespace')
+        self._namespace_management = None
         self._context = self._chart.get('context')
         value_strings = self._chart.get('values-strings', {})
         self._chart['values_strings'] = value_strings
@@ -139,6 +142,11 @@ class Chart(object):
     def namespace(self):
         """ Namespace to install the course chart """
         return self._namespace
+
+    @property
+    def namespace_management(self):
+        """ Namespace to install the course chart """
+        return self._namespace_management
 
     @property
     def context(self):
@@ -243,41 +251,41 @@ class Chart(object):
             except ReckonerCommandException as error:
                 logging.warn("Unable to update chart dependencies: {}".format(error.stderr))
 
-    def create_namespace_if_needed(self):
+    def manage_namespace(self):
         """ Creates the charts specified namespace if it does not already exist
         Requires `self.config.create_namespace` to true. Caches the existing namespace list
         in the self.config option to avoid going back to the api for each chart. 
         """
-        
-        if self.config.create_namespace:
-            if self.config.cluster_namespaces is None:
-                self.config.cluster_namespaces = list_namespace_names()
 
-            if self.namespace not in self.config.cluster_namespaces and not self.dryrun:
-                if create_namespace(self.namespace):
-                    logging.info('Namespace {} not found. Creating it now.'.format(self.namespace))
-                    self.config.cluster_namespaces.append(self.namespace)
+        if self.config.create_namespace and not self.dryrun:
+            nsm = NamespaceManager(self.namespace, self.namespace_management)
+            nsm.create_and_manage()
 
-    def install(self, namespace=None, context=None) -> None:
+    def install(self, default_namespace=None, default_namespace_management={}, context=None) -> None:
         """
         Description:
         - Upgrade --install the course chart
 
         Arguments:
-        - namespace (string). Passed in but will be overridden by Chart().namespace if set
+        - default_namespace (string). Passed in but will be overridden by Chart().namespace if set
+        - default_namespace_management_settings (dictionary). Passed in but will be overridden by Chart().namespace_management_settings if set
         """
 
         # Set the namespace
         if self.namespace is None:
-            self._namespace = namespace
+            self._namespace = default_namespace
+
+        # Set the namespace-management settings
+        if self.namespace_management is None:
+            self._namespace_management = default_namespace_management
 
         # Set the context
         if self.context is None:
             self._context = context
-
         # Try to run the install process for mark the result as failed
+
         try:
-            self.create_namespace_if_needed()
+            self.manage_namespace()
 
             # Fire the pre_install_hook
             self.pre_install_hook()
@@ -312,6 +320,7 @@ class Chart(object):
         except Exception as err:
             logging.debug("Saving encountered error to chart result. See Below:")
             logging.debug("{}".format(err))
+            logging.debug(traceback.format_exc())
             self.result.failed = True
             self.result.error_reason = err
             raise err

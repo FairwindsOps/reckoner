@@ -21,12 +21,11 @@ from reckoner.exception import ReckonerCommandException
 from reckoner.yaml.handler import Handler
 from io import StringIO
 
+from .namespace_manager_mock import NamespaceManagerMock
+
 
 @mock.patch('reckoner.chart.Repository')
 @mock.patch('reckoner.chart.Config')
-# I have to strictly design the mock for Reckoner due to the nature of the
-# key/val class setup. If the class actually had attributes then this
-# would be more easily mockable
 @mock.patch('reckoner.chart.call')
 class TestChartHooks(unittest.TestCase):
 
@@ -165,13 +164,6 @@ class TestChartHooks(unittest.TestCase):
         chart.run_hook('pre_install')
         mock_cmd_call.assert_called_once()
 
-
-# @mock.patch('reckoner.chart.Repository')
-# @mock.patch('reckoner.chart.Config')
-# # I have to strictly design the mock for Reckoner due to the nature of the
-# # key/val class setup. If the class actually had attributes then this
-# # would be more easily mockable
-# @mock.patch('reckoner.chart.call')
 class TestCharts(unittest.TestCase):
     """Test charts"""
 
@@ -218,8 +210,7 @@ class TestCharts(unittest.TestCase):
         chart._check_env_vars()
         self.assertEqual(chart.args[0], 'thing=$(environVar)')
 
-    @mock.patch('reckoner.chart.create_namespace', mock.MagicMock(return_value=True))
-    @mock.patch('reckoner.chart.list_namespace_names', mock.MagicMock(return_value=[]))
+    @mock.patch('reckoner.chart.NamespaceManager', NamespaceManagerMock)
     @mock.patch('reckoner.chart.Config', autospec=True)
     @mock.patch('reckoner.chart.Repository')
     def test_chart_install(self, repositoryMock, chartConfigMock):
@@ -241,8 +232,7 @@ class TestCharts(unittest.TestCase):
         upgrade_call = helm_client_mock.upgrade.call_args
         self.assertEqual(upgrade_call[0][0], ['nameofchart', '', '--namespace', 'fakenamespace'])
 
-    @mock.patch('reckoner.chart.create_namespace', mock.MagicMock(return_value=True))
-    @mock.patch('reckoner.chart.list_namespace_names', mock.MagicMock(return_value=[]))
+    @mock.patch('reckoner.chart.NamespaceManager', NamespaceManagerMock)
     @mock.patch('reckoner.chart.Config', autospec=True)
     @mock.patch('reckoner.chart.Repository')
     def test_chart_install_with_plugin(self, repositoryMock, chartConfigMock):

@@ -19,6 +19,8 @@ from reckoner.command_line_caller import Response
 from reckoner.helm.client import HelmClientException
 from reckoner.exception import ReckonerException
 
+from .namespace_manager_mock import NamespaceManagerMock
+
 
 @mock.patch('reckoner.repository.Repository', autospec=True)
 @mock.patch('reckoner.course.sys')
@@ -78,8 +80,7 @@ class TestMinVersion(unittest.TestCase):
 
 class TestIntegrationWithChart(unittest.TestCase):
 
-    @mock.patch('reckoner.chart.create_namespace', mock.MagicMock(return_value=True))
-    @mock.patch('reckoner.chart.list_namespace_names', mock.MagicMock(return_value=[]))
+    @mock.patch('reckoner.chart.NamespaceManager', NamespaceManagerMock)
     @mock.patch('reckoner.chart.Config', autospec=True)
     @mock.patch('reckoner.chart.call', autospec=True)
     @mock.patch('reckoner.repository.Repository', autospec=True)
@@ -229,5 +230,85 @@ class TestCourse(unittest.TestCase):
         # Assert that third-chart is reconciled to settings from repositories block
         self.assertDictEqual(course['charts']['third-chart']['repository'], course['repositories']['stablez'])
 
-
 # TODO: Add test for calling plot against a chart that doesn't exist in your course.yml
+
+    def test_course_namespace_and_without_namespace_management_handling(self, mockGetHelm, mockYAML):
+        """Assure that course replaces strings with object settings for chart repository settings"""
+        course = mockYAML.load.return_value = self.course_yaml
+        course['namespace'] = "test-namespace"
+
+        # Mock out the repository helm client
+        with mock.patch('reckoner.repository.HelmClient', mockGetHelm):
+            # Run the course to convert the chart['first-chart']['repository'] reference
+            c = Course(None)
+
+        # Assert the chart namespace is string
+        self.assertIsInstance(course['namespace'], str)
+
+        # Assert that the dict for the namespace manager is the same after course loads
+        # expect the first chart install to bubble up an error
+        chart = mock.MagicMock()
+        c.install_charts([chart])
+        chart.install.assert_called_with(
+            context=c.context,
+            default_namespace=c.namespace,
+            default_namespace_management=c.namespace_management
+        )
+
+    def test_course_namespace_and_management_handling(self, mockGetHelm, mockYAML):
+        """Assure that course replaces strings with object settings for chart repository settings"""
+        course = mockYAML.load.return_value = self.course_yaml
+        course['namespace'] = "test-namespace"
+        course['namespace_management'] = {
+            "default": {
+                "metadata": {
+                    "annotations": {
+                        "a-one": "a1",
+                        "a-two": "a2"
+                    },
+                    "labels": {
+                        "l-one": "l1",
+                        "l-two": "l2",
+                    }
+                },
+                "settings": {
+                    "overwrite": True
+                }
+            }
+        }
+        
+        # Mock out the repository helm client
+        with mock.patch('reckoner.repository.HelmClient', mockGetHelm):
+            # Run the course to convert the chart['first-chart']['repository'] reference
+            c = Course(None)
+
+        # Assert the chart namespace is string
+        self.assertIsInstance(course['namespace'], str)
+
+        # Assert that the dict for the namespace manager is the same after course loads
+        self.assertDictEqual(
+            c.namespace_management,
+            {
+                "metadata": {
+                    "annotations": {
+                        "a-one": "a1",
+                        "a-two": "a2"
+                    },
+                    "labels": {
+                        "l-one": "l1",
+                        "l-two": "l2",
+                    }
+                },
+                "settings": {
+                    "overwrite": True
+                }
+            }
+        )
+        # expect the first chart install to bubble up an error
+        chart = mock.MagicMock()
+        c.install_charts([chart])
+        chart.install.assert_called_with(
+            context=c.context,
+            default_namespace=c.namespace,
+            default_namespace_management=c.namespace_management
+        )

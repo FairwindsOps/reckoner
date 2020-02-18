@@ -1,0 +1,27 @@
+namespace: annotatednamespace #namespace to install the chart in, defaults to 'kube-system'
+namespace_management:
+  default:
+    metadata:
+      annotations:
+        reckoner: rocks
+      labels:
+        rocks: reckoner
+    settings:
+      overwrite: True
+repositories:
+  test_repo:
+    url: https://kubernetes-charts.storage.googleapis.com
+  incubator:
+    url: https://kubernetes-charts-incubator.storage.googleapis.com
+  fairwinds-stable:
+    url: https://charts.fairwinds.com/stable
+  fairwinds-incubator:
+    url: https://charts.fairwinds.com/incubator
+minimum_versions: #set minimum version requirements here
+  helm: 0.0.0
+  reckoner: 0.0.0
+charts:
+  namespace-test:
+    repository: stable
+    chart: nginx-ingress
+    namespace: annotatednamespace
