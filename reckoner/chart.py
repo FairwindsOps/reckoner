@@ -104,7 +104,7 @@ class Chart(object):
                 'post_install',
                 []
             ),
-            'Releae {} post install'.format(self.name),
+            'Release {} post install'.format(self.name),
             self.config.course_base_directory
         )
 
