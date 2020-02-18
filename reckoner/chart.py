@@ -143,7 +143,6 @@ class Chart(object):
     @property
     def debug_args(self):
         """ Returns list of Helm debug arguments """
-
         if self.config.dryrun:
             return ['--dry-run', '--debug']
         if self.config.debug:
@@ -185,19 +184,6 @@ class Chart(object):
     @property
     def hooks(self):
         return self._hooks
-
-    def run_hook(self, hook_type):
-        _hook_commands = self.hooks.get(hook_type)
-        if _hook_commands is not None:
-            _hook = Hook(
-                _hook_commands,
-                'Release {} pre install'.format(self.name),
-                self.config.course_base_directory
-            )
-            if self.config.dryrun:
-                logging.warning("Hook not run due to --dry-run: {}".format(_hook.name))
-            else:
-                _hook.run()
 
     @property
     def pre_install_hook(self):
