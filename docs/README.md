@@ -78,14 +78,6 @@ charts:
     chart: nginx-ingress
     version: "0.25.1"
     namespace: nginx-ingress
-    namespace_management:
-      metadata:
-        annotations:
-          ManagedBy: com.fairwinds.reckoner
-        labels:
-          labelName: labelValue
-      settings:
-        overwrite: True
     repository: stable
     hooks:
       pre_install: echo hi
