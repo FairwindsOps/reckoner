@@ -13,156 +13,19 @@
 # limitations under the License.
 
 """Test the chart functions directly"""
-import unittest
 import mock
+import unittest
+
+from io import StringIO
+
+from reckoner.hooks import Hook
+from reckoner.yaml.handler import Handler
 from reckoner.chart import Chart, ChartResult
 from reckoner.command_line_caller import Response
 from reckoner.exception import ReckonerCommandException
-from reckoner.yaml.handler import Handler
-from io import StringIO
 
 from .namespace_manager_mock import NamespaceManagerMock
 
-
-@mock.patch('reckoner.chart.Repository')
-@mock.patch('reckoner.chart.Config')
-@mock.patch('reckoner.chart.call')
-class TestChartHooks(unittest.TestCase):
-
-    def get_chart(self, *args):
-        chart = Chart(
-            {'name': {
-                'hooks': {
-                    'pre_install': [
-                        'omg',
-                    ],
-                    'post_install': [
-                        'fetchez --la-vache',
-                        'mooooooooo!',
-                    ]
-                }
-            }
-            },
-            None,
-        )
-        chart.config.dryrun = False
-
-        return chart
-
-    def test_execution_directory(self, mock_cmd_call, *args):
-        """Assert that we're executing in the same directory as the course yml"""
-        _path = '/path/where/course/lives/'
-        _fake_command = 'fake --command'
-        chart = self.get_chart()
-        chart.hooks = {
-            'pre_install': [
-                _fake_command
-            ]
-        }
-        chart.config.course_base_directory = _path
-        mock_cmd_call.side_effect = [Response(command_string=_fake_command, stderr='err-output', stdout='output', exitcode=0)]
-        chart.run_hook('pre_install')
-        mock_cmd_call.assert_called_with(_fake_command, shell=True, executable='/bin/bash', path=_path)
-
-    def test_caught_exceptions(self, mock_cmd_call, *args):
-        """Assert that we raise the correct error if call() blows up"""
-        chart = self.get_chart()
-        mock_cmd_call.side_effect = [Exception('holy smokes, an error!')]
-        with self.assertRaises(ReckonerCommandException):
-            chart.run_hook('pre_install')
-
-    def test_raises_error_when_any_hook_fails(self, mock_cmd_call, *args):
-        """Assert that we raise an error when commands fail and we don't run subsequent commands."""
-        good_response = Response(
-            exitcode=0,
-            stderr='',
-            stdout='some info',
-            command_string='my --command',
-        )
-        bad_response = Response(
-            exitcode=127,
-            stderr='found exit code 127 set in test mock',
-            stdout='here would be stdout',
-            command_string='mock --command',
-        )
-
-        chart = self.get_chart()
-        chart.hooks['pre_install'] = ['', '', '']
-
-        mock_cmd_call.side_effect = [good_response, bad_response, good_response]
-
-        with self.assertRaises(ReckonerCommandException):
-            chart.run_hook('pre_install')
-
-        self.assertEqual(mock_cmd_call.call_count, 2, "Call two should fail and not run the third hook.")
-
-    @mock.patch('reckoner.chart.logging', autospec=True)
-    def test_logging_info_and_errors(self, mock_logging, mock_cmd_call, *args):
-        """Verify we log the right info when call() fails and succeeds"""
-        chart = self.get_chart()
-
-        # This is actually not a good test because it tightly couples the
-        # implementation of logging to the test. Not sure how to do this any
-        # better.
-        # What I really want to test is that we're sending our info to the cli
-        # user when hooks run.
-        bad_response = mock.Mock(Response,
-                                 exitcode=1,
-                                 stderr='some error',
-                                 stdout='some info',
-                                 command_string='my --command')
-        good_response = mock.Mock(Response,
-                                  exitcode=0,
-                                  stderr='',
-                                  stdout='some info',
-                                  command_string='my --command')
-        mock_cmd_call.side_effect = [good_response]
-        chart.run_hook('pre_install')
-        mock_logging.error.assert_not_called()
-        mock_logging.info.assert_called()
-
-        mock_cmd_call.side_effect = [good_response, bad_response]
-        mock_logging.reset_mock()
-        with self.assertRaises(ReckonerCommandException):
-            chart.run_hook('post_install')
-        mock_logging.error.assert_called()
-        mock_logging.info.assert_called()
-        mock_logging.log.assert_called()
-
-    def test_skipping_due_to_dryrun(self, mock_cmd_call, *args):
-        """Verify that we do NOT run the actual calls when dryrun is enabled"""
-        chart = self.get_chart()
-        chart.config.dryrun = True
-        chart.run_hook('pre_install')
-        mock_cmd_call.assert_not_called()
-
-    def test_hooks_support_list(self, mock_cmd_call, *args):
-        """Assert that hooks can be defined as lists"""
-        chart = self.get_chart()
-        chart.hooks = {
-            'pre_install': [
-                'works',
-                'twice works',
-            ]
-        }
-
-        mock_cmd_call.side_effect = [
-            Response(command_string='command', stderr='err-output', stdout='output', exitcode=0),
-            Response(command_string='command', stderr='err-output', stdout='output', exitcode=0),
-        ]
-        chart.run_hook('pre_install')
-        self.assertTrue(mock_cmd_call.call_count == 2)
-
-    def test_hooks_support_strings(self, mock_cmd_call, *args):
-        """Assert that hooks can be defined as a string"""
-        chart = self.get_chart()
-        chart.hooks = {
-            'pre_install': 'works'
-        }
-
-        mock_cmd_call.side_effect = [Response(command_string='command', stderr='err-output', stdout='output', exitcode=0)]
-        chart.run_hook('pre_install')
-        mock_cmd_call.assert_called_once()
 
 class TestCharts(unittest.TestCase):
     """Test charts"""
@@ -203,7 +66,7 @@ class TestCharts(unittest.TestCase):
         chartConfig = chartConfigMock()
         chartConfig.course_base_directory = '.'
         chartConfig.dryrun = False
-
+        chartConfig.debug = False
         chart.args = ['thing=$(environVar)']
         environMock.environ = {}
 
@@ -222,11 +85,10 @@ class TestCharts(unittest.TestCase):
         chartConfig = chartConfigMock()
         chartConfig.course_base_directory = '.'
         chartConfig.dryrun = False
+        chartConfig.debug = False
         chartConfig.create_namespace = True
         chartConfig.cluster_namespaces = []
 
-        debug_args = mock.PropertyMock(debug_args=['fake'])
-        type(chart).debug_args = debug_args
         chart.install()
         helm_client_mock.upgrade.assert_called_once()
         upgrade_call = helm_client_mock.upgrade.call_args
@@ -244,16 +106,45 @@ class TestCharts(unittest.TestCase):
         chartConfig = chartConfigMock()
         chartConfig.course_base_directory = '.'
         chartConfig.dryrun = False
+        chartConfig.debug = False
         chartConfig.create_namespace = True
         chartConfig.cluster_namespaces = []
 
-        debug_args = mock.PropertyMock(debug_args=['fake'])
-        type(chart).debug_args = debug_args
         chart.install()
         helm_client_mock.upgrade.assert_called_once()
         upgrade_call = helm_client_mock.upgrade.call_args
         self.assertEqual(upgrade_call[0][0], ['nameofchart', '', '--namespace', 'fakenamespace'])
         self.assertEqual(upgrade_call[1], {'plugin': 'someplugin'})
+
+    @mock.patch('reckoner.chart.Config', autospec=True)
+    def test_hooks_parsed(self, chartConfigMock):
+        helm_client_mock = mock.MagicMock()
+        chartConfig = chartConfigMock()
+        chartConfig.course_base_directory = '.'
+        chart = Chart({'nameofchart': {'namespace': 'fakenamespace', 'hooks': {'pre_install': 'command'},
+                                       'plugin': 'someplugin', 'set-values': {}}}, helm_client_mock)
+
+        self.assertIsInstance(chart.hooks, (dict))
+        self.assertIsInstance(chart.pre_install_hook, (Hook))
+        self.assertIsInstance(chart.post_install_hook, (Hook))
+
+        self.assertEqual(chart.pre_install_hook.commands, ['command'])
+        self.assertEqual(chart.post_install_hook.commands, [])
+
+    @mock.patch('reckoner.chart.Config', autospec=True)
+    def test_extra_config_args(self, chartConfigMock):
+
+        chartConfig = chartConfigMock()
+        chartConfig.course_base_directory = '.'
+        chartConfig.dryrun = True
+        chartConfig.helm_args = ['extra', 'helm', 'args']
+        chartConfig.dryrun = True
+
+        helm_client_mock = mock.MagicMock()
+        chart = Chart({'nameofchart': {'namespace': 'fakenamespace', 'hooks': {'pre_install': 'command'},
+                                       'plugin': 'someplugin', 'set-values': {}}}, helm_client_mock)
+        self.assertEqual(chart.helm_args, ['extra', 'helm', 'args'])
+        self.assertEqual(chart.debug_args, ['--dry-run', '--debug'])
 
 
 class TestChartResult(unittest.TestCase):

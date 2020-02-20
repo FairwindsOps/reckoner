@@ -11,6 +11,8 @@ We'll be breaking this documentation down into sections to make reference easier
 - `namespace_management` _(object)_ **(optional)** a structure the defines default annotations and labels to the namespaces that Reckoner will create
 - `charts` _(object)_ _**(required)**_  
     The charts and chart definitions to install with this course, must be alphanumeric between 1 and 63 characters (also allows underscore and dash)
+- `hooks` _(object)_  
+    Allows `pre_install` and `post_install` which can be a string or a list of strings to execute in the shell around your chart installation (execution working directory is relative to your course file)
 - `repositories` _(object)_  
     The definition of remote chart repositories available to this course
 - `minimum_versions` _(object)_  
@@ -40,6 +42,11 @@ context: my-kube-cluster
 repositories:
   stable:
     url: https://kubernetes-charts.storage.googleapis.com
+hooks:
+  pre_install:
+    - ls ./
+  post_install:
+    - kubectl get namespaces
 charts:
   my-metrics-server: # See below for chart schema
     repository: stable

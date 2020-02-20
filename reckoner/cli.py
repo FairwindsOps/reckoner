@@ -15,12 +15,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-import coloredlogs
 import click
-from .reckoner import Reckoner
+import logging
+import traceback
+import coloredlogs
+
 from . import exception
 from .meta import __version__
+from .reckoner import Reckoner
+
 from reckoner.schema_validator.course import validate_course_file
 
 
@@ -57,19 +60,22 @@ def plot(ctx, course_file=None, dry_run=False, debug=False, only=None, helm_args
         with open(course_file.name, 'rb') as course_file_stream:
             validate_course_file(course_file_stream)
         # Load Reckoner
-        r = Reckoner(course_file=course_file, dryrun=dry_run, debug=debug, helm_args=helm_args, continue_on_error=continue_on_error, create_namespace=create_namespace)
+        r = Reckoner(course_file=course_file, dryrun=dry_run, debug=debug, helm_args=helm_args,
+                     continue_on_error=continue_on_error, create_namespace=create_namespace)
         # Convert tuple to list
         only = list(only)
         r.install(only)
     except exception.ReckonerException as err:
         click.echo(click.style("⛵🔥 Encountered errors while reading course file ⛵🔥", fg="bright_red"))
         click.echo(click.style("{}".format(err), fg="red"))
+        logging.debug(traceback.format_exc())
         ctx.exit(1)
     except Exception as err:
         # This handles exceptions cleanly, no expected stack traces from reckoner code
         click.echo(click.style("⛵🔥 Encountered unexpected error in Reckoner! Run with --log-level debug to see details! ⛵🔥", fg="bright_red"))
         if 'log_level' in ctx.parent.params and ctx.parent.params['log_level'].lower() in ['debug', 'trace']:
             click.echo(click.style("{}".format(err), fg='bright_red'))
+        logging.debug(traceback.format_exc())
         ctx.exit(1)
     if r.results.has_errors:
         click.echo(click.style("⛵🔥 Encountered errors while running the course ⛵🔥", fg="bright_red"))

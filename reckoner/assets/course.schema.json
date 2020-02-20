@@ -160,6 +160,9 @@
         "charts": {
             "$ref": "#/definitions/chart"
         },
+        "hooks": {
+            "$ref": "#/definitions/hooks"
+        },
         "minimum_versions": {
             "type": "object",
             "additionalProperties": false,
