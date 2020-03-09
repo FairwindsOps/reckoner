@@ -10,7 +10,7 @@ This utility adds to the functionality of [Helm](https://github.com/kubernetes/h
 * Creates a declarative syntax to manage multiple releases in one place
 * Allows installation of charts from a git commit/branch/release
 
-**Want to learn more?** Fairwinds holds [office hours on Zoom](https://zoom.us/j/242508205) the first Friday of every month, at 12pm Eastern. You can also reach out via email at `opensource@fairwinds.com`
+**Want to learn more?** Reach out on [the Slack channel](https://fairwindscommunity.slack.com/messages/reckoner), send an email to `opensource@fairwinds.com`, or join us for [office hours on Zoom](https://fairwindscommunity.slack.com/messages/office-hours)
 
 ## Requirements
 - python 3
