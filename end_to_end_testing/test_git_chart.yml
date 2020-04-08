@@ -28,6 +28,7 @@ charts:
       path: stable
   go-harbor:
     chart: go-harbor
+    version: v1.3.1
     repository:
       git: https://github.com/goharbor/harbor-helm.git
     values:
@@ -35,6 +36,7 @@ charts:
         enabled: false
   go-harbor-two:
     namespace: a-different-one
+    version: v1.3.1
     repository: the-go-harbor-repo
     values:
       persistence:
