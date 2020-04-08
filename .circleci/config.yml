@@ -142,6 +142,20 @@ jobs:
       - store_artifacts:
           path: installer/dist/reckoner
           destination: reckoner-darwin
+  end-to-end-helmv2-12-0:
+    executor: vm
+    working_directory: ~/reckoner
+    resource_class: medium
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/binaries
+      - run:
+          name: Setup Testing Environment
+          command: "./end_to_end_testing/setup_helm2_12_0.sh"
+      - run:
+          name: Run end to end tests
+          command: HELM_VERSION=2 "./end_to_end_testing/run_end_to_end.sh"
   end-to-end-helmv2:
     executor: vm
     working_directory: ~/reckoner
@@ -229,6 +243,15 @@ workflows:
               only: /.*/
             branches:
               only: /.*/
+      - end-to-end-helmv2-12-0:
+          requires:
+            - compile
+            - compile-darwin
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              only: /.*/
       - end-to-end-helmv2:
           requires:
             - compile
@@ -250,6 +273,8 @@ workflows:
       - release:
           requires:
             - end-to-end-helmv2
+            - end-to-end-helmv2-12-0
+            - end-to-end-helmv3
           filters:
             tags:
               only: /.*/
@@ -258,6 +283,8 @@ workflows:
       - publish-binaries:
           requires:
             - end-to-end-helmv2
+            - end-to-end-helmv2-12-0
+            - end-to-end-helmv3
           filters:
             tags:
               only: /.*/
