@@ -16,12 +16,12 @@
 
 
 import unittest
+from unittest import mock
 
 import coloredlogs
 import logging
 import os
 import shutil
-import mock
 import reckoner
 import ruamel.yaml as yaml
 

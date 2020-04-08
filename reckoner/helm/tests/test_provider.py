@@ -14,7 +14,7 @@
 
 # Intent for this file is to be able to contract test ALL providers!
 import unittest
-import mock
+from unittest import mock
 from reckoner.helm.provider import HelmProvider
 from reckoner.helm.cmd_response import HelmCmdResponse
 from reckoner.helm.command import HelmCommand

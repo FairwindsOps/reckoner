@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import unittest
-import mock
+from unittest import mock
 
 from reckoner.helm.client import HelmClientException
 from reckoner.reckoner import Reckoner, ReckonerInstallResults

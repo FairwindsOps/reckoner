@@ -13,8 +13,8 @@
 # limitations under the License.
 
 """Test the chart functions directly"""
-import mock
 import unittest
+from unittest import mock
 
 from io import StringIO
 

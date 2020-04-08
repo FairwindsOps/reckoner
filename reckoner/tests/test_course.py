@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import mock
 import unittest
+from unittest import mock
 from reckoner.hooks import Hook
 from reckoner.course import Course
 from reckoner.command_line_caller import Response
