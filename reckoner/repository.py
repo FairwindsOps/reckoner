@@ -72,7 +72,7 @@ class Repository(object):
         # TODO: This function needs some love - seems like it wants to return T/F and maybe have logic act on that vs raising errors when you cannot install (from this function)
         if self.git is None:
             self._chart_path = "{}/{}".format(self.name, chart_name)
-            if self.name not in self._helm_client.repositories:
+            if self.name not in self._helm_client.repositories and self.url:
                 try:
                     return self._helm_client.repo_add(str(self.name), str(self.url))
                 except HelmClientException as e:
