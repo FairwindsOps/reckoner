@@ -1,7 +1,6 @@
 pytest==5.4.1
 pytest-cov
 wheel
-mock
 autopep8
 flake8
 codecov

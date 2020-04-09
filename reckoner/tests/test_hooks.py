@@ -1,5 +1,5 @@
-import mock
 import unittest
+from unittest import mock
 
 from reckoner.hooks import Hook
 from reckoner.command_line_caller import Response

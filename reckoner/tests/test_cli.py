@@ -15,7 +15,7 @@
 """Testing of CLI commands in click, contract tests"""
 
 import unittest
-import mock
+from unittest import mock
 from click.testing import CliRunner
 from reckoner import cli
 from reckoner.exception import ReckonerException

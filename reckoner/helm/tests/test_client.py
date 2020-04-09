@@ -16,8 +16,8 @@ from reckoner.helm.client import HelmClient, Helm2Client, Helm3Client, HelmClien
 from reckoner.helm.command import HelmCommand
 from reckoner.helm.cmd_response import HelmCmdResponse
 from reckoner.helm.provider import HelmProvider
-import mock
 import unittest
+from unittest import mock
 
 
 class TestHelm2Client(unittest.TestCase):

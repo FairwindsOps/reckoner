@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import unittest
-import mock
+from unittest import mock
 from reckoner.config import Config
 
 
@@ -30,6 +30,7 @@ class TestConfig(unittest.TestCase):
 
     @mock.patch('os.getcwd')
     def test_course_base_dir_never_empty(self, mock_dir):
+        mock_dir.return_value = "/some/fake/path"
         config = Config()
         config.course_path = 'course.yaml'
         self.assertNotEqual('', config.course_base_directory,
@@ -40,7 +41,6 @@ class TestConfig(unittest.TestCase):
         config.course_path = '/some/full/path/course.yml'
         self.assertEqual('/some/full/path', config.course_base_directory)
 
-        mock_dir.return_value = "/some/fake/path"
         config.course_path = './course.yaml'
         self.assertEqual('/some/fake/path', config.course_base_directory)
 
