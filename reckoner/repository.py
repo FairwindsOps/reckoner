@@ -76,7 +76,7 @@ class Repository(object):
                 try:
                     return self._helm_client.repo_add(str(self.name), str(self.url))
                 except HelmClientException as e:
-                    logging.warn("Unable to install repository {}: {}".format(self.name, e))
+                    logging.warning("Unable to install repository {}: {}".format(self.name, e))
                     raise e  # changed from `return False` since we always want to raise an error if we can't install a chart
             else:
                 logging.debug("Chart repository {} already installed".format(self.name))
@@ -159,14 +159,14 @@ class Repository(object):
         try:
             fetch_pull(version)
         except GitCommandError as e:
-            logging.warn(e)
+            logging.warning(e)
             if 'Sparse checkout leaves no entry on working directory' in str(e):
-                logging.warn("Error with path \"{}\"! Remove path when chart exists at the repository root".format(self.path))
-                logging.warn("Skipping chart {}".format(chart_name))
+                logging.warning("Error with path \"{}\"! Remove path when chart exists at the repository root".format(self.path))
+                logging.warning("Skipping chart {}".format(chart_name))
                 return False
             elif 'did not match any file(s) known to git.' in str(e):
-                logging.warn("Branch/tag \"{}\" does not seem to exist!".format(version))
-                logging.warn("Skipping chart {}".format(chart_name))
+                logging.warning("Branch/tag \"{}\" does not seem to exist!".format(version))
+                logging.warning("Skipping chart {}".format(chart_name))
                 return False
             else:
                 logging.error(e)

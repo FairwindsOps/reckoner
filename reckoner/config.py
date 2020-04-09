@@ -58,7 +58,7 @@ class Config(object):
                 self._config['home'] = helm_home
             else:
                 self._config['home'] = fallback_home
-                logging.warn("$HELM_HOME not set. Using ~/.helm")
+                logging.warning("$HELM_HOME not set. Using ~/.helm")
 
         return self._config['home']
 
@@ -68,7 +68,7 @@ class Config(object):
         if 'archive' not in self._config:
             archive = self.home + '/cache/archive'
             if not os.path.isdir(archive):
-                logging.warn("{} does not exist. Have you run `helm init`?".format(archive))
+                logging.warning("{} does not exist. Have you run `helm init`?".format(archive))
             self._config['archive'] = archive
 
         return self._config['archive']
