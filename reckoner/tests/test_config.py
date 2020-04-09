@@ -18,6 +18,16 @@ from reckoner.config import Config
 
 
 class TestConfig(unittest.TestCase):
+    def setUp(self):
+        Config.reset()
+
+    def test_course_base_dir_doesnt_raise(self):
+        config = Config()
+        try:
+            config.course_base_directory
+        except TypeError as e:
+            self.fail(f"accessing course.course_base_directory of an empty Config() threw TypeError: {e}")
+
     @mock.patch('os.getcwd')
     def test_course_base_dir_never_empty(self, mock_dir):
         config = Config()

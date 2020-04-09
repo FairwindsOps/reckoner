@@ -39,6 +39,10 @@ class Config(object):
     """
     _config = {}
 
+    @classmethod
+    def reset(cls):
+        cls._config = {}
+
     def __init__(self):
         self.__dict__ = self._config
         self._installed_repositories = []
@@ -71,7 +75,10 @@ class Config(object):
 
     @property
     def course_base_directory(self):
-        return dirname(abspath(self.course_path))
+        if self.course_path:
+            return dirname(abspath(self.course_path))
+        else:
+            return '.'
 
     def __setattr__(self, name, value):
         object.__setattr__(self, name, value)
