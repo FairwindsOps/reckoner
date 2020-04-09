@@ -41,6 +41,7 @@ class TestBase(unittest.TestCase):
         self.subprocess_mock_patch = mock.patch('subprocess.Popen')
         self.subprocess_mock = self.subprocess_mock_patch.start()
         self.m = mock.Mock()
+        Config.reset()
 
     def configure_subprocess_mock(self, stdout, stderr, returncode):
         attrs = {'returncode': returncode, 'communicate.return_value': (stdout, stderr)}
