@@ -97,7 +97,7 @@ class Repository(object):
                 chart_name,
                 self.path or '')
 
-            self._fetch_from_git(chart_name, version)
+            self._chart_path = self._fetch_from_git(chart_name, version)
 
             # If the chart_name is in the repo path and appears to be redundant pb
             if os.path.isfile("{}/Chart.yaml".format(self.chart_path)):
@@ -140,14 +140,14 @@ class Repository(object):
 
         # A path in the list implies that the Chart is at the root of the git repository.
         if self.path not in ['', '/', './', None]:
-            self._chart_path = "{}/{}\n".format(self.path, chart_name)
+            chart_path = "{}/{}\n".format(self.path, chart_name)
             repo.git.config('core.sparseCheckout', 'true')
             with open(sparse_checkout_file_path, "a+") as scf:
                 if self.path not in scf.readlines():
-                    scf.write(self._chart_path)
+                    scf.write(chart_path)
             logging.debug("Configuring sparse checkout for path: {}".format(self.path))
 
-        self._chart_path = "{}/{}/{}".format(repo_path, self.path, chart_name)
+        chart_path = "{}/{}/{}".format(repo_path, self.path, chart_name)
 
         logging.debug("Chart path: {} ".format(self.chart_path))
 
@@ -163,11 +163,11 @@ class Repository(object):
             if 'Sparse checkout leaves no entry on working directory' in str(e):
                 logging.warning("Error with path \"{}\"! Remove path when chart exists at the repository root".format(self.path))
                 logging.warning("Skipping chart {}".format(chart_name))
-                return False
+                return None
             elif 'did not match any file(s) known to git.' in str(e):
                 logging.warning("Branch/tag \"{}\" does not seem to exist!".format(version))
                 logging.warning("Skipping chart {}".format(chart_name))
-                return False
+                return None
             else:
                 logging.error(e)
                 raise e
@@ -180,3 +180,6 @@ class Repository(object):
             if os.path.isfile(sparse_checkout_file_path):
                 os.remove(sparse_checkout_file_path)
             repo.git.config('core.sparseCheckout', 'false')
+
+        return chart_path
+
