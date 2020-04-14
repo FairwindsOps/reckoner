@@ -43,7 +43,8 @@ setup(name='reckoner',
           "semver>=2.8.1",
           "ruamel.yaml>=0.16.0",
           "jsonschema>=3.0.2",
-          "kubernetes==11.0.0"
+          "kubernetes==11.0.0",
+          "awscli==1.18.39"
       ],
       entry_points=''' #for click integration
           [console_scripts]
