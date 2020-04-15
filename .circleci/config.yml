@@ -40,8 +40,8 @@ jobs:
       - run:
           name: Unit Tests
           command: |
-            pip install --user -r development-requirements.txt
-            pip install --user -e .
+            pip install -r development-requirements.txt
+            pip install -e .
             reckoner --version
             pytest
   build-3-7:
@@ -55,8 +55,8 @@ jobs:
       - run:
           name: Unit Tests
           command: |
-            pip install --user -r development-requirements.txt
-            pip install --user -e .
+            pip install -r development-requirements.txt
+            pip install -e .
             reckoner --version
             pytest --cov ./
             codecov
@@ -92,8 +92,8 @@ jobs:
       - run:
           name: build binary for linux
           command: |
-            pip install --user pyinstaller setuptools-scm
-            pip install --user .
+            pip install pyinstaller setuptools-scm
+            pip install  .
             cd installer
             python -c 'from setuptools_scm import get_version; get_version(root="..", write_to="reckoner/version.txt")'
             pyinstaller --hidden-import='pkg_resources.py2_warn' --noconfirm --paths .:../ --onefile --add-data ../reckoner/version.txt:reckoner --add-data ../reckoner/assets/course.schema.json:reckoner/assets --name reckoner cli.py
