@@ -96,7 +96,7 @@ jobs:
             pip install --user .
             cd installer
             python -c 'from setuptools_scm import get_version; get_version(root="..", write_to="reckoner/version.txt")'
-            pyinstaller --hidden-import=['pkg_resources.py2_warn','urllib3'] --noconfirm --paths .:../ --onefile --add-data ../reckoner/version.txt:reckoner --add-data ../reckoner/assets/course.schema.json:reckoner/assets --name reckoner cli.py
+            pyinstaller --hidden-import='pkg_resources.py2_warn' --hidden-import='urllib3' --noconfirm --paths .:../ --onefile --add-data ../reckoner/version.txt:reckoner --add-data ../reckoner/assets/course.schema.json:reckoner/assets --name reckoner cli.py
       - run:
           name: persist binaries
           command: |
@@ -126,7 +126,7 @@ jobs:
             python3 -c 'from setuptools_scm import get_version; get_version(root="..", write_to="reckoner/version.txt")'
 
             echo "Running the binary compiler"
-            pyinstaller --hidden-import='pkg_resources.py2_warn' --noconfirm --paths .:../ --onefile --add-data ../reckoner/version.txt:reckoner --add-data ../reckoner/assets/course.schema.json:reckoner/assets --name reckoner cli.py
+            pyinstaller --hidden-import='pkg_resources.py2_warn'  --hidden-import='urllib3' --noconfirm --paths .:../ --onefile --add-data ../reckoner/version.txt:reckoner --add-data ../reckoner/assets/course.schema.json:reckoner/assets --name reckoner cli.py
 
             echo "Running the new Binary"
             ./dist/reckoner version
