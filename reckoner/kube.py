@@ -16,6 +16,7 @@ import sys
 import logging
 import traceback
 
+from .config import Config
 from kubernetes import client, config
 
 
@@ -36,6 +37,7 @@ class NamespaceManager(object):
             False
         )
         self.__load_config()
+        self.config = Config()
 
     @property
     def namespace_name(self) -> str:
@@ -72,6 +74,13 @@ class NamespaceManager(object):
 
     def create_and_manage(self):
         """ Create namespace and patch metadata """
+        if self.config.dryrun:
+            logging.warning(
+                "Namespace not created or patched due to "
+                "--dry-run: {}".format(self.namespace_name)
+            )
+
+            return
         self._namespace = self.create()
         self.patch_metadata()
 
