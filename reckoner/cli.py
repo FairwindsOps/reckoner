@@ -44,7 +44,7 @@ def cli(ctx, log_level, *args, **kwargs):
 @click.argument('course_file', type=click.File('rb'))
 @click.option("--dry-run", is_flag=True, help='Pass --dry-run to helm so no action is taken. Implies --debug and '
                                               'skips hooks.')
-@click.option("--debug", is_flag=True, help='DEPRECATED - use --dry-run instead, or pass to --helm-args')
+@click.option("--debug", is_flag=True, help='DEPRECATED - use --log-level=DEBUG as a parameter to `reckoner` instead. May be used with or without `--dry-run`. Or, pass `--debug` to --helm-args')
 @click.option("--only", "--heading", "-o", "only", metavar="<chart>", help='Only run a specific chart by name', multiple=True)
 @click.option("--helm-args", help='Passes the following arg on to helm, can be used more than once. WARNING: Setting '
                                   'this will completely override any helm_args in the course. Also cannot be used for '
@@ -72,7 +72,7 @@ def plot(ctx, course_file=None, dry_run=False, debug=False, only=None, helm_args
         ctx.exit(1)
     except Exception as err:
         # This handles exceptions cleanly, no expected stack traces from reckoner code
-        click.echo(click.style("⛵🔥 Encountered unexpected error in Reckoner! Run with --log-level debug to see details! ⛵🔥", fg="bright_red"))
+        click.echo(click.style("⛵🔥 Encountered unexpected error in Reckoner! Run with DEBUG log level to see details, for example:\n\nreckoner --log-level=DEBUG plot course.yml -o <heading> --dry-run\n\n(or without heading if running the full chart). ⛵🔥", fg="bright_red"))
         if 'log_level' in ctx.parent.params and ctx.parent.params['log_level'].lower() in ['debug', 'trace']:
             click.echo(click.style("{}".format(err), fg='bright_red'))
         logging.debug(traceback.format_exc())
