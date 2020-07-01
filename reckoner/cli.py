@@ -44,7 +44,7 @@ def cli(ctx, log_level, *args, **kwargs):
 @click.argument('course_file', type=click.File('rb'))
 @click.option("--dry-run", is_flag=True, help='Pass --dry-run to helm so no action is taken. Implies --debug and '
                                               'skips hooks.')
-@click.option("--debug", is_flag=True, help='DEPRECATED - use --log-level=DEBUG as a parameter to `reckoner` with --dry-run instead, or pass to --helm-args')
+@click.option("--debug", is_flag=True, help='DEPRECATED - use --log-level=DEBUG as a parameter to `reckoner` instead. May be used with or without `--dry-run`. Or, pass `--debug` to --helm-args')
 @click.option("--only", "--heading", "-o", "only", metavar="<chart>", help='Only run a specific chart by name', multiple=True)
 @click.option("--helm-args", help='Passes the following arg on to helm, can be used more than once. WARNING: Setting '
                                   'this will completely override any helm_args in the course. Also cannot be used for '
