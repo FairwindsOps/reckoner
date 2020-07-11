@@ -85,6 +85,14 @@ charts:
     chart: nginx-ingress
     version: "0.25.1"
     namespace: nginx-ingress
+    namespace_management:
+      metadata:
+        annotations:
+          foo: bar
+        labels:
+          boo: far
+      settings:
+        overwrite: false
     repository: stable
     hooks:
       pre_install: echo hi

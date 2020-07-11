@@ -91,7 +91,7 @@ class NamespaceManager(object):
         """
         if self.overwrite:
             patch_metadata = self.metadata
-            logging.debug("Overwriting Namespace Metadata")
+            logging.info("Overwriting Namespace Metadata")
         else:
             annotations = {}
             for annotation_name, annotation_value in self.metadata.get('annotations', {}).items():
