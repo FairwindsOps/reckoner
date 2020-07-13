@@ -182,7 +182,9 @@ Options:
   --help            Show this message and exit.
 
 Commands:
-  plot     Install charts with given arguments as listed in yaml file...
+  plot     Install charts with given arguments as listed in yaml file argument
+  template Output the template of the chart or charts as they would be installed or
+  upgraded
   version  Takes no arguments, outputs version info
 ```
 
@@ -211,4 +213,26 @@ Options:
                                   does not already exist. Replaces
                                   functionality lost in Helm3
   --help                          Show this message and exit.
+```
+
+Or
+```text
+# reckoner template --help
+Usage: reckoner template [OPTIONS] COURSE_FILE
+
+  Output the template of the chart or charts as they would be installed or
+  upgraded
+
+Options:
+  -o, --only, --heading <chart>  Only run a specific chart by name  [required]
+  --helm-args TEXT               Passes the following arg on to helm, can be
+                                 used more than once. WARNING: Setting this
+                                 will completely override any helm_args in the
+                                 course. Also cannot be used for configuring
+                                 how helm connects to tiller.
+
+  --log-level TEXT               Log Level. [INFO | DEBUG | WARN | ERROR].
+                                 (default=INFO)
+
+  --help                         Show this message and exit.
 ```

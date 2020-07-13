@@ -53,8 +53,10 @@ def cli(ctx, log_level, *args, **kwargs):
               help="Attempt to install all charts in the course, even if any charts or hooks fail to run.")
 @click.option("--create-namespace/--no-create-namespace", default=True,
               help="Will create the specified nameaspace if it does not already exist. Replaces functionality lost in Helm3")
-def plot(ctx, course_file=None, dry_run=False, debug=False, only=None, helm_args=None, continue_on_error=False, create_namespace=True):
+@click.option("--log-level", default="INFO", help="Log Level. [INFO | DEBUG | WARN | ERROR]. (default=INFO)")
+def plot(ctx, log_level, course_file=None, dry_run=False, debug=False, only=None, helm_args=None, continue_on_error=False, create_namespace=True):
     """ Install charts with given arguments as listed in yaml file argument """
+    coloredlogs.install(level=log_level)
     try:
         # Check Schema of Course FileA
         with open(course_file.name, 'rb') as course_file_stream:
