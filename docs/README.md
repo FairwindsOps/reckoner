@@ -166,7 +166,9 @@ minimum_versions:
 
 When you wish to manage annotations or labels for the namespaces you are installing into with Reckoner, this `namespace_management` block to define default namespace metadata and the whether or not it should overwrite the values that exist.
 
-`namespace_management` blocks can be defined at the top level or at the chart level. By default, the top level `default` metadata will be used for all namespaces and any `metadata.annotations` or `metadata.labels` set in the charts will be additive. However, if `settings.overwrite` is `True` then the `metadata` block from the chart will replace all overwrite any matching labels or annotations values.
+`namespace_management` blocks can be defined at the top level or at the chart level. By default, the top level `default` metadata will be used for all namespaces and any `metadata.annotations` or `metadata.labels` set in the charts will be additive. However, if `settings.overwrite` is `True` then the `metadata` block from the chart will replace any matching labels or annotation values.
+
+Keep in mind, chart level `metadata` properties _cannot_ remove or delete any course level properties, only overwrite the value. For this reason, it's best if you don't set course level namespace metadata unless you truly want it applied to _all_ namespaces defined in this course.yml.
 
 Example:
 ```yaml
