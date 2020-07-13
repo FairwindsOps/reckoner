@@ -220,16 +220,7 @@ class Chart(object):
             nsm = NamespaceManager(self.namespace, self.namespace_management)
             nsm.create_and_manage()
 
-    def install(self, default_namespace=None, default_namespace_management={}, context=None) -> None:
-        """
-        Description:
-        - Upgrade --install the course chart
-
-        Arguments:
-        - default_namespace (string). Passed in but will be overridden by Chart().namespace if set
-        - default_namespace_management_settings (dictionary). Passed in but will be overridden by Chart().namespace_management_settings if set
-        """
-
+    def __pre_command(self, default_namespace=None, default_namespace_management={}, context=None) -> None:
         # Set the namespace
         if self.namespace is None:
             self._namespace = default_namespace
@@ -243,28 +234,39 @@ class Chart(object):
             self._context = context
         # Try to run the install process for mark the result as failed
 
+        # TODO: Improve error handling of a repository installation
+        #       Thoughts here, perhaps it would be better to install the
+        #       repositories *before* trying to install the chart. This
+        #       way we could find out earlier our course is wrong.
+        self.repository.install(self.name, self.version)
+
+        # Update the helm dependencies
+        self.update_dependencies()
+
+        # Build the args for the chart installation
+        # And add any extra arguments
+        self.build_helm_arguments_for_chart()
+
+        # Check and Error if we're missing required env vars
+        # TODO Rename this function as it does more than just "check", it also interpolates
+        self._check_env_vars()
+
+    def install(self, default_namespace=None, default_namespace_management={}, context=None) -> None:
+        """
+        Description:
+        - Upgrade --install the course chart
+
+        Arguments:
+        - default_namespace (string). Passed in but will be overridden by Chart().namespace if set
+        - default_namespace_management_settings (dictionary). Passed in but will be overridden by Chart().namespace_management_settings if set
+        """
+
         try:
+            self.__pre_command(default_namespace, default_namespace_management, context)
             self.manage_namespace()
 
             # Fire the pre_install_hook
             self.pre_install_hook.run()
-
-            # TODO: Improve error handling of a repository installation
-            #       Thoughts here, perhaps it would be better to install the
-            #       repositories *before* trying to install the chart. This
-            #       way we could find out earlier our course is wrong.
-            self.repository.install(self.name, self.version)
-
-            # Update the helm dependencies
-            self.update_dependencies()
-
-            # Build the args for the chart installation
-            # And add any extra arguments
-            self.build_helm_arguments_for_chart()
-
-            # Check and Error if we're missing required env vars
-            # TODO Rename this function as it does more than just "check", it also interpolates
-            self._check_env_vars()
 
             try:
                 # Perform the upgrade with the arguments
