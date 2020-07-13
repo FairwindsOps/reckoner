@@ -224,7 +224,7 @@ class Course(object):
         return the intersection. Will log if chart is requested but not
         present in the chart
         """
-        _only_charts = []
+        self._only_charts = []
 
         # NOTE: Unexpected feature here: Since we're iterating on all charts
         #       in the course to find the ones the user has requested, a
@@ -234,7 +234,7 @@ class Course(object):
 
         for chart in self.charts:
             if chart.release_name in charts_requested:
-                _only_charts.append(chart)
+                self._only_charts.append(chart)
                 charts_requested.remove(chart.release_name)
             else:
                 logging.debug(
@@ -245,14 +245,14 @@ class Course(object):
         # If any items remain in charts requested - warn that we didn't find them
         self._warn_about_missing_requested_charts(charts_requested)
 
-        if len(_only_charts) == 0:
+        if len(self._only_charts) == 0:
             raise NoChartsToInstall(
                 'None of the charts you requested ({}) could be '
                 'found in the course list. Verify you are using the '
                 'release-name and not the chart name.'.format(', '.join(charts_requested))
             )
 
-        return _only_charts
+        return self._only_charts
 
     def template(self, charts_requested_to_template: list) -> List[str]:
         """
