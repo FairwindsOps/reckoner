@@ -256,8 +256,8 @@ class Course(object):
 
     def template(self, charts_requested_to_template: list) -> List[str]:
         """
-        Accepts charts_to_install, an interable of the names of the charts
-        to install. This method compares the charts in the argument to the
+        Accepts charts_requested_to_template, an iterable of the names of the charts
+        to template. This method compares the charts in the argument to the
         charts in the course and calls Chart.template()
 
         """
@@ -267,7 +267,7 @@ class Course(object):
 
     def plot(self, charts_requested_to_install: list) -> List[ChartResult]:
         """
-        Accepts charts_to_install, an interable of the names of the charts
+        Accepts charts_to_install, an iterable of the names of the charts
         to install. This method compares the charts in the argument to the
         charts in the course and calls Chart.install()
 
