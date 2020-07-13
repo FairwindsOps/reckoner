@@ -234,10 +234,6 @@ class Chart(object):
             self._context = context
         # Try to run the install process for mark the result as failed
 
-        # TODO: Improve error handling of a repository installation
-        #       Thoughts here, perhaps it would be better to install the
-        #       repositories *before* trying to install the chart. This
-        #       way we could find out earlier our course is wrong.
         self.repository.install(self.name, self.version)
 
         # Update the helm dependencies
@@ -248,7 +244,6 @@ class Chart(object):
         self.build_helm_arguments_for_chart()
 
         # Check and Error if we're missing required env vars
-        # TODO Rename this function as it does more than just "check", it also interpolates
         self._check_env_vars()
 
     def install(self, default_namespace=None, default_namespace_management={}, context=None) -> None:
