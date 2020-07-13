@@ -289,6 +289,17 @@ class Chart(object):
             if self._deprecation_messages:
                 [logging.warning(msg) for msg in self._deprecation_messages]
 
+    def template(self, default_namespace=None, default_namespace_management={}, context=None) -> None:
+        self.__pre_command(default_namespace, default_namespace_management, context)
+        try:
+            # Perform the template with the arguments
+            return self.helm.template(self.args, plugin=self.plugin)
+        except Exception as e:
+            logging.debug(traceback.format_exc)
+            raise e
+        finally:
+            self.clean_up_temp_files()
+
     def _append_arg(self, arg_string):
         for item in arg_string.split(" ", 1):
             self.args.append(item)

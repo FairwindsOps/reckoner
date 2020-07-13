@@ -86,6 +86,30 @@ def plot(ctx, course_file=None, dry_run=False, debug=False, only=None, helm_args
 
 
 @cli.command()
+@click.pass_context
+@click.argument('course_file', type=click.File('rb'))
+@click.option("--only", "--heading", "-o", "only", metavar="<chart>", help='Only run a specific chart by name', multiple=True, required=True)
+@click.option("--helm-args", help='Passes the following arg on to helm, can be used more than once. WARNING: Setting '
+                                  'this will completely override any helm_args in the course. Also cannot be used for '
+                                  'configuring how helm connects to tiller.', multiple=True)
+@click.option("--log-level", default="INFO", help="Log Level. [INFO | DEBUG | WARN | ERROR]. (default=INFO)")
+def template(ctx, only, log_level, course_file=None, helm_args=None,):
+    """Output the template of the chart or charts as they would be installed or upgraded"""
+    coloredlogs.install(level=log_level)
+    # Check Schema of Course FileA
+    with open(course_file.name, 'rb') as course_file_stream:
+        validate_course_file(course_file_stream)
+    # Load Reckoner
+    r = Reckoner(course_file=course_file, helm_args=helm_args)
+    # Convert tuple to list
+    only = list(only)
+    logging.debug(f'Only tempalating the following charts: {only}')
+    template_results = r.template(only)
+    for result in template_results:
+        print(result.stdout)
+
+
+@cli.command()
 def version():
     """ Takes no arguments, outputs version info"""
     print(__version__)

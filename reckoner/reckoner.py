@@ -106,6 +106,19 @@ class Reckoner(object):
             logging.error(error)
             raise ReckonerCommandException('Failed to find any valid charts to install.')
 
+    def template(self, charts: List[str] = [] ):
+        selected_charts = charts or [chart._release_name for chart in self.course.charts]
+        try:
+            return self.course.template(selected_charts)
+            # for chart_result in plot_results:
+            #     if chart_result:
+            #         self.add_result(chart_result)
+            #     else:
+            #         raise Exception("Didn't expect None as a chart result...")
+        except NoChartsToInstall as error:
+            logging.error(error)
+            raise ReckonerCommandException('Failed to find any valid charts to install.')
+
     def add_result(self, result: ChartResult) -> None:
         self.results.add_result(result)
 
