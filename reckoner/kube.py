@@ -91,19 +91,23 @@ class NamespaceManager(object):
         """
         if self.overwrite:
             patch_metadata = self.metadata
-            logging.info("Overwriting Namespace Metadata")
+            logging.info("Overwriting Namespace '{}' Metadata".format(self.namespace_name))
         else:
             annotations = {}
             for annotation_name, annotation_value in self.metadata.get('annotations', {}).items():
                 try:
-                    self.namespace.metadata.annotations[annotation_name]
+                    current_annotation_value = self.namespace.metadata.annotations[annotation_name]
+                    if current_annotation_value != annotation_value:
+                        logging.info("Not Overwriting Metadata Annotation '{}' in Namespace '{}'".format(annotation_name,self.namespace_name))
                 except (TypeError, KeyError):
                     annotations[annotation_name] = annotation_value
 
             labels = {}
             for label_name, label_value in self.metadata.get('labels', {}).items():
                 try:
-                    self.namespace.metadata.labels[label_name]
+                    current_label_value = self.namespace.metadata.labels[label_name]
+                    if current_label_value != annotation_value:
+                        logging.info("Not Overwriting Metadata Label '{}' in Namespace '{}'".format(annotation_name,self.namespace_name))
                 except (TypeError, KeyError):
                     labels[label_name] = label_value
 
