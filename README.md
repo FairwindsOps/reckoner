@@ -47,7 +47,7 @@ charts:
 Then run:
 
 ```shell
-reckoner plot course.yaml
+reckoner plot course.yaml --run-all
 ```
 
 Grafana and Polaris should now be installed on your cluster!
