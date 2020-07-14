@@ -109,7 +109,7 @@ class Chart(object):
         )
 
         self._namespace = self._chart.get('namespace')
-        self._namespace_management = None
+        self._namespace_management = self._chart.get('namespace_management')
         self._context = self._chart.get('context')
         value_strings = self._chart.get('values-strings', {})
         self._chart['values_strings'] = value_strings
