@@ -155,6 +155,9 @@ class HelmClient(ABC):
             arguments = args
         return self.execute("upgrade", arguments, plugin=plugin)
 
+    def template(self, args, plugin=None):
+        return self.execute("template", args, plugin=plugin)
+
     def rollback(self, release):
         raise NotImplementedError(
             """This is known bad. If you see this error then you are likely implementing the solution :)"""

@@ -296,7 +296,7 @@ class TestCourse(TestBase):
     def test_plot_course(self):
         self.configure_subprocess_mock('', '', 0)  # TODO: Lots of work do do here on installation of the list of charts
         self.c.plot(list(self.c._dict['charts']))
-        self.assertEqual(self.c._charts_to_install, self.c.charts)
+        self.assertEqual(self.c._only_charts, self.c.charts)
 
 
 @mock.patch('reckoner.chart.NamespaceManager', NamespaceManagerMock)
