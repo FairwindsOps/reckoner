@@ -26,6 +26,24 @@ from .reckoner import Reckoner
 
 from reckoner.schema_validator.course import validate_course_file
 
+class Mutex(click.Option):
+    def __init__(self, *args, **kwargs):
+        self.not_required_if:list = kwargs.pop("not_required_if")
+
+        assert self.not_required_if, "'not_required_if' parameter required"
+        kwargs["help"] = (kwargs.get("help", "") + " Mutually exclusive with '" + ", ".join(self.not_required_if) + "'.").strip()
+        super(Mutex, self).__init__(*args, **kwargs)
+
+    def handle_parse_result(self, ctx, opts, args):
+        current_opt:bool = self.name in opts
+        for mutex_opt in self.not_required_if:
+            if mutex_opt in opts:
+                if current_opt:
+                    raise click.UsageError("Illegal usage: '" + str(self.name) + "' is mutually exclusive with '" + str(mutex_opt) + "'.")
+                else:
+                    self.prompt = None
+        return super(Mutex, self).handle_parse_result(ctx, opts, args)
+
 
 @click.group(invoke_without_command=True)
 @click.version_option(__version__)
@@ -45,7 +63,9 @@ def cli(ctx, log_level, *args, **kwargs):
 @click.option("--dry-run", is_flag=True, help='Pass --dry-run to helm so no action is taken. Implies --debug and '
                                               'skips hooks.')
 @click.option("--debug", is_flag=True, help='DEPRECATED - use --log-level=DEBUG as a parameter to `reckoner` instead. May be used with or without `--dry-run`. Or, pass `--debug` to --helm-args')
-@click.option("--only", "--heading", "-o", "only", metavar="<chart>", help='Only run a specific chart by name', multiple=True)
+@click.option("--run-all", "-a", "run_all", is_flag=True, help='Run all charts in the course.', cls=Mutex, not_required_if=["only"])
+@click.option("--only", "--heading", "-o", "only", metavar="<chart>", help='Only run a specific chart by name', multiple=True, cls=Mutex,
+               not_required_if=["run_all"])
 @click.option("--helm-args", help='Passes the following arg on to helm, can be used more than once. WARNING: Setting '
                                   'this will completely override any helm_args in the course. Also cannot be used for '
                                   'configuring how helm connects to tiller.', multiple=True)
@@ -54,9 +74,13 @@ def cli(ctx, log_level, *args, **kwargs):
 @click.option("--create-namespace/--no-create-namespace", default=True,
               help="Will create the specified nameaspace if it does not already exist. Replaces functionality lost in Helm3")
 @click.option("--log-level", default="INFO", help="Log Level. [INFO | DEBUG | WARN | ERROR]. (default=INFO)")
-def plot(ctx, log_level, course_file=None, dry_run=False, debug=False, only=None, helm_args=None, continue_on_error=False, create_namespace=True):
+def plot(ctx, run_all, log_level, course_file=None, dry_run=False, debug=False, only=None, helm_args=None, continue_on_error=False, create_namespace=True):
     """ Install charts with given arguments as listed in yaml file argument """
     coloredlogs.install(level=log_level)
+    if not run_all:
+        if len(only) < 1:
+            logging.error("You must pass either --run-all or --only.")
+            ctx.exit(1)
     try:
         # Check Schema of Course FileA
         with open(course_file.name, 'rb') as course_file_stream:
@@ -90,20 +114,28 @@ def plot(ctx, log_level, course_file=None, dry_run=False, debug=False, only=None
 @cli.command()
 @click.pass_context
 @click.argument('course_file', type=click.File('rb'))
-@click.option("--only", "--heading", "-o", "only", metavar="<chart>", help='Only run a specific chart by name', multiple=True, required=True)
+@click.option("--run-all", "-a", "run_all", is_flag=True, help='Run all charts in the course.', cls=Mutex, not_required_if=["only"])
+@click.option("--only", "--heading", "-o", "only", metavar="<chart>", help='Only run a specific chart by name.', multiple=True, cls=Mutex,
+              not_required_if=["run_all"])
 @click.option("--helm-args", help='Passes the following arg on to helm, can be used more than once. WARNING: Setting '
                                   'this will completely override any helm_args in the course. Also cannot be used for '
                                   'configuring how helm connects to tiller.', multiple=True)
 @click.option("--log-level", default="INFO", help="Log Level. [INFO | DEBUG | WARN | ERROR]. (default=INFO)")
-def template(ctx, only, log_level, course_file=None, helm_args=None,):
+def template(ctx, only, run_all, log_level, course_file=None, helm_args=None):
     """Output the template of the chart or charts as they would be installed or upgraded"""
+
     coloredlogs.install(level=log_level)
+    if not run_all:
+        if len(only) < 1:
+            logging.error("You must pass either --run-all or --only.")
+            ctx.exit(1)
+    
     # Check Schema of Course FileA
     with open(course_file.name, 'rb') as course_file_stream:
         validate_course_file(course_file_stream)
     # Load Reckoner
     r = Reckoner(course_file=course_file, helm_args=helm_args)
-    # Convert tuple to list
+    # Convert tuple to list    
     only = list(only)
     logging.debug(f'Only tempalating the following charts: {only}')
     template_results = r.template(only)
