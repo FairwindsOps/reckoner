@@ -158,6 +158,9 @@ class HelmClient(ABC):
     def template(self, args, plugin=None):
         return self.execute("template", args, plugin=plugin)
 
+    def get_manifest(self, args, plugin=None):
+        return self.execute("get manifest", args, plugin=plugin)
+
     def rollback(self, release):
         raise NotImplementedError(
             """This is known bad. If you see this error then you are likely implementing the solution :)"""

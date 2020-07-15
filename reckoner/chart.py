@@ -295,6 +295,34 @@ class Chart(object):
         finally:
             self.clean_up_temp_files()
 
+    def get_manifest(self, default_namespace=None, default_namespace_management={}, context=None) -> None:
+        self.__pre_command(default_namespace, default_namespace_management, context)
+        try:
+            # get_manifest needs a differnt set of args
+            self.args = []
+
+            # Set Default args (release name and chart path)
+            self._append_arg('{}'.format(self._release_name))
+
+            # Add namespace to args
+            self._append_arg('--namespace {}'.format(self.namespace))
+
+            # Add kubecfg context
+            if self.context is not None:
+                self._append_arg('--kube-context {}'.format(self.context))
+
+            # Add debug arguments
+            for debug_arg in self.debug_args:
+                self._append_arg(debug_arg)
+
+            # Perform the template with the arguments
+            return self.helm.get_manifest(self.args, plugin=self.plugin)
+        except Exception as e:
+            logging.debug(traceback.format_exc)
+            raise e
+        finally:
+            self.clean_up_temp_files()
+
     def _append_arg(self, arg_string):
         for item in arg_string.split(" ", 1):
             self.args.append(item)

@@ -218,6 +218,26 @@ class Course(object):
 
         return results
 
+    def get_chart_manifests(self, charts_to_manifest: list) -> List[str]:
+        results = []
+        for chart in charts_to_manifest:
+            logging.info("Getting Manifests For {}".format(chart.release_name))
+            try:
+                command_response = chart.get_manifest(
+                    default_namespace=self.namespace,
+                    default_namespace_management=self.namespace_management,
+                    context=self.context
+                )
+            except (Exception, ReckonerCommandException) as e:
+                import traceback
+                logging.debug(print(traceback.format_exc()))
+                raise e
+            finally:
+                # Always grab any results in the chart results
+                results.append(command_response)
+
+        return results
+
     def only_charts(self, charts_requested: list) -> List[str]:
         """
         Accepts the list of requested charts, compares that to the course
@@ -263,6 +283,17 @@ class Course(object):
         """
         # return the text of the charts templating
         results = self.template_charts(self.only_charts(charts_requested_to_template))
+        return results
+
+    def get_manifests(self, charts_manifests_requested: list) -> List[str]:
+        """
+        Accepts charts_manifests_requested, an iterable of the names of the charts
+        to get manifests for. This method compares the charts in the argument to the
+        charts in the course and calls Chart.get_manifest()
+
+        """
+        # return the text of the charts templating
+        results = self.get_chart_manifests(self.only_charts(charts_manifests_requested))
         return results
 
     def plot(self, charts_requested_to_install: list) -> List[ChartResult]:

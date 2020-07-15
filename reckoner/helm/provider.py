@@ -42,7 +42,12 @@ class HelmProvider(object):
 
         # start by creating a command line arguments list with the command being first
         args = list([instance._helm_binary])
-        args.append(instance._helm_command.command)
+
+        # if command has a space in it (like get manifests), split on space
+        # and append each segment as it's own list item to make `call` happy
+        for command_segment in instance._helm_command.command.split(' '):
+            args.append(command_segment)
+
         for arg in instance._helm_command.arguments:
             args.append(arg)
 
