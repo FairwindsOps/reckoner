@@ -135,7 +135,7 @@ def template(ctx, only, run_all, log_level, course_file=None, helm_args=None):
         validate_course_file(course_file_stream)
     # Load Reckoner
     r = Reckoner(course_file=course_file, helm_args=helm_args)
-    # Convert tuple to list    
+    # Convert tuple to list
     only = list(only)
     logging.debug(f'Only tempalating the following charts: {only}')
     template_results = r.template(only)
