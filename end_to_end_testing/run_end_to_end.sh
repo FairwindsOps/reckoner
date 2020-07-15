@@ -112,7 +112,7 @@ function namespace_has_annotation_with_value() {
     annotations=($(kubectl get namespace ${namespace}  -o json | jq -r '.metadata.annotations | keys[]'))
     values=($(kubectl get namespace ${namespace}  -o json | jq -r '.metadata.annotations[]'))
 
-    for i in "${!annotations[@]}"; do 
+    for i in "${!annotations[@]}"; do
         if [ "${annotations[i]}" == "$annotation_name" ]; then
             if [ "${values[i]}" == "$annotation_value" ]; then
                 return 0
@@ -131,7 +131,7 @@ function namespace_has_label_with_value() {
     labels=($(kubectl get namespace ${namespace}  -o json | jq -r '.metadata.labels | keys[]'))
     values=($(kubectl get namespace ${namespace}  -o json | jq -r '.metadata.labels[]'))
 
-    for i in "${!labels[@]}"; do 
+    for i in "${!labels[@]}"; do
         if [ "${labels[i]}" == "$label_name" ]; then
             if [ "${values[i]}" == "$label_value" ]; then
                 return 0
@@ -150,7 +150,7 @@ function helm_get_values(){
 
     if [ "${HELM_VERSION}" -eq "3" ]; then
         namespace=$(release_namespace ${1})
-        helm get values --output=json --namespace "${namespace}" "${1}" 
+        helm get values --output=json --namespace "${namespace}" "${1}"
     else
         helm get values --output=json "${1}"
     fi
@@ -193,7 +193,7 @@ function helm_release_key_value_is_type() {
 
 function e2e_test_namespace_creation_flag_on_chart_install() {
     if [ "${HELM_VERSION}" -eq "3" ]; then
-        if reckoner plot --no-create-namespace test_create_namespace.yml; then
+        if reckoner plot --no-create-namespace test_create_namespace.yml --run-all; then
             mark_failed "${FUNCNAME[0]}" "With --no-create-namespace set, this should have failed"
         fi
 
@@ -201,7 +201,7 @@ function e2e_test_namespace_creation_flag_on_chart_install() {
             mark_failed "${FUNCNAME[0]}" "Found namespace_test in farglebargle namespace after install and should not have"
         fi
 
-        if ! reckoner plot test_create_namespace.yml; then
+        if ! reckoner plot test_create_namespace.yml --run-all; then
             mark_failed "${FUNCNAME[0]}" "Without --no-create-namespace set, this should not have failed"
         fi
 
@@ -210,11 +210,11 @@ function e2e_test_namespace_creation_flag_on_chart_install() {
         fi
     fi
 
- 
+
 }
 
 function e2e_test_basic_chart_install() {
-    if ! reckoner plot test_basic.yml; then
+    if ! reckoner plot test_basic.yml --run-all; then
         mark_failed "${FUNCNAME[0]}" "Plot had a bad exit code"
     fi
 
@@ -224,7 +224,7 @@ function e2e_test_basic_chart_install() {
 }
 
 function e2e_test_env_var() {
-    if ! myvar=testing reckoner plot test_env_var.yml; then
+    if ! myvar=testing reckoner plot test_env_var.yml --run-all; then
         mark_failed "${FUNCNAME[0]}" "Could not install course"
     fi
 
@@ -242,13 +242,13 @@ function e2e_test_env_var() {
 }
 
 function e2e_test_env_var_exit_code() {
-    if reckoner plot test_env_var.yml; then
+    if reckoner plot test_env_var.yml --run-all; then
         mark_failed "${FUNCNAME[0]}" "Should fail to plot course without env var."
     fi
 }
 
 function e2e_test_good_hooks() {
-    if ! reckoner plot test_good_hooks.yml; then
+    if ! reckoner plot test_good_hooks.yml --run-all; then
         mark_failed "${FUNCNAME[0]}" "Plot had bad exit code"
     fi
 
@@ -257,7 +257,7 @@ function e2e_test_good_hooks() {
 
 function e2e_test_exit_on_post_install_hook() {
     # we expect this to fail exit code != 0
-    if reckoner plot test_exit_on_post_install_hook.yml; then
+    if reckoner plot test_exit_on_post_install_hook.yml --run-all; then
         mark_failed "${FUNCNAME[0]}" "Expected plot to have a bad exit code"
     fi
 
@@ -268,7 +268,7 @@ function e2e_test_exit_on_post_install_hook() {
 
 function e2e_test_exit_on_pre_install_hook() {
     # we expect this to fail exit code != 0
-    if reckoner plot test_exit_on_pre_install_hook.yml; then
+    if reckoner plot test_exit_on_pre_install_hook.yml --run-all; then
         mark_failed "${FUNCNAME[0]}" "Expected plot to have a bad exit code"
     fi
 
@@ -280,7 +280,7 @@ function e2e_test_exit_on_pre_install_hook() {
 
 function e2e_test_failed_chart() {
     # we expect this command to have a bad exit code
-    if reckoner plot test_failed_chart.yml; then
+    if reckoner plot test_failed_chart.yml --run-all; then
         mark_failed "${FUNCNAME[0]}" "Expected plot to fail with bad exit code"
     fi
 
@@ -290,7 +290,7 @@ function e2e_test_failed_chart() {
 }
 
 function e2e_test_multi_chart() {
-    if ! reckoner plot test_multi_chart.yml; then
+    if ! reckoner plot test_multi_chart.yml --run-all; then
         mark_failed "${FUNCNAME[0]}" "Expected plot to succeed"
     fi
 
@@ -304,14 +304,14 @@ function e2e_test_multi_chart() {
 }
 
 function e2e_test_install_only_one_chart() {
-    if ! reckoner plot --only first-chart test_multi_chart.yml; then
+    if ! reckoner plot --only first-chart test_multi_chart.yml --run-all; then
         mark_failed "${FUNCNAME[0]}" "Expected plot command with --only to pass"
     fi
 
     if ! helm_has_release_name_in_namespace "first-chart" "infra"; then
         mark_failed "${FUNCNAME[0]}" "Expected plot to install first-chart"
     fi
-    
+
     # we do not expect second-chart due to --only
     if helm_has_release_name_in_namespace "second-chart" "test"; then
         mark_failed "${FUNCNAME[0]}" "Expected second-chart to be ignored due to --only flag"
@@ -319,7 +319,7 @@ function e2e_test_install_only_one_chart() {
 }
 
 function e2e_test_git_chart() {
-    if ! reckoner plot test_git_chart.yml; then
+    if ! reckoner plot test_git_chart.yml --run-all; then
         mark_failed "${FUNCNAME[0]}" "Expected chart plot to succeed"
     fi
 
@@ -341,13 +341,13 @@ function e2e_test_git_chart() {
     else
         helm delete --purge go-harbor
     fi
-    
+
     kubectl delete pvc --all-namespaces --all
 }
 
 function e2e_test_stop_after_first_failure() {
     # we expect a non-zero exit code here
-    if reckoner plot test_stop_after_first_failure.yml; then
+    if reckoner plot test_stop_after_first_failure.yml --run-all; then
         mark_failed "${FUNCNAME[0]}" "Expected reckoner to exit with a bad exit code."
     fi
 
@@ -366,7 +366,7 @@ function e2e_test_stop_after_first_failure() {
 
 function e2e_test_continue_after_first_failure() {
     # we expect a non-zero exit code here
-    if reckoner plot --continue-on-error test_continue_after_first_failure.yml; then
+    if reckoner plot --continue-on-error test_continue_after_first_failure.yml --run-all; then
         mark_failed "${FUNCNAME[0]}" "Expected reckoner to exit with a bad exit code."
     fi
 
@@ -400,10 +400,10 @@ function e2e_test_strong_ordering() {
     # Custom check which subtracts the two modified timestamps
     # This will fail if they are modified at the same second...
     local first_chart_timestamp
-    
+
     local second_chart_timestamp
-    
-    
+
+
     if [ "${HELM_VERSION}" -eq "3" ]; then
         first_chart_timestamp="$(helm ls --namespace test -a --output json | jq '.[] |select(.name == "first-chart") | .updated' -r | awk -F"." '{ print $1 }' | tr -d \\n | xargs -I {} date -d {} +%s)"
         second_chart_timestamp="$(helm ls --namespace test -a --output json | jq '.[] |select(.name == "second-chart") | .updated' -r | awk -F"." '{ print $1 }' | tr -d \\n | xargs -I {} date -d {} +%s)"
@@ -418,7 +418,7 @@ function e2e_test_strong_ordering() {
 }
 
 function e2e_test_strong_typing() {
-    if ! yes_var=yes true_var=true false_var=false int_var=123 float_var=1.234 reckoner plot test_strong_typing.yml; then
+    if ! yes_var=yes true_var=true false_var=false int_var=123 float_var=1.234 reckoner plot test_strong_typing.yml --run-all; then
         mark_failed "${FUNCNAME[0]}" "Expected the course to be installable."
     fi
 
@@ -428,7 +428,7 @@ function e2e_test_strong_typing() {
     else
         charts="$(helm ls --output json | jq -e -r '.Releases[].Name')"
     fi
-    
+
     for _release_install in ${charts}; do
         # Check if the chart is installed
         if ! helm_has_release_name_in_namespace "${_release_install}" "testing"; then
@@ -438,7 +438,7 @@ function e2e_test_strong_typing() {
 
         # Check that all charts have these keys
         local values
-        
+
         if [ "${HELM_VERSION}" -eq "3" ]; then
             values="$(helm get values --namespace testing "${_release_install}" --output json | jq -e -r 'keys|.[]')"
         else
@@ -484,19 +484,19 @@ function e2e_test_strong_typing() {
 }
 
 function e2e_test_bad_schema_repository() {
-    if reckoner plot test_bad_schema_repository.yml; then
+    if reckoner plot test_bad_schema_repository.yml --run-all; then
         mark_failed "${FUNCNAME[0]}" "Expected to fail on schema validation failure."
     fi
 }
 
 function e2e_test_required_schema() {
-    if reckoner plot test_required_schema.yml; then
+    if reckoner plot test_required_schema.yml --run-all; then
         mark_failed "${FUNCNAME[0]}" "Expected to fail on schema validation failure."
     fi
 }
 
 function e2e_test_files_in_folders() {
-    if ! reckoner plot testing_in_folder/test_files_in_folders.yml; then
+    if ! reckoner plot testing_in_folder/test_files_in_folders.yml --run-all; then
         mark_failed "${FUNCNAME[0]}" "Expected to run without an error."
     fi
 
@@ -506,7 +506,7 @@ function e2e_test_files_in_folders() {
 }
 
 function e2e_test_default_namespace_management(){
-    if ! reckoner plot test_default_namespace_annotation_and_labels.yml; then
+    if ! reckoner plot test_default_namespace_annotation_and_labels.yml --run-all; then
         mark_failed "${FUNCNAME[0]}" "Expected to run without an error."
     fi
 
@@ -520,7 +520,7 @@ function e2e_test_default_namespace_management(){
 }
 
 function e2e_test_overwrite_namespace_management(){
-    if ! reckoner plot test_overwrite_namespace_annotation_and_labels.yml; then
+    if ! reckoner plot test_overwrite_namespace_annotation_and_labels.yml --run-all; then
         mark_failed "${FUNCNAME[0]}" "Expected to run without an error."
     fi
 
@@ -534,7 +534,7 @@ function e2e_test_overwrite_namespace_management(){
 }
 
 function e2e_test_does_not_overwrite_namespace_management(){
-    if ! reckoner plot test_overwrite_namespace_annotation_and_labels.yml; then
+    if ! reckoner plot test_overwrite_namespace_annotation_and_labels.yml --run-all; then
         mark_failed "${FUNCNAME[0]}" "Expected to run without an error."
     fi
 
