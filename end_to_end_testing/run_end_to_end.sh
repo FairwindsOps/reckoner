@@ -304,7 +304,7 @@ function e2e_test_multi_chart() {
 }
 
 function e2e_test_install_only_one_chart() {
-    if ! reckoner plot --only first-chart test_multi_chart.yml; then
+    if ! reckoner plot --only first-chart test_multi_chart.yml --run-all; then
         mark_failed "${FUNCNAME[0]}" "Expected plot command with --only to pass"
     fi
 
