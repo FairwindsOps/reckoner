@@ -76,7 +76,7 @@ class TestCliPlot(unittest.TestCase):
             with open('nonexistent.file', 'wb') as fake_file:
                 fake_file.write(''.encode())
 
-            result = runner.invoke(cli.plot, args=['nonexistent.file'])
+            result = runner.invoke(cli.plot, args=['nonexistent.file', '--run-all'])
 
         self.assertEqual(0, result.exit_code, result.output)
         reckoner_instance.install.assert_called_once()
@@ -93,7 +93,7 @@ class TestCliPlot(unittest.TestCase):
             with open('nonexistent.file', 'wb') as fake_file:
                 fake_file.write(''.encode())
 
-            result = runner.invoke(cli.plot, args=['nonexistent.file'])
+            result = runner.invoke(cli.plot, args=['nonexistent.file', '--run-all'])
 
         self.assertEqual(1, result.exit_code, result.output)
         reckoner_instance.install.assert_called_once()
@@ -107,7 +107,7 @@ class TestCliPlot(unittest.TestCase):
             with open('nonexistent.file', 'wb') as fake_file:
                 fake_file.write(''.encode())
 
-            result = runner.invoke(cli.plot, args=['nonexistent.file'])
+            result = runner.invoke(cli.plot, args=['nonexistent.file', '--run-all'])
 
         self.assertEqual(1, result.exit_code, result.output)
 
@@ -115,6 +115,7 @@ class TestCliPlot(unittest.TestCase):
         required = {
             'option': [
                 '--dry-run',
+                '--run-all',
                 '--debug',
                 '--helm-args',
                 '--heading',
@@ -128,6 +129,67 @@ class TestCliPlot(unittest.TestCase):
 
         assert_required_params(required, cli.plot.params)
 
+class TestCliTemplate(unittest.TestCase):
+    @mock.patch('reckoner.cli.validate_course_file')
+    @mock.patch('reckoner.cli.Reckoner', autospec=True)
+    def test_template_exists(self, reckoner_mock, validation_mock):
+        """Assure we have a template command and it calls reckoner template"""
+        reckoner_instance = reckoner_mock()
+        reckoner_instance.results = mock.MagicMock(has_errors=False)
+        runner = CliRunner()
+        with runner.isolated_filesystem():
+            with open('nonexistent.file', 'wb') as fake_file:
+                fake_file.write(''.encode())
+
+            result = runner.invoke(cli.template, args=['nonexistent.file', '--run-all'])
+
+        self.assertEqual(0, result.exit_code, result.output)
+        reckoner_instance.template.assert_called_once()
+
+    @mock.patch('reckoner.cli.validate_course_file')
+    @mock.patch('reckoner.cli.Reckoner', autospec=True)
+    def test_template_has_correct_exit_code_with_errors(self, reckoner_mock, validation_mock):
+        """Assure we have a template command and it calls reckoner template"""
+        reckoner_instance = reckoner_mock()
+        reckoner_instance.results = mock.MagicMock(has_errors=True)
+        reckoner_instance.results.results_with_errors = [None]
+        runner = CliRunner()
+        with runner.isolated_filesystem():
+            with open('nonexistent.file', 'wb') as fake_file:
+                fake_file.write(''.encode())
+
+            result = runner.invoke(cli.template, args=['nonexistent.file'])
+
+        self.assertEqual(1, result.exit_code, result.output)
+
+    @mock.patch('reckoner.cli.Reckoner', autospec=True)
+    def test_template_handles_exception(self, reckoner_mock):
+        """Assure we have a template command and it calls reckoner template"""
+        reckoner_mock.side_effect = [ReckonerException("had some error")]
+        runner = CliRunner()
+        with runner.isolated_filesystem():
+            with open('nonexistent.file', 'wb') as fake_file:
+                fake_file.write(''.encode())
+
+            result = runner.invoke(cli.template, args=['nonexistent.file', '--run-all'])
+
+        self.assertEqual(1, result.exit_code, result.output)
+
+    def test_template_options(self):
+        required = {
+            'option': [
+                '--run-all',
+                '--helm-args',
+                '--heading',
+                '--only',
+                '--continue-on-error',
+            ],
+            'argument': [
+                'course_file',
+            ]
+        }
+
+        assert_required_params(required, cli.plot.params)
 
 def assert_required_params(required_options, list_of_cli_params):
     all_params = {}
