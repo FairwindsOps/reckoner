@@ -204,7 +204,7 @@ jobs:
           name: Run end to end tests
           command: HELM_VERSION=3 "./end_to_end_testing/run_end_to_end.sh"
   publish-binaries:
-    executor: python-3-7
+    executor: python-3-8
     steps:
       - attach_workspace:
           at: /tmp/binaries
@@ -239,6 +239,12 @@ workflows:
             branches:
               only: /.*/
       - build-3-7:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              only: /.*/
+      - build-3-8:
           filters:
             tags:
               only: /.*/
