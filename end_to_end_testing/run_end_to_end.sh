@@ -547,6 +547,20 @@ function e2e_test_does_not_overwrite_namespace_management(){
     fi
 }
 
+function e2e_test_template_command(){
+    if ! reckoner template test_basic.yml --heading first-chart; then
+        mark_failed "${FUNCNAME[0]}" "Expected 'template' command to run without an error" 
+    fi
+}
+
+function e2e_test_get_manifests_command(){
+    reckoner plot test_basic.yml --heading first-chart
+    if ! reckoner get-manifests test_basic.yml --heading first-chart; then
+        mark_failed "${FUNCNAME[0]}" "Expected 'get-manifests' command to run without an error"
+    fi
+}
+
+
 function run_test() {
     local test_name
     test_name="${1}"
