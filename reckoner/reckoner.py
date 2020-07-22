@@ -109,7 +109,6 @@ class Reckoner(object):
     def template(self, charts: List[str] = [] ):
         selected_charts = charts or [chart._release_name for chart in self.course.charts]
         try:
-            print(selected_charts)
             return self.course.template(selected_charts)
         except NoChartsToInstall as error:
             logging.error(error)

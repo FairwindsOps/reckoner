@@ -237,7 +237,7 @@ class TestCliGetManifests(unittest.TestCase):
 
         self.assertEqual(1, result.exit_code, result.output)
 
-    def test_get_manefest_options(self):
+    def test_get_manifest_options(self):
         required = {
             'option': [
                 '--run-all',
