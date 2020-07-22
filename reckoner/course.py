@@ -208,13 +208,10 @@ class Course(object):
                     default_namespace_management=self.namespace_management,
                     context=self.context
                 )
+                results.append(command_response)
             except (Exception, ReckonerCommandException) as e:
                 import traceback
-                logging.debug(print(traceback.format_exc()))
-                raise e
-            finally:
-                # Always grab any results in the chart results
-                results.append(command_response)
+                logging.debug(traceback.format_exc())
 
         return results
 
@@ -228,13 +225,10 @@ class Course(object):
                     default_namespace_management=self.namespace_management,
                     context=self.context
                 )
+                results.append(command_response)
             except (Exception, ReckonerCommandException) as e:
                 import traceback
-                logging.debug(print(traceback.format_exc()))
-                raise e
-            finally:
-                # Always grab any results in the chart results
-                results.append(command_response)
+                logging.debug(traceback.format_exc())
 
         return results
 
