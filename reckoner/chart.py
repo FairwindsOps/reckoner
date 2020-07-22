@@ -298,7 +298,7 @@ class Chart(object):
     def get_manifest(self, default_namespace=None, default_namespace_management={}, context=None) -> None:
         self.__pre_command(default_namespace, default_namespace_management, context)
         try:
-            # get_manifest needs a differnt set of args
+            # get_manifest needs a different set of args
             self.args = []
 
             # Set Default args (release name and chart path)
