@@ -562,7 +562,7 @@ function e2e_test_get_manifests() {
 
 function e2e_test_get_manifests_non_existent() {
     reckoner plot test_basic.yml --run-all
-    if reckoner get-manifests test_basic.yml -o non-existant then
+    if reckoner get-manifests test_basic.yml -o non-existent; then
         mark_failed "${FUNCNAME[0]}" "Expected to fail getting non-existent release"
     fi
 }
