@@ -27,6 +27,8 @@ from .command_line_caller import call
 from .exception import ReckonerCommandException
 from .yaml.handler import Handler as yaml_handler
 
+from .helm.cmd_response import HelmCmdResponse
+
 from string import Template
 from tempfile import NamedTemporaryFile as tempfile
 
@@ -36,10 +38,11 @@ default_repository = {'name': 'stable', 'url': 'https://kubernetes-charts.storag
 
 class ChartResult:
 
-    def __init__(self, name: str, failed: bool, error_reason: str):
+    def __init__(self, name: str, failed: bool, error_reason: str, response: HelmCmdResponse):
         self.name = name
         self.failed = failed
         self.error_reason = error_reason
+        self.response = response
 
     def __str__(self):
         return "Chart Name: {}\n" \
@@ -79,7 +82,12 @@ class Chart(object):
         self.helm = helm
         self.config = Config()
         self._release_name = list(chart.keys())[0]
-        self.result = ChartResult(name=self._release_name, failed=False, error_reason="")
+        self.result = ChartResult(
+            name=self._release_name,
+            failed=False,
+            error_reason="",
+            response=None
+        )
         self._chart = chart[self._release_name]
         self._repository = Repository(self._chart.get('repository', default_repository), self.helm)
         self._plugin = self._chart.get('plugin')
@@ -265,11 +273,11 @@ class Chart(object):
 
             try:
                 # Perform the upgrade with the arguments
-                helm_command_response = self.helm.upgrade(self.args, plugin=self.plugin)
+                self.result.response = self.helm.upgrade(self.args, plugin=self.plugin)
             finally:
                 self.clean_up_temp_files()
             # Log the stdout response in info
-            logging.info(helm_command_response.stdout)
+            logging.info(self.result.response.stdout)
 
             # Fire the post_install_hook
             self.post_install_hook.run()
@@ -288,7 +296,7 @@ class Chart(object):
         self.__pre_command(default_namespace, default_namespace_management, context)
         try:
             # Perform the template with the arguments
-            return self.helm.template(self.args, plugin=self.plugin)
+            self.result.response = self.helm.template(self.args, plugin=self.plugin)
         except Exception as e:
             logging.debug(traceback.format_exc)
             raise e
@@ -316,7 +324,7 @@ class Chart(object):
                 self._append_arg(debug_arg)
 
             # Perform the template with the arguments
-            return self.helm.get_manifest(self.args, plugin=self.plugin)
+            self.result.response = self.helm.get_manifest(self.args, plugin=self.plugin)
         except Exception as e:
             logging.debug(traceback.format_exc)
             raise e

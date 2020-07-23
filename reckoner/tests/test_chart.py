@@ -154,19 +154,20 @@ class TestChartResult(unittest.TestCase):
             name="fake-result",
             failed=False,
             error_reason="",
+            response=None
         )
 
         assert c
 
     def test_string_output(self):
-        c = ChartResult(name="fake-result", failed=False, error_reason="oops")
+        c = ChartResult(name="fake-result", failed=False, error_reason="oops", response=None)
         string_output = c.__str__()
         self.assertIn("fake-result", string_output)
         self.assertIn("Succeeded", string_output)
         self.assertIn(c.error_reason, string_output)
 
     def test_status_string(self):
-        c = ChartResult(name="railed-result", failed=True, error_reason="")
+        c = ChartResult(name="railed-result", failed=True, error_reason="", response=None)
         self.assertEqual(c.status_string, "Failed")
         c.failed = False
         self.assertEqual(c.status_string, "Succeeded")

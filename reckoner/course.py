@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
+import traceback
 import logging
 import semver
 import sys
@@ -168,29 +168,25 @@ class Course(object):
     def post_install_hook(self):
         return self._post_install_hook
 
-    def install_charts(self, charts_to_install: list) -> List[ChartResult]:
+    def __run_command_for_charts_list(self, command: str, charts: list) -> List[ChartResult]:
         results = []
-        for chart in charts_to_install:
-            logging.info("Installing {}".format(chart.release_name))
+        for chart in charts:
+            logging.info(f"Running '{command}' on {chart.release_name}")
             try:
-                chart.install(
+                getattr(chart, command)(
                     default_namespace=self.namespace,
                     default_namespace_management=self.namespace_management,
                     context=self.context
                 )
             except (Exception, ReckonerCommandException) as e:
-                import traceback
-                logging.debug(print(traceback.format_exc()))
+                logging.debug(traceback.format_exc())
                 if type(e) == ReckonerCommandException:
                     logging.error(e.stderr)
                 if type(e) == Exception:
                     logging.error(e)
-                logging.error('Helm upgrade failed on {}'.format(chart.release_name))
-                # chart.rollback #TODO Fix this - it doesn't actually fire or work
-                logging.error("ERROR: Chart failed to install.")
-                logging.error(" - {}".format(chart.release_name))
+                logging.error(f'ERROR: {command} Failed on {chart.release_name}')
                 if not self.config.continue_on_error:
-                    logging.error("Stopping chart installations due to an error! Some of your charts may not have been installed!")
+                    logging.error(f"Stopping chart '{command}' due to an error! Some of your charts may not have been installed!")
                     break
             finally:
                 # Always grab any results in the chart results
@@ -198,39 +194,29 @@ class Course(object):
 
         return results
 
-    def template_charts(self, charts_to_template: list) -> List[str]:
-        results = []
-        for chart in charts_to_template:
-            logging.info("Templating {}".format(chart.release_name))
-            try:
-                command_response = chart.template(
-                    default_namespace=self.namespace,
-                    default_namespace_management=self.namespace_management,
-                    context=self.context
-                )
-                results.append(command_response)
-            except (Exception, ReckonerCommandException) as e:
-                import traceback
-                logging.debug(traceback.format_exc())
+    def install_charts(self, charts_to_install: list) -> List[ChartResult]:
+        """
+        For a list of charts_to_install, run the `install` method on each chart instance.
+        Accepts list of `Chart()`
+        Returns list of `ChartResult()`
+        """
+        return self.__run_command_for_charts_list('install', charts_to_install)
 
-        return results
+    def template_charts(self, charts_to_template: list) -> List[ChartResult]:
+        """
+        For a list of charts_to_install, run the `template` method on each chart instance
+        Accepts list of `Chart()`
+        Returns list of `ChartResult()`
+        """
+        return self.__run_command_for_charts_list('template', charts_to_template)
 
-    def get_chart_manifests(self, charts_to_manifest: list) -> List[str]:
-        results = []
-        for chart in charts_to_manifest:
-            logging.info("Getting Manifests For {}".format(chart.release_name))
-            try:
-                command_response = chart.get_manifest(
-                    default_namespace=self.namespace,
-                    default_namespace_management=self.namespace_management,
-                    context=self.context
-                )
-                results.append(command_response)
-            except (Exception, ReckonerCommandException) as e:
-                import traceback
-                logging.debug(traceback.format_exc())
-
-        return results
+    def get_chart_manifests(self, charts_to_manifest: list) -> List[ChartResult]:
+        """
+        For a list of charts_to_install, run the `get_manifest` method on each chart instance
+        Accepts list of `Chart()`
+        Returns list of `ChartResult()`
+        """
+        return self.__run_command_for_charts_list('get_manifest', charts_to_manifest)
 
     def only_charts(self, charts_requested: list) -> List[str]:
         """
