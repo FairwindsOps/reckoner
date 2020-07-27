@@ -548,22 +548,28 @@ function e2e_test_does_not_overwrite_namespace_management(){
 }
 
 function e2e_test_template() {
-    if ! reckoner template test_basic.yml --run-all; then
-        mark_failed "${FUNCNAME[0]}" "Expected to get templates of one release without an error."
+    if [ "${HELM_VERSION}" -eq "3" ]; then
+        if ! reckoner template test_basic.yml --run-all; then
+            mark_failed "${FUNCNAME[0]}" "Expected to get templates of one release without an error."
+        fi
     fi
 }
 
 function e2e_test_get_manifests() {
-    reckoner plot test_basic.yml --run-all
-    if ! reckoner get-manifests test_basic.yml -o first-chart; then
-        mark_failed "${FUNCNAME[0]}" "Expected to get manifests of one release without an error."
+    if [ "${HELM_VERSION}" -eq "3" ]; then
+        reckoner plot test_basic.yml --run-all
+        if ! reckoner get-manifests test_basic.yml -o first-chart; then
+            mark_failed "${FUNCNAME[0]}" "Expected to get manifests of one release without an error."
+        fi
     fi
 }
 
 function e2e_test_get_manifests_non_existent() {
-    reckoner plot test_basic.yml --run-all
-    if reckoner get-manifests test_basic.yml -o non-existent; then
-        mark_failed "${FUNCNAME[0]}" "Expected to fail getting non-existent release"
+    if [ "${HELM_VERSION}" -eq "3" ]; then
+        reckoner plot test_basic.yml --run-all
+        if reckoner get-manifests test_basic.yml -o non-existent; then
+            mark_failed "${FUNCNAME[0]}" "Expected to fail getting non-existent release"
+        fi
     fi
 }
 
