@@ -225,7 +225,7 @@ class TestCliGetManifests(unittest.TestCase):
         self.assertEqual(1, result.exit_code, result.output)
 
     @mock.patch('reckoner.cli.Reckoner', autospec=True)
-    def test_template_handles_exception(self, reckoner_mock):
+    def test_get_manifests_handles_exception(self, reckoner_mock):
         """Assure we have a get_manifests command and it calls reckoner get_manifests"""
         reckoner_mock.side_effect = [ReckonerException("had some error")]
         runner = CliRunner()
@@ -237,7 +237,7 @@ class TestCliGetManifests(unittest.TestCase):
 
         self.assertEqual(1, result.exit_code, result.output)
 
-    def test_template_options(self):
+    def test_get_manifest_options(self):
         required = {
             'option': [
                 '--run-all',

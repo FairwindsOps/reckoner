@@ -140,7 +140,7 @@ def template(ctx, only, run_all, log_level, course_file=None, helm_args=None):
     logging.debug(f'Only tempalating the following charts: {only}')
     template_results = r.template(only)
     for result in template_results:
-        print(result.stdout)
+        print(result.response.stdout)
 
 
 @cli.command()
@@ -171,7 +171,7 @@ def get_manifests(ctx, only, run_all, log_level, course_file=None, helm_args=Non
     logging.debug(f'Only tempalating the following charts: {only}')
     manifests_results = r.get_manifests(only)
     for result in manifests_results:
-        print(result.stdout)
+        print(result.response.stdout)
 
 
 @cli.command()

@@ -47,16 +47,16 @@ class TestReckonerInstallResults(unittest.TestCase):
 
     def test_has_errors(self):
         r = ReckonerInstallResults()
-        r.add_result(ChartResult(name="fake-result", failed=False, error_reason=""))
+        r.add_result(ChartResult(name="fake-result", failed=False, error_reason="", response=None))
         self.assertFalse(r.has_errors)
 
         r = ReckonerInstallResults()
-        r.add_result(ChartResult(name="failed-result", failed=True, error_reason="somereason"))
+        r.add_result(ChartResult(name="failed-result", failed=True, error_reason="somereason", response=None))
         self.assertTrue(r.has_errors)
 
     def test_results_with_errors(self):
         r = ReckonerInstallResults()
-        r.add_result(ChartResult(name="good-result", failed=False, error_reason=""))
-        r.add_result(ChartResult(name="failed", failed=True, error_reason="failed install"))
+        r.add_result(ChartResult(name="good-result", failed=False, error_reason="", response=None))
+        r.add_result(ChartResult(name="failed", failed=True, error_reason="failed install", response=None))
 
         self.assertEqual(len(r.results_with_errors), 1)

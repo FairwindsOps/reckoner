@@ -547,6 +547,32 @@ function e2e_test_does_not_overwrite_namespace_management(){
     fi
 }
 
+function e2e_test_template() {
+    if [ "${HELM_VERSION}" -eq "3" ]; then
+        if ! reckoner template test_basic.yml --run-all; then
+            mark_failed "${FUNCNAME[0]}" "Expected to get templates of one release without an error."
+        fi
+    fi
+}
+
+function e2e_test_get_manifests() {
+    if [ "${HELM_VERSION}" -eq "3" ]; then
+        reckoner plot test_basic.yml --run-all
+        if ! reckoner get-manifests test_basic.yml -o first-chart; then
+            mark_failed "${FUNCNAME[0]}" "Expected to get manifests of one release without an error."
+        fi
+    fi
+}
+
+function e2e_test_get_manifests_non_existent() {
+    if [ "${HELM_VERSION}" -eq "3" ]; then
+        reckoner plot test_basic.yml --run-all
+        if reckoner get-manifests test_basic.yml -o non-existent; then
+            mark_failed "${FUNCNAME[0]}" "Expected to fail getting non-existent release"
+        fi
+    fi
+}
+
 function run_test() {
     local test_name
     test_name="${1}"
