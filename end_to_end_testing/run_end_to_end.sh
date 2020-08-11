@@ -573,6 +573,33 @@ function e2e_test_get_manifests_non_existent() {
     fi
 }
 
+function e2e_test_get_diff() {
+    if [ "${HELM_VERSION}" -eq "3" ]; then
+        reckoner plot test_basic.yml --run-all
+        if ! reckoner get-manifests test_basic.yml -o first-chart; then
+            mark_failed "${FUNCNAME[0]}" "Expected to succeed getting diff of release"
+        fi
+    fi
+}
+
+function e2e_test_get_update_of_release() {
+    if [ "${HELM_VERSION}" -eq "3" ]; then
+        reckoner plot test_basic.yml --run-all
+        if ! reckoner update test_basic.yml -o first-chart; then
+            mark_failed "${FUNCNAME[0]}" "Expected to succeed updating release"
+        fi
+    fi
+}
+
+function e2e_test_get_update_of_run_all() {
+    if [ "${HELM_VERSION}" -eq "3" ]; then
+        reckoner plot test_basic.yml --run-all
+        if ! reckoner update test_basic.yml --run-all; then
+            mark_failed "${FUNCNAME[0]}" "Expected to succeed updating all"
+        fi
+    fi
+}
+
 function run_test() {
     local test_name
     test_name="${1}"
