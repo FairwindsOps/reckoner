@@ -175,6 +175,37 @@ def get_manifests(ctx, only, run_all, log_level, course_file=None, helm_args=Non
 
 
 @cli.command()
+@click.pass_context
+@click.argument('course_file', type=click.File('rb'))
+@click.option("--run-all", "-a", "run_all", is_flag=True, help='Run all charts in the course.', cls=Mutex, not_required_if=["only"])
+@click.option("--only", "--heading", "-o", "only", metavar="<chart>", help='Only run a specific chart by name.', multiple=True, cls=Mutex,
+              not_required_if=["run_all"])
+@click.option("--helm-args", help='Passes the following arg on to helm, can be used more than once. WARNING: Setting '
+                                  'this will completely override any helm_args in the course. Also cannot be used for '
+                                  'configuring how helm connects to tiller.', multiple=True)
+@click.option("--log-level", default="INFO", help="Log Level. [INFO | DEBUG | WARN | ERROR]. (default=INFO)")
+def diff(ctx, only, run_all, log_level, course_file=None, helm_args=None):
+    """Output the manifests of the chart or charts as they are installed"""
+
+    coloredlogs.install(level=log_level)
+    if not run_all:
+        if len(only) < 1:
+            logging.error("You must pass either --run-all or --only.")
+            ctx.exit(1)
+    # Check Schema of Course FileA
+    with open(course_file.name, 'rb') as course_file_stream:
+        validate_course_file(course_file_stream)
+    # Load Reckoner
+    r = Reckoner(course_file=course_file, helm_args=helm_args)
+    # Convert tuple to list
+    only = list(only)
+    logging.debug(f'Only diffing the following charts: {only}')
+    diff_results = r.diff(only)
+    for result in diff_results:
+        print(result.response)
+
+
+@cli.command()
 def version():
     """ Takes no arguments, outputs version info"""
     print(__version__)
