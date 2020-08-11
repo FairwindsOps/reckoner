@@ -293,6 +293,47 @@ class Chart(object):
             if self._deprecation_messages:
                 [logging.warning(msg) for msg in self._deprecation_messages]
 
+    def update(self, default_namespace=None, default_namespace_management={}, context=None) -> None:
+        """
+        Description:
+        - Upgrade --install the course charts where this would cause a change in the cluster
+
+        Arguments:
+        - default_namespace (string). Passed in but will be overridden by Chart().namespace if set
+        - default_namespace_management_settings (dictionary). Passed in but will be overridden by Chart().namespace_management_settings if set
+        """
+
+        try:
+            if self.requires_update:
+                self.__pre_command(default_namespace, default_namespace_management, context)
+                self.manage_namespace()
+
+                # Fire the pre_install_hook
+                self.pre_install_hook.run()
+
+                try:
+                    # Perform the upgrade with the arguments
+                    self.result.response = self.helm.upgrade(self.args, plugin=self.plugin)
+                finally:
+                    self.clean_up_temp_files()
+                # Log the stdout response in info
+                logging.info(self.result.response.stdout)
+
+                # Fire the post_install_hook
+                self.post_install_hook.run()
+            else:
+                logging.info(f"Update not required for {self.release_name}. No Changes")
+        except Exception as err:
+            logging.debug("Saving encountered error to chart result. See Below:")
+            logging.debug("{}".format(err))
+            logging.debug(traceback.format_exc())
+            self.result.failed = True
+            self.result.error_reason = err
+            raise err
+        finally:
+            if self._deprecation_messages:
+                [logging.warning(msg) for msg in self._deprecation_messages]
+
     def template(self, default_namespace=None, default_namespace_management={}, context=None) -> None:
         self.result.response = self.__template_response(default_namespace, default_namespace_management, context)
 
@@ -345,7 +386,7 @@ class Chart(object):
             manifest_lines = manifest_response.stdout.strip().splitlines()
         except HelmClientException as e:
             if "not found" in str(e):
-                logging.warn(f"Release {self.name} does not exist. Output will be the equal to 'template'")
+                logging.warn(f"Release {self.release_name} does not exist. Output will be the equal to 'template'")
             manifest_lines = []
 
         template_response = self.__template_response(default_namespace, default_namespace_management, context)
@@ -359,13 +400,16 @@ class Chart(object):
 
         return "\n".join(diff)
 
+    @property
     def requires_update(self):
         """
         Returns true if there is any differences between the installed release and the
         templates that would be generated from this run
         """
-        if self.__diff_response() is not "":
-            return True
+        if self.__diff_response() is "":
+            return False
+
+        return True
 
     def diff(self, default_namespace=None, default_namespace_management={}, context=None) -> None:
         self.result.response = self.__diff_response()

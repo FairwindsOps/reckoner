@@ -185,7 +185,7 @@ def get_manifests(ctx, only, run_all, log_level, course_file=None, helm_args=Non
                                   'configuring how helm connects to tiller.', multiple=True)
 @click.option("--log-level", default="INFO", help="Log Level. [INFO | DEBUG | WARN | ERROR]. (default=INFO)")
 def diff(ctx, only, run_all, log_level, course_file=None, helm_args=None):
-    """Output the manifests of the chart or charts as they are installed"""
+    """Output diff of the templates that would be installed and the manifests that are currently installed"""
 
     coloredlogs.install(level=log_level)
     if not run_all:
@@ -203,6 +203,59 @@ def diff(ctx, only, run_all, log_level, course_file=None, helm_args=None):
     diff_results = r.diff(only)
     for result in diff_results:
         print(result.response)
+
+@cli.command()
+@click.pass_context
+@click.argument('course_file', type=click.File('rb'))
+@click.option("--dry-run", is_flag=True, help='Pass --dry-run to helm so no action is taken. Implies --debug and '
+                                              'skips hooks.')
+@click.option("--debug", is_flag=True, help='DEPRECATED - use --log-level=DEBUG as a parameter to `reckoner` instead. May be used with or without `--dry-run`. Or, pass `--debug` to --helm-args')
+@click.option("--run-all", "-a", "run_all", is_flag=True, help='Run all charts in the course.', cls=Mutex, not_required_if=["only"])
+@click.option("--only", "--heading", "-o", "only", metavar="<chart>", help='Only run a specific chart by name', multiple=True, cls=Mutex,
+              not_required_if=["run_all"])
+@click.option("--helm-args", help='Passes the following arg on to helm, can be used more than once. WARNING: Setting '
+                                  'this will completely override any helm_args in the course. Also cannot be used for '
+                                  'configuring how helm connects to tiller.', multiple=True)
+@click.option("--continue-on-error", is_flag=True, default=False,
+              help="Attempt to install all charts in the course, even if any charts or hooks fail to run.")
+@click.option("--create-namespace/--no-create-namespace", default=True,
+              help="Will create the specified nameaspace if it does not already exist. Replaces functionality lost in Helm3")
+@click.option("--log-level", default="INFO", help="Log Level. [INFO | DEBUG | WARN | ERROR]. (default=INFO)")
+def update(ctx, run_all, log_level, course_file=None, dry_run=False, debug=False, only=None, helm_args=None, continue_on_error=False, create_namespace=True):
+    """Checks to see if any thing will have changed, if so, updated the release, if not, does nothing"""
+    coloredlogs.install(level=log_level)
+    if not run_all:
+        if len(only) < 1:
+            logging.error("You must pass either --run-all or --only.")
+            ctx.exit(1)
+    try:
+        # Check Schema of Course FileA
+        with open(course_file.name, 'rb') as course_file_stream:
+            validate_course_file(course_file_stream)
+        # Load Reckoner
+        r = Reckoner(course_file=course_file, dryrun=dry_run, debug=debug, helm_args=helm_args,
+                     continue_on_error=continue_on_error, create_namespace=create_namespace)
+        # Convert tuple to list
+        only = list(only)
+        r.update(only)
+    except exception.ReckonerException as err:
+        click.echo(click.style("⛵🔥 Encountered errors while reading course file ⛵🔥", fg="bright_red"))
+        click.echo(click.style("{}".format(err), fg="red"))
+        logging.debug(traceback.format_exc())
+        ctx.exit(1)
+    except Exception as err:
+        # This handles exceptions cleanly, no expected stack traces from reckoner code
+        click.echo(click.style("⛵🔥 Encountered unexpected error in Reckoner! Run with DEBUG log level to see details, for example:\n\nreckoner --log-level=DEBUG plot course.yml -o <heading> --dry-run\n\n(or without heading if running the full chart). ⛵🔥", fg="bright_red"))
+        if 'log_level' in ctx.parent.params and ctx.parent.params['log_level'].lower() in ['debug', 'trace']:
+            click.echo(click.style("{}".format(err), fg='bright_red'))
+        logging.debug(traceback.format_exc())
+        ctx.exit(1)
+    if r.results.has_errors:
+        click.echo(click.style("⛵🔥 Encountered errors while running the course ⛵🔥", fg="bright_red"))
+        for result in r.results.results_with_errors:
+            click.echo(click.style("\n* * * * *\n", fg="bright_red"))
+            click.echo(click.style(str(result), fg="bright_red"))
+        ctx.exit(1)
 
 
 @cli.command()

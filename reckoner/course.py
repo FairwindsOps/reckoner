@@ -202,6 +202,14 @@ class Course(object):
         """
         return self.__run_command_for_charts_list('install', charts_to_install)
 
+    def update_charts(self, charts_to_update: list) -> List[ChartResult]:
+        """
+        For a list of charts_to_update, run the `update` method on each chart instance.
+        Accepts list of `Chart()`
+        Returns list of `ChartResult()`
+        """
+        return self.__run_command_for_charts_list('update', charts_to_update)
+
     def template_charts(self, charts_to_template: list) -> List[ChartResult]:
         """
         For a list of charts_to_install, run the `template` method on each chart instance
@@ -225,7 +233,6 @@ class Course(object):
         Returns list of `ChartResult()`
         """
         return self.__run_command_for_charts_list('diff', charts_to_diff)
-
 
     def only_charts(self, charts_requested: list) -> List[str]:
         """
@@ -306,6 +313,24 @@ class Course(object):
         # return the results of the charts installation, exit on error to prevent post install hook run
         self.pre_install_hook.run()
         results = self.install_charts(self.only_charts(charts_requested_to_install))
+        for chart in results:
+            if chart.failed == True and not self.config.continue_on_error:
+                logging.error("Not running Course post_install hook due to a chart install error!")
+                return results
+
+        self.post_install_hook.run()
+        return results
+
+    def update(self, charts_requested_to_update: list) -> List[ChartResult]:
+        """
+        Accepts charts_to_update, an iterable of the names of the charts
+        to update. This method compares the charts in the argument to the
+        charts in the course and calls Chart.update()
+
+        """
+        # return the results of the charts update, exit on error to prevent post install hook run
+        self.pre_install_hook.run()
+        results = self.update_charts(self.only_charts(charts_requested_to_update))
         for chart in results:
             if chart.failed == True and not self.config.continue_on_error:
                 logging.error("Not running Course post_install hook due to a chart install error!")
