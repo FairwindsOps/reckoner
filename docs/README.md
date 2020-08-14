@@ -199,7 +199,7 @@ Commands:
   upgraded
   get-manifests  Output the manifests of the chart or charts as they are installed
   diff           Output diff of the templates that would be installed and the manifests as they are installed
-  update         Checks to see if any thing will have changed, if so, updated the release, if not, does nothing
+  update         Checks to see if anything will be changed, if so, update the release, if not, does nothing
   version  Takes no arguments, outputs version info
 ```
 
