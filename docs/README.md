@@ -250,7 +250,7 @@ Or
 # reckoner update --help
 Usage: reckoner update [OPTIONS] COURSE_FILE
 
-  Checks to see if any thing will have changed, if so, updated the release,
+  Checks to see if anything will be changed, if so, update the release,
   if not, does nothing
 
 Options:
