@@ -1,0 +1,119 @@
+# Copyright 2019 FairwindsOps Inc
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import unittest
+from unittest import mock
+from reckoner.yaml.handler import Handler as yaml_handler
+from reckoner.manifests import Manifest, Manifests, diff
+
+
+class TestManifests(unittest.TestCase):
+    def setUp(self):
+        with open('./reckoner/tests/files/templates.yaml') as templates:
+            self.manifests = Manifests(templates.read())
+
+    def test_manifests_loaded(self):
+
+        # All member of the all_manifest list are of type Manifest
+        for manifest in self.manifests.all_manifests:
+            self.assertIsInstance(manifest, (Manifest))
+
+        # There number of documents in the test file should equal the number of manifets
+        self.assertEqual(len(self.manifests.all_manifests), 3)
+
+        # Prior to modification, all_manifests == filtered_manifest
+        self.assertEqual(self.manifests.all_manifests, self.manifests.filtered_manifests)
+
+    def test_filter_by_annotation(self):
+
+        # removes any manifests with this annotation name
+        self.manifests.filter_by_annotation_name('helm.sh/hook')
+
+        for manifest in self.manifests.filtered_manifests:
+            annotation_keys = [key for key in manifest.annotations]
+            self.assertNotIn('"helm.sh/hook"', annotation_keys)
+
+        self.assertEqual(len(self.manifests.filtered_manifests), 2)
+
+    def test_find_by_kind_and_name(self):
+        found = self.manifests.find_by_kind_and_name("ConfigMap", "a2-aws-iam-authenticator")
+        self.assertIsInstance(found, (Manifest))
+        self.assertEqual(found.kind, 'ConfigMap')
+        self.assertEqual(found.name, 'a2-aws-iam-authenticator')
+        self.assertEqual(found.annotations, {})
+
+
+class TestManifest(unittest.TestCase):
+    def setUp(self):
+        with open('./reckoner/tests/files/service.yaml') as f:
+            self.document = f.read()
+        self.service_manifest = Manifest(yaml_handler.load(self.document))
+
+    def test_kind_and_name(self):
+        self.assertEqual(self.service_manifest.name, 'reckoner-test-service')
+        self.assertEqual(self.service_manifest.kind, 'Service')
+
+    def test_str_method(self):
+        self.assertEqual(
+            yaml_handler.load(str(self.service_manifest)),
+            yaml_handler.load(self.document)
+        )
+
+
+class TestDiff(unittest.TestCase):
+
+    def test_no_difference(self):
+        with open('./reckoner/tests/files/templates.yaml') as templates:
+            t1 = templates.read()
+
+        with open('./reckoner/tests/files/templates.yaml') as templates:
+            t2 = templates.read()
+
+        self.assertEqual(diff(t1, t2), '')
+
+    def test_no_difference(self):
+        with open('./reckoner/tests/files/templates.yaml') as templates:
+            t1 = templates.read()
+
+        with open('./reckoner/tests/files/templates.yaml') as templates:
+            t2 = templates.read()
+
+        self.assertEqual(diff(t1, t2), '')
+
+    def test_with_name_difference(self):
+        with open('./reckoner/tests/files/templates.yaml') as templates:
+            t1 = templates.read()
+
+        with open('./reckoner/tests/files/templates2.yaml') as templates:
+            t2 = templates.read()
+        self.maxDiff = None
+        template_diff = diff(t1, t2)
+
+        # The change makes a manifests get removed and one with a new name get created
+        self.assertTrue(r'DaemonSet: "a2-aws-iam-authenticator-test2" does not exist and will be added' in template_diff)
+        self.assertTrue(r'DaemonSet: "a2-aws-iam-authenticator" exists but will be removed' in template_diff)
+        self.assertFalse(r'helm.sh/hook' in template_diff )
+
+    def test_with_annotation_difference(self):
+        with open('./reckoner/tests/files/templates.yaml') as templates:
+            t1 = templates.read()
+
+        with open('./reckoner/tests/files/templates3.yaml') as templates:
+            t2 = templates.read()
+        self.maxDiff = None
+        template_diff = diff(t1, t2)
+
+        self.assertTrue(r'-    k8s-app: aws-iam-authenticator' in template_diff)
+        self.assertTrue(r'+    k8s-app: aws-iam-authenticator-test' in template_diff)
+        self.assertFalse(r'helm.sh/hook' in template_diff )

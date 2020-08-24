@@ -178,7 +178,7 @@ def diff(current: str, new: str, show_hooks: bool = False):
     for current_manifest in current_manifests:
         matching_new_manifest = new_manifests.find_by_kind_and_name(current_manifest.kind, current_manifest.name)
         if not matching_new_manifest:
-            output_lines += ['', '', f'{current_manifest.kind}: {current_manifest.name} exists but will be removed', '']
+            output_lines += ['', '', f'{current_manifest.kind}: "{current_manifest.name}" exists but will be removed', '']
             output_lines += current_manifest.diff(matching_new_manifest)
 
     return "\n".join(output_lines)
