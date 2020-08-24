@@ -47,3 +47,16 @@ class TestConfig(unittest.TestCase):
         # relative path to /some/fake/path
         config.course_path = '../../relative/course.yml'
         self.assertEqual('/some/relative', config.course_base_directory)
+
+    def test_update_repos(self):
+        config = Config()
+        # Test default True
+        self.assertTrue(config.update_repos)
+
+        # Test set False
+        config.update_repos = False
+        self.assertFalse(config.update_repos)
+
+        # Test set True
+        config.update_repos = True
+        self.assertTrue(config.update_repos)
