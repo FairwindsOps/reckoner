@@ -94,15 +94,16 @@ class Course(object):
             self.config.course_base_directory
         )
 
-        for repo in self._repositories:
-            # Skip install of repo if it is git based since it will be installed from the chart class
-            if repo.git is None:
-                logging.debug("Installing repository: {}".format(repo))
-                repo.install(chart_name=repo._repository['name'], version=repo._repository.get('version'))
-            else:
-                logging.debug("Skipping git install of repository to later be installed at the chart level: {}".format(repo))
+        if self.config.update_repos:
+            for repo in self._repositories:
+                # Skip install of repo if it is git based since it will be installed from the chart class
+                if repo.git is None:
+                    logging.debug("Installing repository: {}".format(repo))
+                    repo.install(chart_name=repo._repository['name'], version=repo._repository.get('version'))
+                else:
+                    logging.debug("Skipping git install of repository to later be installed at the chart level: {}".format(repo))
 
-        self.helm.repo_update()
+            self.helm.repo_update()
 
         try:
             self._compare_required_versions()

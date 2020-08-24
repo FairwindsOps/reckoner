@@ -27,6 +27,7 @@ from .kube import NamespaceManager
 from .command_line_caller import call
 from .exception import ReckonerCommandException
 from .yaml.handler import Handler as yaml_handler
+from .manifests import diff as manifestDiff
 
 from .helm.cmd_response import HelmCmdResponse
 from .helm.client import HelmClientException
@@ -382,23 +383,18 @@ class Chart(object):
 
     def __diff_response(self, default_namespace=None, default_namespace_management={}, context=None) -> SyntaxWarning:
         try:
-            manifest_response = self.__get_manifest_response(default_namespace, default_namespace_management, context)
-            manifest_lines = manifest_response.stdout.strip().splitlines()
+            manifest_response = self.__get_manifest_response(default_namespace, default_namespace_management, context).stdout
         except HelmClientException as e:
             if "not found" in str(e):
                 logging.warn(f"Release {self.release_name} does not exist. Output will be the equal to 'template'")
-            manifest_lines = []
+            manifest_response = ""
 
-        template_response = self.__template_response(default_namespace, default_namespace_management, context)
-
-        template_lines = template_response.stdout.strip().splitlines()
-
-        diff = list(difflib.context_diff(manifest_lines, template_lines,))
-        if diff == []:
+        template_response = self.__template_response(default_namespace, default_namespace_management, context).stdout
+        diff = manifestDiff(manifest_response, template_response)
+        if diff == "":
             logging.info(f"There are no differences in release {self.release_name}")
-            return ""
 
-        return "\n".join(diff)
+        return diff
 
     @property
     def requires_update(self):
