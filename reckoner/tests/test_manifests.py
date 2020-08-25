@@ -23,6 +23,10 @@ class TestManifests(unittest.TestCase):
         with open('./reckoner/tests/files/templates.yaml') as templates:
             self.manifests = Manifests(templates.read())
 
+    def test_manifest_load_error(self):
+        with self.assertRaises(Exception):
+            manifests = Manifests("---\njunk: - information: that | does , not play")
+
     def test_manifests_loaded(self):
 
         # All member of the all_manifest list are of type Manifest
@@ -53,6 +57,13 @@ class TestManifests(unittest.TestCase):
         self.assertEqual(found.name, 'a2-aws-iam-authenticator')
         self.assertEqual(found.annotations, {})
 
+    def test_filter_by_kind(self):
+        self.manifests.filter_by_kind('Pod')
+        self.manifests.filter_by_kind('DaemonSet')
+        print([str(m) for m in self.manifests.filtered_manifests])
+        self.assertEqual(len(self.manifests.filtered_manifests), 1)
+        self.assertEqual(self.manifests.filtered_manifests[0].kind, 'ConfigMap')
+
 
 class TestManifest(unittest.TestCase):
     def setUp(self):
@@ -69,6 +80,12 @@ class TestManifest(unittest.TestCase):
             yaml_handler.load(str(self.service_manifest)),
             yaml_handler.load(self.document)
         )
+
+    def test_diff_types(self):
+        self.service_manifest.diff(Manifest(yaml_handler.load(self.document)), difftype='unified')
+        self.service_manifest.diff(Manifest(yaml_handler.load(self.document)), difftype='context')
+        with self.assertRaises((TypeError)):
+            self.service_manifest.diff(Manifest(yaml_handler.load(self.document)), difftype='wrong')
 
 
 class TestDiff(unittest.TestCase):
@@ -103,7 +120,7 @@ class TestDiff(unittest.TestCase):
         # The change makes a manifests get removed and one with a new name get created
         self.assertTrue(r'DaemonSet: "a2-aws-iam-authenticator-test2" does not exist and will be added' in template_diff)
         self.assertTrue(r'DaemonSet: "a2-aws-iam-authenticator" exists but will be removed' in template_diff)
-        self.assertFalse(r'helm.sh/hook' in template_diff )
+        self.assertFalse(r'helm.sh/hook' in template_diff)
 
     def test_with_annotation_difference(self):
         with open('./reckoner/tests/files/templates.yaml') as templates:
@@ -116,4 +133,4 @@ class TestDiff(unittest.TestCase):
 
         self.assertTrue(r'-    k8s-app: aws-iam-authenticator' in template_diff)
         self.assertTrue(r'+    k8s-app: aws-iam-authenticator-test' in template_diff)
-        self.assertFalse(r'helm.sh/hook' in template_diff )
+        self.assertFalse(r'helm.sh/hook' in template_diff)

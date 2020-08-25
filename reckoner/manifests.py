@@ -124,7 +124,7 @@ class Manifests(object):
         """
         _new_filtered_manifests = []
         for manifest in self.filtered_manifests:
-            if manifest.get('kind') != kind:
+            if manifest.kind != kind:
                 _new_filtered_manifests.append(manifest)
 
         self.filtered_manifests = _new_filtered_manifests
