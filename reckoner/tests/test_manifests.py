@@ -25,7 +25,7 @@ class TestManifests(unittest.TestCase):
 
     def test_manifest_load_error(self):
         with self.assertRaises(Exception):
-            manifests = Manifests("---\njunk: - information: that | does , not play")
+            Manifests("---\njunk: - information: that | does , not play")
 
     def test_manifests_loaded(self):
 
@@ -89,15 +89,6 @@ class TestManifest(unittest.TestCase):
 
 
 class TestDiff(unittest.TestCase):
-
-    def test_no_difference(self):
-        with open('./reckoner/tests/files/templates.yaml') as templates:
-            t1 = templates.read()
-
-        with open('./reckoner/tests/files/templates.yaml') as templates:
-            t2 = templates.read()
-
-        self.assertEqual(diff(t1, t2), '')
 
     def test_no_difference(self):
         with open('./reckoner/tests/files/templates.yaml') as templates:
