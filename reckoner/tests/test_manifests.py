@@ -34,7 +34,7 @@ class TestManifests(unittest.TestCase):
             self.assertIsInstance(manifest, (Manifest))
 
         # There number of documents in the test file should equal the number of manifets
-        self.assertEqual(len(self.manifests.all_manifests), 3)
+        self.assertEqual(len(self.manifests.all_manifests), 4)
 
         # Prior to modification, all_manifests == filtered_manifest
         self.assertEqual(self.manifests.all_manifests, self.manifests.filtered_manifests)
@@ -48,7 +48,7 @@ class TestManifests(unittest.TestCase):
             annotation_keys = [key for key in manifest.annotations]
             self.assertNotIn('"helm.sh/hook"', annotation_keys)
 
-        self.assertEqual(len(self.manifests.filtered_manifests), 2)
+        self.assertEqual(len(self.manifests.filtered_manifests), 3)
 
     def test_find_by_kind_and_name(self):
         found = self.manifests.find_by_kind_and_name("ConfigMap", "a2-aws-iam-authenticator")
@@ -60,7 +60,7 @@ class TestManifests(unittest.TestCase):
     def test_filter_by_kind(self):
         self.manifests.filter_by_kind('Pod')
         self.manifests.filter_by_kind('DaemonSet')
-        print([str(m) for m in self.manifests.filtered_manifests])
+        self.manifests.filter_by_kind('List')
         self.assertEqual(len(self.manifests.filtered_manifests), 1)
         self.assertEqual(self.manifests.filtered_manifests[0].kind, 'ConfigMap')
 

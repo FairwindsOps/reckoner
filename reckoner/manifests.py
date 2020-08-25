@@ -28,12 +28,16 @@ class Manifest(object):
         self.document = document
 
     @property
+    def metadata(self):
+        return self.document.get('metadata') or {}
+
+    @property
     def annotations(self):
-        return self.document['metadata'].get('annotations', {})
+        return self.metadata.get('annotations') or {}
 
     @property
     def name(self):
-        return self.document['metadata']['name']
+        return self.metadata.get('name')
 
     @property
     def kind(self):

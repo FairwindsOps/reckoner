@@ -95,3 +95,26 @@ metadata:
     annotations:
       helm.sh/hook: test-success
 spec: {}
+---
+apiVersion: v1
+kind: List
+items:
+  - apiVersion: monitoring.coreos.com/v1
+    kind: ServiceMonitor
+    metadata:
+      name: external-dns
+      namespace: prometheus-operator
+      labels:
+        app: prometheus-operator-prometheus
+        chart: prometheus-operator-8.13.4
+        release: "prometheus-operator"
+        heritage: "Helm"
+    spec:
+      endpoints:
+        - port: http
+      namespaceSelector:
+        matchNames:
+        - external-dns
+      selector:
+        matchLabels:
+          app.kubernetes.io/name: external-dns
