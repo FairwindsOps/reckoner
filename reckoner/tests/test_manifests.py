@@ -34,7 +34,7 @@ class TestManifests(unittest.TestCase):
             self.assertIsInstance(manifest, (Manifest))
 
         # There number of documents in the test file should equal the number of manifets
-        self.assertEqual(len(self.manifests.all_manifests), 4)
+        self.assertEqual(len(self.manifests.all_manifests), 6)
 
         # Prior to modification, all_manifests == filtered_manifest
         self.assertEqual(self.manifests.all_manifests, self.manifests.filtered_manifests)
@@ -48,20 +48,27 @@ class TestManifests(unittest.TestCase):
             annotation_keys = [key for key in manifest.annotations]
             self.assertNotIn('"helm.sh/hook"', annotation_keys)
 
-        self.assertEqual(len(self.manifests.filtered_manifests), 3)
+        self.assertEqual(len(self.manifests.filtered_manifests), 5)
 
-    def test_find_by_kind_and_name(self):
-        found = self.manifests.find_by_kind_and_name("ConfigMap", "a2-aws-iam-authenticator")
+    def test_find_congruent_manifest(self):
+        with open('./reckoner/tests/files/service.yaml') as f:
+            document = f.read()
+        service_manifest = Manifest(yaml_handler.load(document))
+
+        print(service_manifest.kind)
+
+        found = self.manifests.find_congruent_manifest(service_manifest)
+        print(found)
         self.assertIsInstance(found, (Manifest))
-        self.assertEqual(found.kind, 'ConfigMap')
-        self.assertEqual(found.name, 'a2-aws-iam-authenticator')
+        self.assertEqual(found.kind, 'Service')
+        self.assertEqual(found.name, 'reckoner-test-service')
         self.assertEqual(found.annotations, {})
 
     def test_filter_by_kind(self):
         self.manifests.filter_by_kind('Pod')
         self.manifests.filter_by_kind('DaemonSet')
         self.manifests.filter_by_kind('List')
-        self.assertEqual(len(self.manifests.filtered_manifests), 1)
+        self.assertEqual(len(self.manifests.filtered_manifests), 2)
         self.assertEqual(self.manifests.filtered_manifests[0].kind, 'ConfigMap')
 
 

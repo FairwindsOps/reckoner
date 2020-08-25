@@ -41,13 +41,25 @@ class Manifest(object):
 
     @property
     def kind(self):
-        return self.document['kind']
+        return self.document.get('kind')
+
+    @property
+    def source(self):
+        try:
+            return self.document.ca.comment[1][0].value.replace('# Source:', '').strip()
+        except Exception as e:
+            logging.error(e)
+            logging.debug(traceback.format_exc)
+            logging.warn(
+                f'Unable to determine the source of '
+                '{self.kind} "{self.name}". This may '
+                'yield unexpected results!')
 
     def __str__(self):
         return yaml_handler.dump(self.document)
 
     def __eq__(self, other):
-        if not isinstance(other, (Manifetst)):
+        if not isinstance(other, (Manifest)):
             raise TypeError(f"Cannot compare {type(other)} to Manifest()")
 
         return other.document == self.document
@@ -63,7 +75,6 @@ class Manifest(object):
         difftype may be "unified" [DEFAULT] or "context"
         """
 
-        d = difflib.Differ()
         if difftype.lower() == "unified":
             differ = difflib.unified_diff
         elif difftype.lower() == "context":
@@ -133,7 +144,21 @@ class Manifests(object):
 
         self.filtered_manifests = _new_filtered_manifests
 
-    def find_by_kind_and_name(self, kind: str, name: str) -> str:
+    def find_congruent_manifest(self, manifest: Manifest) -> Manifest:
+        """
+        Given a manifest, returns the most matching manifest
+        in this list of filtered_manifests using source, name
+        or kind
+        """
+        if isinstance(manifest, (Manifest)):
+            logging.debug(f"Looking for {manifest.kind} name {manifest.name} with source {manifest.source}")
+            if manifest.kind == 'List':
+                return self.__find_by_kind_and_source(manifest.kind, manifest.source)
+            return self.__find_by_kind_and_name(manifest.kind, manifest.name)
+
+        raise TypeError("'manifest' argument must be of type Manifest()")
+
+    def __find_by_kind_and_name(self, kind: str, name: str) -> Manifest:
         """
         Returns the manifest from the filtered manifests
         that matches the paramters kind and name, as a string
@@ -149,7 +174,25 @@ class Manifests(object):
         except IndexError:
             pass
 
-        return Manifest("")
+        return Manifest({})
+
+    def __find_by_kind_and_source(self, kind: str, source: str) -> Manifest:
+        """
+        Returns the manifest from the filtered manifests
+        where the source matches the paramters source as a string
+        """
+        try:
+            return [
+                manifest
+                for manifest
+                in self.filtered_manifests
+                if manifest.source == source
+                and manifest.kind == kind
+            ][0]
+        except IndexError:
+            pass
+
+        return Manifest({})
 
     def __iter__(self):
         for manifest in self.filtered_manifests:
@@ -167,7 +210,7 @@ def diff(current: str, new: str, show_hooks: bool = False):
     output_lines = []
     for new_manifest in new_manifests:
         diff_lines = []
-        matching_existing_manifest = current_manifests.find_by_kind_and_name(new_manifest.kind, new_manifest.name)
+        matching_existing_manifest = current_manifests.find_congruent_manifest(new_manifest)
 
         manifest_separator_message = f'{new_manifest.kind}: "{new_manifest.name}"'
         if not matching_existing_manifest:
@@ -180,7 +223,7 @@ def diff(current: str, new: str, show_hooks: bool = False):
             output_lines += diff_lines
 
     for current_manifest in current_manifests:
-        matching_new_manifest = new_manifests.find_by_kind_and_name(current_manifest.kind, current_manifest.name)
+        matching_new_manifest = new_manifests.find_congruent_manifest(current_manifest)
         if not matching_new_manifest:
             output_lines += ['', '', f'{current_manifest.kind}: "{current_manifest.name}" exists but will be removed', '']
             output_lines += current_manifest.diff(matching_new_manifest)

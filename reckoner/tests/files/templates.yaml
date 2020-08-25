@@ -88,6 +88,7 @@ spec:
         hostPath:
           path: /srv/kubernetes/aws-iam-authenticator/
 ---
+# Source: aws-iam-authenticator/templates/pod.yaml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -96,6 +97,7 @@ metadata:
       helm.sh/hook: test-success
 spec: {}
 ---
+# Source: aws-iam-authenticator/templates/list1.yaml
 apiVersion: v1
 kind: List
 items:
@@ -118,3 +120,43 @@ items:
       selector:
         matchLabels:
           app.kubernetes.io/name: external-dns
+---
+# Source: aws-iam-authenticator/templates/list2.yaml
+apiVersion: v1
+kind: List
+items:
+  - apiVersion: monitoring.coreos.com/v1
+    kind: ServiceMonitor
+    metadata:
+      name: external-dns2
+      namespace: prometheus-operator
+      labels:
+        app: prometheus-operator-prometheus
+        chart: prometheus-operator-8.13.4
+        release: "prometheus-operator"
+        heritage: "Helm"
+    spec:
+      endpoints:
+        - port: http
+      namespaceSelector:
+        matchNames:
+        - external-dns2
+      selector:
+        matchLabels:
+          app.kubernetes.io/name: external-dns2
+---
+# Source test-service
+apiVersion: v1
+kind: Service
+metadata:
+  name: reckoner-test-service
+spec:
+  type: NodePort
+  ports:
+    - port: 80
+      targetPort: 4141
+      protocol: TCP
+      name: reckoner
+  selector:
+    app: reckoner
+    release: reckoner

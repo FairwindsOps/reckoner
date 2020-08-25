@@ -22,6 +22,7 @@ metadata:
 data:
   config.yaml: ""
 ---
+# Source: daemonset
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -88,6 +89,7 @@ spec:
         hostPath:
           path: /srv/kubernetes/aws-iam-authenticator/
 ---
+# Source: pod
 apiVersion: v1
 kind: Pod
 metadata:
@@ -95,3 +97,27 @@ metadata:
     annotations:
       helm.sh/hook: test-success
 spec: {}
+---
+# Source: aws-iam-authenticator/templates/list1.yaml
+apiVersion: v1
+kind: List
+items:
+  - apiVersion: monitoring.coreos.com/v1
+    kind: ServiceMonitor
+    metadata:
+      name: external-dns-new
+      namespace: prometheus-operator
+      labels:
+        app: prometheus-operator-prometheus
+        chart: prometheus-operator-8.13.4
+        release: "prometheus-operator"
+        heritage: "Helm"
+    spec:
+      endpoints:
+        - port: http
+      namespaceSelector:
+        matchNames:
+        - external-dns
+      selector:
+        matchLabels:
+          app.kubernetes.io/name: external-dns
