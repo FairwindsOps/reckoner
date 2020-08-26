@@ -231,6 +231,11 @@ incubator       https://kubernetes-charts-incubator.storage.googleapis.com
             client = Helm2Client(provider=provider_mock)
             client._get_version('')
 
+    def test_get_cache(self):
+
+        self.dummy_provider.execute.return_value = HelmCmdResponse(0, '', '/Users/test/.helm', '')
+        assert "/Users/test/.helm" == Helm2Client(provider=self.dummy_provider).cache
+
 
 class TestHelm3Client(unittest.TestCase):
     def setUp(self):
@@ -430,6 +435,22 @@ incubator       https://kubernetes-charts-incubator.storage.googleapis.com
             ]
             client = Helm3Client(provider=provider_mock)
             client._get_version()
+
+    def test_get_cache(self):
+        env_response = """
+HELM_BIN="/Users/test/.asdf/installs/helm/3.2.4/bin/helm"
+HELM_DEBUG="false"
+HELM_KUBEAPISERVER=""
+HELM_KUBECONTEXT=""
+HELM_KUBETOKEN=""
+HELM_NAMESPACE="default"
+HELM_PLUGINS="/Users/testLibrary/helm/plugins"
+HELM_REGISTRY_CONFIG="/Users/test/Library/Preferences/helm/registry.json"
+HELM_REPOSITORY_CACHE="/Users/test/Library/Caches/helm/repository"
+HELM_REPOSITORY_CONFIG="/Users/test/Library/Preferences/helm/repositories.yaml
+"""
+        self.dummy_provider.execute.return_value = HelmCmdResponse(0, '', env_response, '')
+        assert "/Users/test/Library/Caches/helm/repository" == Helm3Client(provider=self.dummy_provider).cache
 
 
 class TestGetHelmClient(unittest.TestCase):

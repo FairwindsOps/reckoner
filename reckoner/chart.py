@@ -75,7 +75,7 @@ class Chart(object):
 
     Returns:
     - Instance of Response() is truthy where Response.exitcode == 0
-    - Instance of Response() is falsey where Response.exitcode != 0
+    - Instance of Response() is falsy where Response.exitcode != 0
     """
 
     def __init__(self, chart, helm):
