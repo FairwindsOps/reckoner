@@ -77,7 +77,7 @@ class TestReckonerAttributes(TestBase):
         self.assertTrue(hasattr(reckoner_instance, 'course'))
 
 
-@mock.patch('reckoner.chart.NamespaceManager', NamespaceManagerMock)    
+@mock.patch('reckoner.chart.NamespaceManager', NamespaceManagerMock)
 class TestCourseMocks(unittest.TestCase):
 
     @mock.patch('reckoner.course.yaml_handler', autospec=True)
@@ -241,7 +241,7 @@ def tearDownModule():
     shutil.rmtree(test_files_path)
 
 
-@mock.patch('reckoner.chart.NamespaceManager', NamespaceManagerMock)    
+@mock.patch('reckoner.chart.NamespaceManager', NamespaceManagerMock)
 class TestReckoner(TestBase):
     name = "test-pentagon-base"
 
@@ -265,7 +265,7 @@ class TestReckoner(TestBase):
         self.assertEqual(self.a.install(), None)
 
 
-@mock.patch('reckoner.chart.NamespaceManager', NamespaceManagerMock)    
+@mock.patch('reckoner.chart.NamespaceManager', NamespaceManagerMock)
 class TestCourse(TestBase):
 
     @mock.patch('reckoner.course.get_helm_client', autospec=True)
@@ -366,14 +366,7 @@ class TestChart(TestBase):
             #        this is traversing many layers in the code that could be better encapsulated
 
             last_mock = self.helm_client_mock.upgrade.call_args_list[-1][0][0]
-            logging.debug(last_mock)
-            self.assertEqual(
-                last_mock[0:2],
-                [
-                    chart.release_name,
-                    chart.repository.chart_path,
-                ]
-            )
+
             if chart.name == test_environ_var_chart:
                 logging.error(last_mock)
                 self.assertEqual(
@@ -434,10 +427,6 @@ class TestConfig(TestBase):
         super(type(self), self).setUp()
         self.c1 = Config()
         self.c2 = Config()
-
-    def test_home_with_envvar_set(self):
-        self.assertEqual(self.c1.home, test_files_path)
-        self.assertEqual(self.c1.archive, '{}/{}'.format(test_files_path, test_archive_pathlet))
 
     def test_borg_pattern(self):
         self.assertEqual(self.c1.__dict__, self.c2.__dict__)
