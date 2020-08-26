@@ -49,7 +49,7 @@ def get_helm_client(helm_arguments, client_version=None, helm_provider=HelmProvi
             try:
                 logging.debug('Checking for Helm 2 client')
                 detected_version = client2.version
-                logging.info('Found Helm Version {}'.format(detected_version))
+                logging.info('Found Helm Client Version {}'.format(detected_version))
                 logging.info('Tiller version {}'.format(client2.tiller_version))
                 return client2
             except (HelmClientException, HelmVersionException) as e:
@@ -86,6 +86,14 @@ class HelmClient(ABC):
     def default_helm_arguments(self):
         """The default helm arguments for all commands run through the client."""
         return self._default_helm_arguments
+
+    @property
+    def cache(self):
+        try:
+            return self._cache
+        except Exception as e:
+            logging.error("Error determining repository cache location. Cannot proceed")
+            raise e
 
     @default_helm_arguments.setter
     def default_helm_arguments(self, value):
@@ -273,6 +281,11 @@ class Helm2Client(HelmClient):
         else:
             return None
 
+    @property
+    def _cache(self):
+        # Get the value of the HELM_HOME from the helm home command
+        return self.execute("home", filter_non_global_flags=True).stdout.strip().replace('"', '')
+
 
 class Helm3Client(HelmClient):
     version_regex = re.compile(r'v([0-9\.]+)([\-,\+][a-zA-Z]+)(\+g[0-9a-f]+)?')
@@ -281,6 +294,12 @@ class Helm3Client(HelmClient):
     @property
     def version(self):
         return self._get_version()
+
+    @property
+    def _cache(self):
+        response = self.execute("env", filter_non_global_flags=True)
+        # Get the value of the HELM_REPOSITORY_CACHE from the helm env command
+        return [_var_line.split('=')[1] for _var_line in response.stdout.splitlines() if 'HELM_REPOSITORY_CACHE' in _var_line][0].replace('"', '')
 
     def _get_version(self):
         get_ver = self.execute("version", arguments=['--short'], filter_non_global_flags=True)

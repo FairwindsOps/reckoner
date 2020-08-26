@@ -31,14 +31,13 @@ class Repository(object):
     - Helm repository object
 
     Arguments:
-    - name: repostiory name
+    - name: repository name
     - url: tgz reppsitory url
     - git: git repository url
     - path: path in git repository
     """
 
     def __init__(self, repository, helm_client: HelmClient):
-        super(type(self), self).__init__()  # TODO: Remove this and test thoroughly, it appears this doesn't do anything.
         self.config = Config()
         self._repository = {}
         self._helm_client = helm_client
@@ -89,7 +88,7 @@ class Repository(object):
                 self.path = ''
 
             self.name = '{}/{}/{}/{}' .format(
-                self.config.archive,
+                self._helm_client.cache,
                 re.sub(
                     r'\:\/\/|\/|\.', '_',
                     self.git
@@ -118,7 +117,7 @@ class Repository(object):
             repo.git.pull("origin", "{}".format(ref))
 
         repo_path = '{}/{}'.format(
-            self.config.archive,
+            self._helm_client.cache,
             re.sub(r'\:\/\/|\/|\.', '_', self.git)
         )
 
