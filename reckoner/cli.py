@@ -27,7 +27,7 @@ from .config import Config
 
 from reckoner.schema_validator.course import validate_course_file
 
-update_repos_option = click.option("--update-repos/--no-update-repos", default=False,
+update_repos_option = click.option("--update-repos/--no-update-repos", default=True,
                                    help="Will update Helm repos when --update-repos is specified [DEFAULT]. Skips update when --no-update-repos is specified.")
 
 
