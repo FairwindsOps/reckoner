@@ -16,6 +16,7 @@
 
 import os
 import re
+import difflib
 import logging
 import traceback
 
@@ -26,9 +27,10 @@ from .kube import NamespaceManager
 from .command_line_caller import call
 from .exception import ReckonerCommandException
 from .yaml.handler import Handler as yaml_handler
+from .manifests import diff as manifestDiff
 
 from .helm.cmd_response import HelmCmdResponse
-
+from .helm.client import HelmClientException
 from string import Template
 from tempfile import NamedTemporaryFile as tempfile
 
@@ -292,11 +294,55 @@ class Chart(object):
             if self._deprecation_messages:
                 [logging.warning(msg) for msg in self._deprecation_messages]
 
+    def update(self, default_namespace=None, default_namespace_management={}, context=None) -> None:
+        """
+        Description:
+        - Upgrade --install the course charts where this would cause a change in the cluster
+
+        Arguments:
+        - default_namespace (string). Passed in but will be overridden by Chart().namespace if set
+        - default_namespace_management_settings (dictionary). Passed in but will be overridden by Chart().namespace_management_settings if set
+        """
+
+        try:
+            if self.requires_update:
+                self.__pre_command(default_namespace, default_namespace_management, context)
+                self.manage_namespace()
+
+                # Fire the pre_install_hook
+                self.pre_install_hook.run()
+
+                try:
+                    # Perform the upgrade with the arguments
+                    self.result.response = self.helm.upgrade(self.args, plugin=self.plugin)
+                finally:
+                    self.clean_up_temp_files()
+                # Log the stdout response in info
+                logging.info(self.result.response.stdout)
+
+                # Fire the post_install_hook
+                self.post_install_hook.run()
+            else:
+                logging.info(f"Update not required for {self.release_name}. No Changes")
+        except Exception as err:
+            logging.debug("Saving encountered error to chart result. See Below:")
+            logging.debug("{}".format(err))
+            logging.debug(traceback.format_exc())
+            self.result.failed = True
+            self.result.error_reason = err
+            raise err
+        finally:
+            if self._deprecation_messages:
+                [logging.warning(msg) for msg in self._deprecation_messages]
+
     def template(self, default_namespace=None, default_namespace_management={}, context=None) -> None:
+        self.result.response = self.__template_response(default_namespace, default_namespace_management, context)
+
+    def __template_response(self, default_namespace=None, default_namespace_management={}, context=None) -> HelmCmdResponse:
         self.__pre_command(default_namespace, default_namespace_management, context)
         try:
             # Perform the template with the arguments
-            self.result.response = self.helm.template(self.args, plugin=self.plugin)
+            return self.helm.template(self.args, plugin=self.plugin)
         except Exception as e:
             logging.debug(traceback.format_exc)
             raise e
@@ -304,6 +350,10 @@ class Chart(object):
             self.clean_up_temp_files()
 
     def get_manifest(self, default_namespace=None, default_namespace_management={}, context=None) -> None:
+        # Perform the template with the arguments
+        self.result.response = self.__get_manifest_response(default_namespace, default_namespace_management, context)
+
+    def __get_manifest_response(self, default_namespace=None, default_namespace_management={}, context=None) -> HelmCmdResponse:
         self.__pre_command(default_namespace, default_namespace_management, context)
         try:
             # get_manifest needs a different set of args
@@ -324,12 +374,41 @@ class Chart(object):
                 self._append_arg(debug_arg)
 
             # Perform the template with the arguments
-            self.result.response = self.helm.get_manifest(self.args, plugin=self.plugin)
+            return self.helm.get_manifest(self.args, plugin=self.plugin)
         except Exception as e:
-            logging.debug(traceback.format_exc)
+            logging.debug(traceback.format_exc())
             raise e
         finally:
             self.clean_up_temp_files()
+
+    def __diff_response(self, default_namespace=None, default_namespace_management={}, context=None) -> SyntaxWarning:
+        try:
+            manifest_response = self.__get_manifest_response(default_namespace, default_namespace_management, context).stdout
+        except HelmClientException as e:
+            if "not found" in str(e):
+                logging.warn(f"Release {self.release_name} does not exist. Output will be the equal to 'template'")
+            manifest_response = ""
+
+        template_response = self.__template_response(default_namespace, default_namespace_management, context).stdout
+        diff = manifestDiff(manifest_response, template_response)
+        if diff == "":
+            logging.info(f"There are no differences in release {self.release_name}")
+
+        return diff
+
+    @property
+    def requires_update(self):
+        """
+        Returns true if there is any differences between the installed release and the
+        templates that would be generated from this run
+        """
+        if self.__diff_response() is "":
+            return False
+
+        return True
+
+    def diff(self, default_namespace=None, default_namespace_management={}, context=None) -> None:
+        self.result.response = self.__diff_response()
 
     def _append_arg(self, arg_string):
         for item in arg_string.split(" ", 1):
@@ -467,7 +546,10 @@ class Chart(object):
     def clean_up_temp_files(self):
         # Clean up all temp files used in the helm run
         for temp_file in self._temp_values_file_paths:
-            os.remove(temp_file)
+            try:
+                os.remove(temp_file)
+            except FileNotFoundError:
+                logging.debug(f"{temp_file} not found to delete. Ignoring this fact")
 
     # TODO This needs some documentation and some more thorough testing
     def _format_set(self, key, value):

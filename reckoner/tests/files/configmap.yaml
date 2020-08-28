@@ -1,0 +1,8 @@
+---
+# Source test-configmap
+  apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: reckoner-test-configmap
+data:
+  foo: bear

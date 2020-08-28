@@ -194,9 +194,12 @@ Options:
   --help            Show this message and exit.
 
 Commands:
-  plot     Install charts with given arguments as listed in yaml file argument
-  template Output the template of the chart or charts as they would be installed or
+  plot           Install charts with given arguments as listed in yaml file argument
+  template       Output the template of the chart or charts as they would be installed or
   upgraded
+  get-manifests  Output the manifests of the chart or charts as they are installed
+  diff           Output diff of the templates that would be installed and the manifests as they are installed
+  update         Checks to see if anything will be changed, if so, update the release, if not, does nothing
   version  Takes no arguments, outputs version info
 ```
 
@@ -206,6 +209,49 @@ $> reckoner plot --help
 Usage: reckoner plot [OPTIONS] COURSE_FILE
 
   Install charts with given arguments as listed in yaml file argument
+
+Options:
+  --dry-run                       Pass --dry-run to helm so no action is
+                                  taken. Implies --debug and skips hooks.
+
+  --debug                         DEPRECATED - use --log-level=DEBUG as a
+                                  parameter to `reckoner` instead. May be used
+                                  with or without `--dry-run`. Or, pass
+                                  `--debug` to --helm-args
+
+  -a, --run-all                   Run all charts in the course. Mutually
+                                  exclusive with 'only'.
+
+  -o, --only, --heading <chart>   Only run a specific chart by name Mutually
+                                  exclusive with 'run_all'.
+
+  --helm-args TEXT                Passes the following arg on to helm, can be
+                                  used more than once. WARNING: Setting this
+                                  will completely override any helm_args in
+                                  the course. Also cannot be used for
+                                  configuring how helm connects to tiller.
+
+  --continue-on-error             Attempt to install all charts in the course,
+                                  even if any charts or hooks fail to run.
+
+  --create-namespace / --no-create-namespace
+                                  Will create the specified nameaspace if it
+                                  does not already exist. Replaces
+                                  functionality lost in Helm3
+
+  --log-level TEXT                Log Level. [INFO | DEBUG | WARN | ERROR].
+                                  (default=INFO)
+
+  --help                          Show this message and exit.
+```
+
+Or
+```
+# reckoner update --help
+Usage: reckoner update [OPTIONS] COURSE_FILE
+
+  Checks to see if anything will be changed, if so, update the release,
+  if not, does nothing
 
 Options:
   --dry-run                       Pass --dry-run to helm so no action is

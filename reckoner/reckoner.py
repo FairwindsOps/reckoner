@@ -106,6 +106,31 @@ class Reckoner(object):
             logging.error(error)
             raise ReckonerCommandException('Failed to find any valid charts to install.')
 
+    def update(self, charts: List[str] = []) -> None:
+        """
+        Description:
+        - Calls update on course instance.
+
+        Arguments:
+        - charts (default: []): list or tuple of release_names from the course. That list of
+          charts will be installed or if the argument is empty, All charts in the course will be installed
+
+        Returns:
+        - None
+
+        """
+        selected_charts = charts or [chart._release_name for chart in self.course.charts]
+        try:
+            plot_results = self.course.update(selected_charts)
+            for chart_result in plot_results:
+                if chart_result:
+                    self.add_result(chart_result)
+                else:
+                    raise Exception("Didn't expect None as a chart result...")
+        except NoChartsToInstall as error:
+            logging.error(error)
+            raise ReckonerCommandException('Failed to find any valid charts to install.')
+
     def template(self, charts: List[str] = [] ):
         selected_charts = charts or [chart._release_name for chart in self.course.charts]
         try:
@@ -121,6 +146,14 @@ class Reckoner(object):
         except NoChartsToInstall as error:
             logging.error(error)
             raise ReckonerCommandException('Failed to find any valid charts to show manifests for.')
+
+    def diff(self, charts: List[str] = [] ):
+        selected_charts = charts or [chart._release_name for chart in self.course.charts]
+        try:
+            return self.course.diff(selected_charts)
+        except NoChartsToInstall as error:
+            logging.error(error)
+            raise ReckonerCommandException('Failed to find any valid charts to show diff for.')
 
 
     def add_result(self, result: ChartResult) -> None:

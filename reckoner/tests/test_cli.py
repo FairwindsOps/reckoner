@@ -181,15 +181,14 @@ class TestCliTemplate(unittest.TestCase):
                 '--run-all',
                 '--helm-args',
                 '--heading',
-                '--only',
-                '--continue-on-error',
+                '--only'
             ],
             'argument': [
                 'course_file',
             ]
         }
 
-        assert_required_params(required, cli.plot.params)
+        assert_required_params(required, cli.template.params)
 
 class TestCliGetManifests(unittest.TestCase):
     @mock.patch('reckoner.cli.validate_course_file')
@@ -243,6 +242,128 @@ class TestCliGetManifests(unittest.TestCase):
                 '--run-all',
                 '--helm-args',
                 '--heading',
+                '--only'
+            ],
+            'argument': [
+                'course_file',
+            ]
+        }
+
+        assert_required_params(required, cli.get_manifests.params)
+
+class TestCliDiff(unittest.TestCase):
+    @mock.patch('reckoner.cli.validate_course_file')
+    @mock.patch('reckoner.cli.Reckoner', autospec=True)
+    def test_template_exists(self, reckoner_mock, validation_mock):
+        """Assure we have a get_manifests command and it calls reckoner get-manifests"""
+        reckoner_instance = reckoner_mock()
+        reckoner_instance.results = mock.MagicMock(has_errors=False)
+        runner = CliRunner()
+        with runner.isolated_filesystem():
+            with open('nonexistent.file', 'wb') as fake_file:
+                fake_file.write(''.encode())
+
+            result = runner.invoke(cli.diff, args=['nonexistent.file', '--run-all'])
+
+        self.assertEqual(0, result.exit_code, result.output)
+        reckoner_instance.diff.assert_called_once()
+
+    @mock.patch('reckoner.cli.validate_course_file')
+    @mock.patch('reckoner.cli.Reckoner', autospec=True)
+    def test_diff_has_correct_exit_code_with_errors(self, reckoner_mock, validation_mock):
+        """Assure we have a get_manifests command and it calls reckoner get_manifests"""
+        reckoner_instance = reckoner_mock()
+        reckoner_instance.results = mock.MagicMock(has_errors=True)
+        reckoner_instance.results.results_with_errors = [None]
+        runner = CliRunner()
+        with runner.isolated_filesystem():
+            with open('nonexistent.file', 'wb') as fake_file:
+                fake_file.write(''.encode())
+
+            result = runner.invoke(cli.diff, args=['nonexistent.file'])
+
+        self.assertEqual(1, result.exit_code, result.output)
+
+    @mock.patch('reckoner.cli.Reckoner', autospec=True)
+    def test_diff_handles_exception(self, reckoner_mock):
+        """Assure we have a get_manifests command and it calls reckoner get_manifests"""
+        reckoner_mock.side_effect = [ReckonerException("had some error")]
+        runner = CliRunner()
+        with runner.isolated_filesystem():
+            with open('nonexistent.file', 'wb') as fake_file:
+                fake_file.write(''.encode())
+
+            result = runner.invoke(cli.diff, args=['nonexistent.file', '--run-all'])
+
+        self.assertEqual(1, result.exit_code, result.output)
+
+    def test_diff_options(self):
+        required = {
+            'option': [
+                '--run-all',
+                '--helm-args',
+                '--heading',
+                '--only'
+            ],
+            'argument': [
+                'course_file',
+            ]
+        }
+
+        assert_required_params(required, cli.diff.params)
+
+class TestCliUpdate(unittest.TestCase):
+    @mock.patch('reckoner.cli.validate_course_file')
+    @mock.patch('reckoner.cli.Reckoner', autospec=True)
+    def test_template_exists(self, reckoner_mock, validation_mock):
+        """Assure we have a get_manifests command and it calls reckoner get-manifests"""
+        reckoner_instance = reckoner_mock()
+        reckoner_instance.results = mock.MagicMock(has_errors=False)
+        runner = CliRunner()
+        with runner.isolated_filesystem():
+            with open('nonexistent.file', 'wb') as fake_file:
+                fake_file.write(''.encode())
+
+            result = runner.invoke(cli.update, args=['nonexistent.file', '--run-all'])
+
+        self.assertEqual(0, result.exit_code, result.output)
+        reckoner_instance.update.assert_called_once()
+
+    @mock.patch('reckoner.cli.validate_course_file')
+    @mock.patch('reckoner.cli.Reckoner', autospec=True)
+    def test_get_manifests_has_correct_exit_code_with_errors(self, reckoner_mock, validation_mock):
+        """Assure we have a get_manifests command and it calls reckoner get_manifests"""
+        reckoner_instance = reckoner_mock()
+        reckoner_instance.results = mock.MagicMock(has_errors=True)
+        reckoner_instance.results.results_with_errors = [None]
+        runner = CliRunner()
+        with runner.isolated_filesystem():
+            with open('nonexistent.file', 'wb') as fake_file:
+                fake_file.write(''.encode())
+
+            result = runner.invoke(cli.update, args=['nonexistent.file'])
+
+        self.assertEqual(1, result.exit_code, result.output)
+
+    @mock.patch('reckoner.cli.Reckoner', autospec=True)
+    def test_get_manifests_handles_exception(self, reckoner_mock):
+        """Assure we have a get_manifests command and it calls reckoner get_manifests"""
+        reckoner_mock.side_effect = [ReckonerException("had some error")]
+        runner = CliRunner()
+        with runner.isolated_filesystem():
+            with open('nonexistent.file', 'wb') as fake_file:
+                fake_file.write(''.encode())
+
+            result = runner.invoke(cli.update, args=['nonexistent.file', '--run-all'])
+
+        self.assertEqual(1, result.exit_code, result.output)
+
+    def test_get_manifest_options(self):
+        required = {
+            'option': [
+                '--run-all',
+                '--helm-args',
+                '--heading',
                 '--only',
                 '--continue-on-error',
             ],
@@ -251,7 +372,7 @@ class TestCliGetManifests(unittest.TestCase):
             ]
         }
 
-        assert_required_params(required, cli.plot.params)
+        assert_required_params(required, cli.update.params)
 
 def assert_required_params(required_options, list_of_cli_params):
     all_params = {}

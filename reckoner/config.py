@@ -55,6 +55,17 @@ class Config(object):
         else:
             return '.'
 
+    @property
+    def update_repos(self):
+        if self.__dict__.get('update_repos') is not None:
+            return self.__dict__.get('update_repos')
+        else:
+            return True
+
+    @update_repos.setter
+    def update_repos(self, value):
+        self.__dict__['update_repos'] = bool(value)
+
     def __setattr__(self, name, value):
         object.__setattr__(self, name, value)
 
