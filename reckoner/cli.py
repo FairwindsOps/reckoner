@@ -128,7 +128,8 @@ def plot(ctx, run_all, log_level, course_file=None, dry_run=False, debug=False, 
                                   'this will completely override any helm_args in the course. Also cannot be used for '
                                   'configuring how helm connects to tiller.', multiple=True)
 @click.option("--log-level", default="INFO", help="Log Level. [INFO | DEBUG | WARN | ERROR]. (default=INFO)")
-def template(ctx, only, run_all, log_level, course_file=None, helm_args=None):
+@update_repos_option
+def template(ctx, only, run_all, log_level, course_file=None, helm_args=None, update_repos=True):
     """Output the template of the chart or charts as they would be installed or upgraded"""
 
     coloredlogs.install(level=log_level)
@@ -136,17 +137,37 @@ def template(ctx, only, run_all, log_level, course_file=None, helm_args=None):
         if len(only) < 1:
             logging.error("You must pass either --run-all or --only.")
             ctx.exit(1)
-    # Check Schema of Course FileA
-    with open(course_file.name, 'rb') as course_file_stream:
-        validate_course_file(course_file_stream)
-    # Load Reckoner
-    r = Reckoner(course_file=course_file, helm_args=helm_args)
-    # Convert tuple to list
-    only = list(only)
-    logging.debug(f'Only tempalating the following charts: {only}')
-    template_results = r.template(only)
-    for result in template_results:
-        print(result.response.stdout)
+    Config().update_repos = update_repos
+    try:
+        # Check Schema of Course File
+        with open(course_file.name, 'rb') as course_file_stream:
+            validate_course_file(course_file_stream)
+        # Load Reckoner
+        r = Reckoner(course_file=course_file, helm_args=helm_args)
+        # Convert tuple to list
+        only = list(only)
+        logging.debug(f'Only tempalating the following charts: {only}')
+        template_results = r.template(only)
+        for result in template_results:
+            print(result.response.stdout)
+    except exception.ReckonerException as err:
+        click.echo(click.style("⛵🔥 Encountered errors while reading course file ⛵🔥", fg="bright_red"))
+        click.echo(click.style("{}".format(err), fg="red"))
+        logging.debug(traceback.format_exc())
+        ctx.exit(1)
+    except Exception as err:
+        # This handles exceptions cleanly, no expected stack traces from reckoner code
+        click.echo(click.style("⛵🔥 Encountered unexpected error in Reckoner! Run with DEBUG log level to see details, for example:\n\nreckoner --log-level=DEBUG plot course.yml -o <heading> --dry-run\n\n(or without heading if running the full chart). ⛵🔥", fg="bright_red"))
+        if 'log_level' in ctx.parent.params and ctx.parent.params['log_level'].lower() in ['debug', 'trace']:
+            click.echo(click.style("{}".format(err), fg='bright_red'))
+        logging.debug(traceback.format_exc())
+        ctx.exit(1)
+    if r.results.has_errors:
+        click.echo(click.style("⛵🔥 Encountered errors while running the course ⛵🔥", fg="bright_red"))
+        for result in r.results.results_with_errors:
+            click.echo(click.style("\n* * * * *\n", fg="bright_red"))
+            click.echo(click.style(str(result), fg="bright_red"))
+        ctx.exit(1)
 
 
 @cli.command()
@@ -159,7 +180,8 @@ def template(ctx, only, run_all, log_level, course_file=None, helm_args=None):
                                   'this will completely override any helm_args in the course. Also cannot be used for '
                                   'configuring how helm connects to tiller.', multiple=True)
 @click.option("--log-level", default="INFO", help="Log Level. [INFO | DEBUG | WARN | ERROR]. (default=INFO)")
-def get_manifests(ctx, only, run_all, log_level, course_file=None, helm_args=None):
+@update_repos_option
+def get_manifests(ctx, only, run_all, log_level, course_file=None, helm_args=None, update_repos=True):
     """Output the manifests of the chart or charts as they are installed"""
 
     coloredlogs.install(level=log_level)
@@ -167,17 +189,38 @@ def get_manifests(ctx, only, run_all, log_level, course_file=None, helm_args=Non
         if len(only) < 1:
             logging.error("You must pass either --run-all or --only.")
             ctx.exit(1)
-    # Check Schema of Course FileA
-    with open(course_file.name, 'rb') as course_file_stream:
-        validate_course_file(course_file_stream)
-    # Load Reckoner
-    r = Reckoner(course_file=course_file, helm_args=helm_args)
-    # Convert tuple to list
-    only = list(only)
-    logging.debug(f'Only tempalating the following charts: {only}')
-    manifests_results = r.get_manifests(only)
-    for result in manifests_results:
-        print(result.response.stdout)
+    Config().update_repos = update_repos
+
+    try:
+        # Check Schema of Course File
+        with open(course_file.name, 'rb') as course_file_stream:
+            validate_course_file(course_file_stream)
+        # Load Reckoner
+        r = Reckoner(course_file=course_file, helm_args=helm_args)
+        # Convert tuple to list
+        only = list(only)
+        logging.debug(f'Only tempalating the following charts: {only}')
+        manifests_results = r.get_manifests(only)
+        for result in manifests_results:
+            print(result.response.stdout)
+    except exception.ReckonerException as err:
+        click.echo(click.style("⛵🔥 Encountered errors while reading course file ⛵🔥", fg="bright_red"))
+        click.echo(click.style("{}".format(err), fg="red"))
+        logging.debug(traceback.format_exc())
+        ctx.exit(1)
+    except Exception as err:
+        # This handles exceptions cleanly, no expected stack traces from reckoner code
+        click.echo(click.style("⛵🔥 Encountered unexpected error in Reckoner! Run with DEBUG log level to see details, for example:\n\nreckoner --log-level=DEBUG plot course.yml -o <heading> --dry-run\n\n(or without heading if running the full chart). ⛵🔥", fg="bright_red"))
+        if 'log_level' in ctx.parent.params and ctx.parent.params['log_level'].lower() in ['debug', 'trace']:
+            click.echo(click.style("{}".format(err), fg='bright_red'))
+        logging.debug(traceback.format_exc())
+        ctx.exit(1)
+    if r.results.has_errors:
+        click.echo(click.style("⛵🔥 Encountered errors while running the course ⛵🔥", fg="bright_red"))
+        for result in r.results.results_with_errors:
+            click.echo(click.style("\n* * * * *\n", fg="bright_red"))
+            click.echo(click.style(str(result), fg="bright_red"))
+        ctx.exit(1)
 
 
 @cli.command()
@@ -201,19 +244,37 @@ def diff(ctx, only, run_all, log_level, course_file=None, helm_args=None, update
             ctx.exit(1)
 
     Config().update_repos = update_repos
+    try:
+        # Check Schema of Course FileA
+        with open(course_file.name, 'rb') as course_file_stream:
+            validate_course_file(course_file_stream)
 
-    # Check Schema of Course FileA
-    with open(course_file.name, 'rb') as course_file_stream:
-        validate_course_file(course_file_stream)
-
-    # Load Reckoner
-    r = Reckoner(course_file=course_file, helm_args=helm_args)
-    # Convert tuple to list
-    only = list(only)
-    logging.debug(f'Only diffing the following charts: {only}')
-    diff_results = r.diff(only)
-    for result in diff_results:
-        print(result.response)
+        # Load Reckoner
+        r = Reckoner(course_file=course_file, helm_args=helm_args)
+        # Convert tuple to list
+        only = list(only)
+        logging.debug(f'Only diffing the following charts: {only}')
+        diff_results = r.diff(only)
+        for result in diff_results:
+            print(result.response)
+    except exception.ReckonerException as err:
+        click.echo(click.style("⛵🔥 Encountered errors while reading course file ⛵🔥", fg="bright_red"))
+        click.echo(click.style("{}".format(err), fg="red"))
+        logging.debug(traceback.format_exc())
+        ctx.exit(1)
+    except Exception as err:
+        # This handles exceptions cleanly, no expected stack traces from reckoner code
+        click.echo(click.style("⛵🔥 Encountered unexpected error in Reckoner! Run with DEBUG log level to see details, for example:\n\nreckoner --log-level=DEBUG plot course.yml -o <heading> --dry-run\n\n(or without heading if running the full chart). ⛵🔥", fg="bright_red"))
+        if 'log_level' in ctx.parent.params and ctx.parent.params['log_level'].lower() in ['debug', 'trace']:
+            click.echo(click.style("{}".format(err), fg='bright_red'))
+        logging.debug(traceback.format_exc())
+        ctx.exit(1)
+    if r.results.has_errors:
+        click.echo(click.style("⛵🔥 Encountered errors while running the course ⛵🔥", fg="bright_red"))
+        for result in r.results.results_with_errors:
+            click.echo(click.style("\n* * * * *\n", fg="bright_red"))
+            click.echo(click.style(str(result), fg="bright_red"))
+        ctx.exit(1)
 
 
 @cli.command()
