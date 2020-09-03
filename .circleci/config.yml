@@ -301,6 +301,7 @@ workflows:
               ignore: /.*/
       - publish-binaries:
           requires:
+            - release
             - end-to-end-helmv2
             - end-to-end-helmv2-12-0
             - end-to-end-helmv3

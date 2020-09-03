@@ -26,7 +26,7 @@ except ImportError:
 
 
 setup(name='reckoner',
-      python_requires='~=3.8',
+      python_requires='~=3.6',
       use_scm_version=True,
       setup_requires=['setuptools_scm'],
       description='Declarative Helm configuration with Git capability',
