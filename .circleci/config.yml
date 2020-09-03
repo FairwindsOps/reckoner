@@ -23,7 +23,7 @@ executors:
       - image: circleci/python:3.7-stretch
   python-3-8:
     docker:
-      - image: circleci/python:3.8-stretch
+      - image: circleci/python:3.8-buster
   vm:
     machine:
       enabled: true
