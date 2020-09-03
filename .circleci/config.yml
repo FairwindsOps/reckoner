@@ -27,9 +27,10 @@ executors:
   vm:
     machine:
       enabled: true
+      image: ubuntu-1604:202007-01
   darwin:
     macos:
-      xcode: 10.2.0
+      xcode: 11.3.0
 
 jobs:
   build-3-6:
@@ -244,10 +245,17 @@ workflows:
               only: /.*/
             branches:
               only: /.*/
+      - build-3-8:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              only: /.*/
       - compile-darwin:
           requires:
             - build-3-6
             - build-3-7
+            - build-3-8
           filters:
             tags:
               only: /.*/
@@ -257,6 +265,7 @@ workflows:
           requires:
             - build-3-6
             - build-3-7
+            - build-3-8
           filters:
             tags:
               only: /.*/
