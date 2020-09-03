@@ -21,6 +21,9 @@ executors:
   python-3-7:
     docker:
       - image: circleci/python:3.7-stretch
+  python-3-8:
+    docker:
+      - image: circleci/python:3.8-stretch
   vm:
     machine:
       enabled: true
@@ -60,6 +63,22 @@ jobs:
             reckoner --version
             pytest --cov ./
             codecov
+  build-3-8:
+    executor: python-3-8
+    working_directory: ~/reckoner
+    steps:
+      - run:
+          name: Setup PATH to support pip user installs
+          command: echo 'export PATH=$PATH:/home/circleci/.local/bin' >> $BASH_ENV
+      - checkout
+      - run:
+          name: Unit Tests
+          command: |
+            pip install --user -r development-requirements.txt
+            pip install --user -e .
+            reckoner --version
+            pytest --cov ./
+            codecov
   release:
     executor: python-3-7
     environment:
@@ -82,7 +101,7 @@ jobs:
             python setup.py sdist bdist_wheel
             twine upload dist/*
   compile:
-    executor: python-3-7
+    executor: python-3-8
     working_directory: ~/reckoner
     steps:
       - run:
