@@ -102,7 +102,7 @@ jobs:
             python setup.py sdist bdist_wheel
             twine upload dist/*
   compile:
-    executor: python-3-8
+    executor: python-3-7
     working_directory: ~/reckoner
     steps:
       - run:
