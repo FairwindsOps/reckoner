@@ -129,7 +129,7 @@ def plot(ctx, run_all, log_level, course_file=None, dry_run=False, debug=False, 
                                   'configuring how helm connects to tiller.', multiple=True)
 @click.option("--log-level", default="INFO", help="Log Level. [INFO | DEBUG | WARN | ERROR]. (default=INFO)")
 @update_repos_option
-def template(ctx, only, run_all, log_level, course_file=None, helm_args=None, update_repos=True):
+def template(ctx, only, run_all, log_level, course_file=None, helm_args=None, dry_run=False, update_repos=True):
     """Output the template of the chart or charts as they would be installed or upgraded"""
 
     coloredlogs.install(level=log_level)
@@ -280,8 +280,6 @@ def diff(ctx, only, run_all, log_level, course_file=None, helm_args=None, update
 @cli.command()
 @click.pass_context
 @click.argument('course_file', type=click.File('rb'))
-@click.option("--dry-run", is_flag=True, help='Pass --dry-run to helm so no action is taken. Implies --debug and '
-              'skips hooks.')
 @click.option("--debug", is_flag=True, help='DEPRECATED - use --log-level=DEBUG as a parameter to `reckoner` instead. May be used with or without `--dry-run`. Or, pass `--debug` to --helm-args')
 @click.option("--run-all", "-a", "run_all", is_flag=True, help='Run all charts in the course.', cls=Mutex, not_required_if=["only"])
 @click.option("--only", "--heading", "-o", "only", metavar="<chart>", help='Only run a specific chart by name', multiple=True, cls=Mutex,
@@ -308,7 +306,7 @@ def update(ctx, run_all, log_level, course_file=None, dry_run=False, debug=False
         with open(course_file.name, 'rb') as course_file_stream:
             validate_course_file(course_file_stream)
         # Load Reckoner
-        r = Reckoner(course_file=course_file, dryrun=dry_run, debug=debug, helm_args=helm_args,
+        r = Reckoner(course_file=course_file, debug=debug, helm_args=helm_args,
                      continue_on_error=continue_on_error, create_namespace=create_namespace)
         # Convert tuple to list
         only = list(only)

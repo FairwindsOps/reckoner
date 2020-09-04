@@ -306,6 +306,7 @@ class Chart(object):
 
         try:
             if self.requires_update:
+                logging.info(f"Release {self.name} requires updating.")
                 self.__pre_command(default_namespace, default_namespace_management, context)
                 self.manage_namespace()
 
@@ -370,8 +371,10 @@ class Chart(object):
                 self._append_arg('--kube-context {}'.format(self.context))
 
             # Add debug arguments
+            # No --dry-run flag for get manifest
             for debug_arg in self.debug_args:
-                self._append_arg(debug_arg)
+                if debug_arg != '--dry-run':
+                    self._append_arg(debug_arg)
 
             # Perform the template with the arguments
             return self.helm.get_manifest(self.args, plugin=self.plugin)
@@ -402,9 +405,10 @@ class Chart(object):
         Returns true if there is any differences between the installed release and the
         templates that would be generated from this run
         """
-        if self.__diff_response() == "":
+        diff = self.__diff_response()
+        if diff == "":
             return False
-
+        logging.debug(f"\"{diff}\" != \"\"")
         return True
 
     def diff(self, default_namespace=None, default_namespace_management={}, context=None) -> None:
