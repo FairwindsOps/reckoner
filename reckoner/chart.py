@@ -402,7 +402,7 @@ class Chart(object):
         Returns true if there is any differences between the installed release and the
         templates that would be generated from this run
         """
-        if self.__diff_response() is "":
+        if self.__diff_response() == "":
             return False
 
         return True

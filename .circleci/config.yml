@@ -21,12 +21,16 @@ executors:
   python-3-7:
     docker:
       - image: circleci/python:3.7-stretch
+  python-3-8:
+    docker:
+      - image: circleci/python:3.8-buster
   vm:
     machine:
       enabled: true
+      image: ubuntu-1604:202007-01
   darwin:
     macos:
-      xcode: 10.2.0
+      xcode: 11.3.0
 
 jobs:
   build-3-6:
@@ -46,6 +50,22 @@ jobs:
             pytest
   build-3-7:
     executor: python-3-7
+    working_directory: ~/reckoner
+    steps:
+      - run:
+          name: Setup PATH to support pip user installs
+          command: echo 'export PATH=$PATH:/home/circleci/.local/bin' >> $BASH_ENV
+      - checkout
+      - run:
+          name: Unit Tests
+          command: |
+            pip install --user -r development-requirements.txt
+            pip install --user -e .
+            reckoner --version
+            pytest --cov ./
+            codecov
+  build-3-8:
+    executor: python-3-8
     working_directory: ~/reckoner
     steps:
       - run:
@@ -225,10 +245,17 @@ workflows:
               only: /.*/
             branches:
               only: /.*/
+      - build-3-8:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              only: /.*/
       - compile-darwin:
           requires:
             - build-3-6
             - build-3-7
+            - build-3-8
           filters:
             tags:
               only: /.*/
@@ -238,6 +265,7 @@ workflows:
           requires:
             - build-3-6
             - build-3-7
+            - build-3-8
           filters:
             tags:
               only: /.*/
@@ -282,6 +310,7 @@ workflows:
               ignore: /.*/
       - publish-binaries:
           requires:
+            - release
             - end-to-end-helmv2
             - end-to-end-helmv2-12-0
             - end-to-end-helmv3

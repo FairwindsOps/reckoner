@@ -20,10 +20,10 @@ import logging
 import traceback
 import coloredlogs
 
-from . import exception
-from .meta import __version__
-from .reckoner import Reckoner
-from .config import Config
+from reckoner import exception
+from reckoner.meta import __version__
+from reckoner.reckoner import Reckoner
+from reckoner.config import Config
 
 from reckoner.schema_validator.course import validate_course_file
 
