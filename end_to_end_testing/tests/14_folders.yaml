@@ -1,0 +1,26 @@
+version: "2"
+name: Files in Folders
+vars:
+  course: ../course_files/testing_in_folder/test_files_in_folders.yml
+  namespace: infra
+  release: chart-one
+testcases:
+- name: plot {{.course}}
+  steps:
+  - script: |
+      reckoner plot -a {{.course}}
+    assertions:
+    - result.code ShouldEqual 0
+  - script: |
+      helm -n {{.namespace}} get all {{.release}}
+    assertions:
+    - result.code ShouldEqual 0
+  - script: |
+      helm -n {{.namespace}} get values {{.release}} -ojson | jq -e ".[\"new_key\"] == \"new_value\""
+    assertions:
+    - result.code ShouldEqual 0
+- name: cleanup
+  steps:
+    - script: |
+        helm -n {{.namespace}} delete {{.release}}
+        kubectl delete ns {{.namespace}}

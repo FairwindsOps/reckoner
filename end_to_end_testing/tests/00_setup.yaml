@@ -1,0 +1,16 @@
+version: "2"
+name: Setup
+testcases:
+- name: Helm Version
+  steps:
+  - script: |
+      helm version
+    assertions:
+    - result.code ShouldEqual 0
+    - result.systemout ShouldContainSubstring "v3"
+- name: Reckoner Version
+  steps:
+  - script: |
+      reckoner version
+    assertions:
+    - result.code ShouldEqual 0

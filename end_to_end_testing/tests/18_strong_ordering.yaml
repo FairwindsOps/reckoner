@@ -1,0 +1,33 @@
+version: "2"
+name: Strong Ordering
+vars:
+  course: ../course_files/test_strong_ordering.yml
+  namespace: test
+testcases:
+- name: plot course
+  steps:
+  - script: |
+      reckoner plot -a {{.course}}
+    assertions:
+    - result.code ShouldEqual 0
+  - script: |
+      helm -n {{.namespace}} get all first-chart
+    assertions:
+    - result.code ShouldEqual 0
+  - script: |
+      helm -n {{.namespace}} get all second-chart
+    assertions:
+    - result.code ShouldEqual 0
+- name: check install timestamps
+  steps:
+  - script: |
+      first_chart_timestamp="$(helm status first-chart -n test -ojson | jq .info.last_deployed -r | cut -c -19 | jq --raw-input 'strptime("%Y-%m-%dT%H:%M:%S")|mktime')"
+      second_chart_timestamp="$(helm status second-chart -n test -ojson | jq .info.last_deployed -r | cut -c -19 | jq --raw-input 'strptime("%Y-%m-%dT%H:%M:%S")|mktime')"
+      test $((first_chart_timestamp-second_chart_timestamp)) -lt 0
+    assertions:
+    - result.code ShouldEqual 0
+- name: cleanup
+  steps:
+    - script: |
+        helm -n {{.namespace}} delete first-chart second-chart
+        kubectl delete ns {{.namespace}}

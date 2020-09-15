@@ -14,9 +14,10 @@ This utility adds to the functionality of [Helm](https://github.com/kubernetes/h
 
 ## Requirements
 - python 3
-- helm (<= 3.3.0 >= 2.12.0), installed and initialized
+- helm (>= 3.0.0), installed and initialized
 
 *Note:* Python2 is no longer supported by Reckoner. In general we suggest using the binary on the [Latest Releases](https://github.com/FairwindsOps/reckoner/releases/latest) page.
+*Note2:* Helm2 support will not be tested from v4.3.0. The maintainters have [deprecated helm2](https://helm.sh/blog/helm-v2-deprecation-timeline/).
 
 ### Installation
 Via Binary: *preferred method*

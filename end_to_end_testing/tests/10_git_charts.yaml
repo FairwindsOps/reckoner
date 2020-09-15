@@ -1,0 +1,30 @@
+version: "2"
+name: Charts from Git Repos
+vars:
+  course: ../course_files/test_git_chart.yml
+testcases:
+- name: plot {{.course}}
+  steps:
+  - script: |
+      reckoner plot -a {{.course}}
+    assertions:
+    - result.code ShouldEqual 0
+  - script: |
+      helm ls --all-namespaces
+    assertions:
+    - result.code ShouldEqual 0
+    - result.systemout ShouldContainSubstring 'polaris'
+    - result.systemout ShouldContainSubstring 'go-harbor'
+    - result.systemout ShouldContainSubstring 'another-polaris'
+    - result.systemout ShouldContainSubstring 'test'
+    - result.systemout ShouldContainSubstring 'polaris-release'
+    - result.systemout ShouldContainSubstring 'a-different-one'
+    - result.systemout ShouldContainSubstring 'go-harbor-two'
+- name: cleanup namespace creation
+  steps:
+    - script: |
+        helm -n test delete go-harbor
+        helm -n polaris delete polaris-release
+        helm -n another-polaris delete polaris
+        helm -n a-different-one delete go-harbor-two
+        kubectl delete ns test polaris another-polaris a-different-one

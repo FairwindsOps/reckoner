@@ -1,0 +1,34 @@
+version: "2"
+name: Namespace Creation
+vars:
+  course: ../course_files/test_create_namespace.yml
+  namespace: farglebargle
+  release: namespace-test
+testcases:
+- name: plot --no-create-namespace {{.course}} fails
+  steps:
+  - script: |
+      reckoner plot --no-create-namespace -a {{.course}}
+    assertions:
+    - result.code ShouldEqual 1
+  - script: |
+      helm -n {{.namespace}} get all {{.release}}
+    assertions:
+    - result.code ShouldNotEqual 0
+- name: plot {{.course}}
+  steps:
+  - script: |
+      reckoner plot -a {{.course}}
+    assertions:
+    - result.code ShouldEqual 0
+  - script: |
+      helm -n {{.namespace}} get all {{.release}}
+    assertions:
+    - result.code ShouldEqual 0
+    - result.systemout ShouldContainSubstring "{{.namespace}}"
+    - result.systemout ShouldContainSubstring "{{.release}}"
+- name: cleanup
+  steps:
+    - script: |
+        helm -n {{.namespace}} delete {{.release}}
+        kubectl delete ns {{.namespace}}

@@ -1,0 +1,21 @@
+version: "2"
+name: Bad Chart
+vars:
+  course: ../course_files/test_failed_chart.yml
+  namespace: test
+  release: bad-chart
+testcases:
+- name: plot test_bad_schema_repository.yml
+  steps:
+  - script: |
+      reckoner plot -a ../course_files/test_bad_schema_repository.yml
+    assertions:
+    - result.code ShouldEqual 1
+    - result.systemout ShouldContainSubstring 'Course file has schema validation errors'
+- name: plot test_required_schema.yml
+  steps:
+  - script: |
+      reckoner plot -a ../course_files/test_required_schema.yml
+    assertions:
+    - result.code ShouldEqual 1
+    - result.systemout ShouldContainSubstring 'Course file has schema validation errors'

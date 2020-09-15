@@ -14,6 +14,9 @@
 
 version: 2.1
 
+orbs:
+  rok8s-scripts: fairwinds/rok8s-scripts@11
+
 executors:
   python-3-6:
     docker:
@@ -31,6 +34,23 @@ executors:
   darwin:
     macos:
       xcode: 11.3.0
+
+references:
+  e2e_configuration: &e2e_configuration
+    pre_script: end_to_end_testing/pre.sh
+    script: end_to_end_testing/run.sh
+    command_runner_image: quay.io/reactiveops/ci-images:v11-stretch
+    enable_docker_layer_caching: true
+    store-test-results: /tmp/test-results
+    kind_version: 0.9.0
+    requires:
+      - compile
+      - compile-darwin
+    filters:
+      branches:
+        only: /.*/
+      tags:
+        ignore: /v.*/
 
 jobs:
   build-3-6:
@@ -162,48 +182,6 @@ jobs:
       - store_artifacts:
           path: installer/dist/reckoner
           destination: reckoner-darwin
-  end-to-end-helmv2-12-0:
-    executor: vm
-    working_directory: ~/reckoner
-    resource_class: medium
-    steps:
-      - checkout
-      - attach_workspace:
-          at: /tmp/binaries
-      - run:
-          name: Setup Testing Environment
-          command: "./end_to_end_testing/setup_helm2_12_0.sh"
-      - run:
-          name: Run end to end tests
-          command: HELM_VERSION=2 "./end_to_end_testing/run_end_to_end.sh"
-  end-to-end-helmv2:
-    executor: vm
-    working_directory: ~/reckoner
-    resource_class: medium
-    steps:
-      - checkout
-      - attach_workspace:
-          at: /tmp/binaries
-      - run:
-          name: Setup Testing Environment
-          command: "./end_to_end_testing/setup_helm2.sh"
-      - run:
-          name: Run end to end tests
-          command: HELM_VERSION=2 "./end_to_end_testing/run_end_to_end.sh"
-  end-to-end-helmv3:
-    executor: vm
-    working_directory: ~/reckoner
-    resource_class: medium
-    steps:
-      - checkout
-      - attach_workspace:
-          at: /tmp/binaries
-      - run:
-          name: Setup Testing Environment
-          command: "./end_to_end_testing/setup_helm3.sh"
-      - run:
-          name: Run end to end tests
-          command: HELM_VERSION=3 "./end_to_end_testing/run_end_to_end.sh"
   publish-binaries:
     executor: python-3-7
     steps:
@@ -271,38 +249,18 @@ workflows:
               only: /.*/
             branches:
               only: /.*/
-      - end-to-end-helmv2-12-0:
-          requires:
-            - compile
-            - compile-darwin
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              only: /.*/
-      - end-to-end-helmv2:
-          requires:
-            - compile
-            - compile-darwin
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              only: /.*/
-      - end-to-end-helmv3:
-          requires:
-            - compile
-            - compile-darwin
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              only: /.*/
+      - rok8s-scripts/kubernetes_e2e_tests:
+          name: "End-To-End Kubernetes 1.18.8"
+          kind_node_image: "kindest/node:v1.18.8@sha256:f4bcc97a0ad6e7abaf3f643d890add7efe6ee4ab90baeb374b4f41a4c95567eb"
+          <<: *e2e_configuration
+      - rok8s-scripts/kubernetes_e2e_tests:
+          name: "End-To-End Kubernetes 1.19.1"
+          kind_node_image: "kindest/node:v1.19.1@sha256:98cf5288864662e37115e362b23e4369c8c4a408f99cbc06e58ac30ddc721600"
+          <<: *e2e_configuration
       - release:
           requires:
-            - end-to-end-helmv2
-            - end-to-end-helmv2-12-0
-            - end-to-end-helmv3
+            - compile
+            - compile-darwin
           filters:
             tags:
               only: /.*/
@@ -311,9 +269,6 @@ workflows:
       - publish-binaries:
           requires:
             - release
-            - end-to-end-helmv2
-            - end-to-end-helmv2-12-0
-            - end-to-end-helmv3
           filters:
             tags:
               only: /.*/

@@ -1,0 +1,72 @@
+version: "2"
+name: Basic Functionality
+vars:
+  course: ../course_files/test_basic.yml
+  namespace: infra
+  release: first-chart
+testcases:
+- name: get manifests {{.course}} not installed yet
+  steps:
+  - script: |
+      reckoner get-manifests {{.course}} -a
+    assertions:
+    - result.code ShouldEqual 1
+- name: plot {{.course}}
+  steps:
+  - script: |
+      reckoner plot -a {{.course}}
+    assertions:
+    - result.code ShouldEqual 0
+  - script: |
+      helm -n {{.namespace}} get all {{.release}}
+    assertions:
+    - result.code ShouldEqual 0
+    - result.systemout ShouldContainSubstring '{{.namespace}}'
+    - result.systemout ShouldContainSubstring '{{.release}}'
+- name: template {{.course}} all
+  steps:
+  - script: |
+      reckoner template {{.course}} -a
+    assertions:
+    - result.code ShouldEqual 0
+- name: template {{.course}} -o {{.release}}
+  steps:
+  - script: |
+      reckoner template {{.course}} -o {{.release}}
+    assertions:
+    - result.code ShouldEqual 0
+- name: get manifests {{.course}} all
+  steps:
+  - script: |
+      reckoner get-manifests {{.course}} -a
+    assertions:
+    - result.code ShouldEqual 0
+- name: get manifests {{.course}} not in course
+  steps:
+  - script: |
+      reckoner get-manifests {{.course}} -o doesnotexist
+    assertions:
+    - result.code ShouldEqual 1
+- name: diff {{.course}} all
+  steps:
+  - script: |
+      reckoner diff {{.course}} -a
+    assertions:
+    - result.code ShouldEqual 0
+- name: update {{.course}} all
+  steps:
+  - script: |
+      reckoner update {{.course}} -a
+    assertions:
+    - result.code ShouldEqual 0
+- name: update {{.course}} -o {{.release}}
+  steps:
+  - script: |
+      reckoner template {{.course}} -o {{.release}}
+    assertions:
+    - result.code ShouldEqual 0
+- name: cleanup
+  steps:
+    - script: |
+        helm -n {{.namespace}} delete {{.release}}
+        kubectl delete ns {{.namespace}}

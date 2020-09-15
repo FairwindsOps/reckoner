@@ -1,0 +1,48 @@
+version: "2"
+name: Environment Variable Interpolation
+vars:
+  course: ../course_files/test_env_var.yml
+  namespace: infra
+testcases:
+- name: plot {{.course}} without var
+  steps:
+  - script: |
+      reckoner plot -a {{.course}}
+    assertions:
+    - result.code ShouldEqual 1
+- name: plot {{.course}} with var
+  steps:
+  - script: |
+      myvar=testing reckoner plot -a {{.course}}
+    assertions:
+    - result.code ShouldEqual 0
+  - script: |
+      helm -n {{.namespace}} ls
+    assertions:
+    - result.code ShouldEqual 0
+    - result.systemout ShouldContainSubstring 'check-values'
+    - result.systemout ShouldContainSubstring 'check-set-values'
+    - result.systemout ShouldContainSubstring 'check-values-strings'
+- name: check values
+  steps:
+  - script: |
+      helm -n {{.namespace}} get values check-values -ojson | jq -e ".[\"non-used\"] == \"testing\""
+  assertions:
+    - result.code ShouldEqual 0
+- name: check set  values
+  steps:
+  - script: |
+      helm -n {{.namespace}} get values check-set-values -ojson | jq -e ".[\"non-used\"] == \"testing\""
+  assertions:
+    - result.code ShouldEqual 0
+- name: check values strings
+  steps:
+  - script: |
+      helm -n {{.namespace}} get values check-values-strings -ojson | jq -e ".[\"non-used\"] == \"testing\""
+  assertions:
+    - result.code ShouldEqual 0
+- name: cleanup
+  steps:
+    - script: |
+        helm -n {{.namespace}} delete check-values check-set-values check-values-strings
+        kubectl delete ns {{.namespace}}
