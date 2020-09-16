@@ -33,9 +33,9 @@ def get_helm_client(helm_arguments, client_version=None, helm_provider=HelmProvi
       HelmClientException
     """
     try:
-        # if client version is
         if client_version is not None:
             if client_version == "2":
+                logging.warning("Helm 2 will be deprecated in a soon-to-come release. Please upgrade.")
                 return Helm2Client(default_helm_arguments=helm_arguments, provider=helm_provider)
             elif client_version == "3":
                 return Helm3Client(default_helm_arguments=helm_arguments, provider=helm_provider)
@@ -49,6 +49,7 @@ def get_helm_client(helm_arguments, client_version=None, helm_provider=HelmProvi
             try:
                 logging.debug('Checking for Helm 2 client')
                 detected_version = client2.version
+                logging.warning("Helm 2 will be deprecated in a soon-to-come release. Please upgrade.")
                 logging.info('Found Helm Client Version {}'.format(detected_version))
                 logging.info('Tiller version {}'.format(client2.tiller_version))
                 return client2
