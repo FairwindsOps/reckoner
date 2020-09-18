@@ -11,7 +11,8 @@ testcases:
       true_var=true
       false_var=false
       int_var=123
-      float_var=1.234
+      float_var='1.234'
+      pwd
       ls -al ../course_files
       reckoner plot -a {{.course}}
     assertions:
