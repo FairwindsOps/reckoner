@@ -7,7 +7,12 @@ testcases:
 - name: plot {{.course}}
   steps:
   - script: |
-      yes_var=yes true_var=true false_var=false int_var=123 float_var=1.234 reckoner plot -a {{.course}}
+      yes_var=yes
+      true_var=true
+      false_var=false 
+      int_var=123 
+      float_var=1.234 
+      reckoner plot -a {{.course}}
     assertions:
     - result.code ShouldEqual 0
 - name: check values
