@@ -1,8 +1,7 @@
 #!/bin/bash
 
 set -x
-ls -al /tmp/binaries
-sudo cp /tmp/binaries/reckoner-linux-amd64 /usr/local/bin/reckoner
+chmod +x /usr/local/bin/reckoner
 reckoner version
 
 ## Install python 3.8 and pip
