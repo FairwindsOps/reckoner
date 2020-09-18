@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -x
+ls -al /tmp/binaries
 sudo cp /tmp/binaries/reckoner-linux-amd64 /usr/local/bin/reckoner
 reckoner version
 
