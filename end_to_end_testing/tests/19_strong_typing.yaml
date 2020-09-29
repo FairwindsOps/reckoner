@@ -1,20 +1,12 @@
 ersion: "2"
 name: Strong Typing
 vars:
-  course: ../course_files/test_strong_typing.yml
+  course: '../course_files/test_strong_typing.yml'
   namespace: testing
 testcases:
 - name: plot {{.course}}
   steps:
-  - script: |
-      yes_var=yes
-      true_var=true
-      false_var=false
-      int_var=123
-      float_var='1.234'
-      pwd
-      ls -al ../course_files
-      reckoner plot -a {{.course}}
+  - script: reckoner plot -a {{.course}}
     assertions:
     - result.code ShouldEqual 0
 - name: check values
