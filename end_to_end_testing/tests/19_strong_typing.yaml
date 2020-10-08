@@ -1,7 +1,7 @@
 ersion: "2"
 name: Strong Typing
 vars:
-  course: ../course_files/test_strong_typing.yml
+  course: ../course_files/strong_typing.yml
   namespace: testing
 testcases:
 - name: plot {{.course}}
