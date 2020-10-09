@@ -1,4 +1,4 @@
-ersion: "2"
+version: "2"
 name: Strong Typing
 vars:
   course: ../course_files/strong_typing.yml
@@ -7,7 +7,7 @@ testcases:
 - name: plot {{.course}}
   steps:
   - script: |
-      reckoner plot -a {{.course}}
+      reckoner plot {{.course}} -a
     assertions:
     - result.code ShouldEqual 0
 - name: check values
