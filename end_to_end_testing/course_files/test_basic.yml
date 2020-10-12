@@ -1,6 +1,6 @@
 namespace: test #namespace to install the chart in, defaults to 'kube-system'
 repositories:
-  test_repo:
+  stable:
     url: https://kubernetes-charts.storage.googleapis.com
   incubator:
     url: https://kubernetes-charts-incubator.storage.googleapis.com
@@ -12,16 +12,7 @@ minimum_versions: #set minimum version requirements here
   helm: 0.0.0
   reckoner: 0.0.0
 charts:
-  good-chart:
+  first-chart:
     repository: stable
     chart: nginx-ingress
-  bad-chart:
-    repository: stable
-    chart: atlantis # NOTE: This chart has required values so it should fail without them
-    version: 3.5.2
-    set-values:
-      github:
-        broken: yep
-  expected-skipped-chart: # This chart should never be installed due to bad-chart failing (if applied in order)
-    repository: stable
-    chart: nginx-ingress
+    namespace: infra

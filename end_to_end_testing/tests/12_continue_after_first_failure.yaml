@@ -1,0 +1,29 @@
+version: "2"
+name: Continue After First Failure
+vars:
+  course: ../course_files/test_after_first_failure.yml
+  namespace: test
+testcases:
+- name: plot {{.course}}
+  steps:
+  - script: |
+      reckoner plot -a {{.course}} --continue-on-error
+    assertions:
+    - result.code ShouldEqual 1
+  - script: |
+      helm -n {{.namespace}} get all good-chart
+    assertions:
+    - result.code ShouldEqual 0
+  - script: |
+      helm -n {{.namespace}} get all bad-chart
+    assertions:
+    - result.code ShouldEqual 1
+  - script: |
+      helm -n {{.namespace}} get all expected-skipped-chart
+    assertions:
+    - result.code ShouldEqual 0
+- name: cleanup
+  steps:
+    - script: |
+        helm -n {{.namespace}} delete good-chart expected-skipped-chart
+        kubectl delete ns {{.namespace}}

@@ -1,0 +1,29 @@
+version: "2"
+name: Multiple Charts in Multiple Namespaces
+vars:
+  course: ../course_files/test_multi_chart.yml
+testcases:
+- name: plot {{.course}}
+  steps:
+  - script: |
+      reckoner plot -a {{.course}}
+    assertions:
+    - result.code ShouldEqual 0
+- name: check first chart
+  steps:
+  - script: |
+      helm -n infra get all first-chart
+    assertions:
+    - result.code ShouldEqual 0
+- name: check second chart
+  steps:
+  - script: |
+      helm -n test get all second-chart
+    assertions:
+    - result.code ShouldEqual 0
+- name: cleanup
+  steps:
+    - script: |
+        helm -n test delete second-chart
+        helm -n infra delete first-chart
+        kubectl delete ns test infra

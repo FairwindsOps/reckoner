@@ -1,0 +1,22 @@
+version: "2"
+name: Bad Chart
+vars:
+  course: ../course_files/test_failed_chart.yml
+  namespace: test
+  release: bad-chart
+testcases:
+- name: plot {{.course}}
+  steps:
+  - script: |
+      reckoner plot -a {{.course}}
+    assertions:
+    - result.code ShouldEqual 1
+  - script: |
+      helm -n {{.namespace}} get all {{.release}}
+    assertions:
+    - result.code ShouldEqual 1
+- name: cleanup
+  steps:
+    - script: |
+        helm -n {{.namespace}} delete {{.release}}
+        kubectl delete ns {{.namespace}}

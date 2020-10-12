@@ -1,4 +1,13 @@
-namespace: test #namespace to install the chart in, defaults to 'kube-system'
+namespace: annotatednamespace #namespace to install the chart in, defaults to 'kube-system'
+namespace_management:
+  default:
+    metadata:
+      annotations:
+        reckoner: doesnotrock
+      labels:
+        rocks: reckonerstill
+    settings:
+      overwrite: False
 repositories:
   test_repo:
     url: https://kubernetes-charts.storage.googleapis.com
@@ -12,7 +21,7 @@ minimum_versions: #set minimum version requirements here
   helm: 0.0.0
   reckoner: 0.0.0
 charts:
-  first-chart:
+  namespace-test:
     repository: stable
     chart: nginx-ingress
-    namespace: infra
+    namespace: annotatednamespace

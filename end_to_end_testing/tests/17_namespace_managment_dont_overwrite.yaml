@@ -1,0 +1,33 @@
+version: "2"
+name: Namespace Management Overwrite
+vars:
+  course: ../course_files/test_dont_overwrite_ns_meta.yml
+  namespace: annotatednamespace
+  release: namespace-test
+testcases:
+- name: plot {{.course}}
+  steps:
+  - script: |
+      kubectl create ns {{.namespace}}
+      kubectl annotate ns {{.namespace}} reckoner=dontoverwriteme
+      kubectl label ns {{.namespace}} rocks=dontoverwriteme
+      reckoner plot -a {{.course}}
+    assertions:
+    - result.code ShouldEqual 0
+  - script: |
+      helm -n {{.namespace}} get all {{.release}}
+    assertions:
+    - result.code ShouldEqual 0
+  - script: |
+      kubectl get ns {{.namespace}} -ojson | jq -e ".metadata.annotations[\"reckoner\"] == \"doesnotrock\""
+    assertions:
+    - result.code ShouldEqual 1
+  - script: |
+      kubectl get ns {{.namespace}} -ojson | jq -e ".metadata.labels[\"rocks\"] == \"reckonerstill\""
+    assertions:
+    - result.code ShouldEqual 1
+- name: cleanup
+  steps:
+    - script: |
+        helm -n {{.namespace}} delete {{.release}}
+        kubectl delete ns {{.namespace}}

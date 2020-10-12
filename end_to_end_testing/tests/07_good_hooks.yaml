@@ -1,0 +1,25 @@
+version: "2"
+name: Successful Hooks
+vars:
+  course: ../course_files/test_good_hooks.yml
+  namespace: redis-test-namespace
+  release: should-install
+testcases:
+- name: plot {{.course}}
+  steps:
+  - script: |
+      reckoner plot -a {{.course}}
+    assertions:
+    - result.code ShouldEqual 0
+    - result.systemerr ShouldContainSubstring "Returned stdout"
+    - result.systemerr ShouldContainSubstring "Release redis post install hook ran successfully"
+    - result.systemerr ShouldContainSubstring "Release redis pre install hook ran successfully"
+  - script: |
+      helm -n {{.namespace}} get all {{.release}}
+    assertions:
+    - result.code ShouldEqual 0
+- name: cleanup
+  steps:
+    - script: |
+        helm -n {{.namespace}} delete {{.release}}
+        kubectl delete ns {{.namespace}}
