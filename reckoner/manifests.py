@@ -104,7 +104,7 @@ class Manifests(object):
         - manifest: String containing
         """
         try:
-            self.all_manifests = [Manifest(document) for document in yaml_handler.load_all(documents.strip())]
+            self.all_manifests = [Manifest(document) for document in yaml_handler.load_all(documents.strip()) if document]
         except Exception as e:
             logging.error("Error loading manifest")
             logging.error(e)
