@@ -117,7 +117,7 @@ Keys:
 - `git` _(string)_
     The git endpoint from which to pull the chart, in SSH or HTTP form (i.e. `git@github.com:FairwindsOps/charts.git`)
 - `path` _(string)_ _**git specific**_
-    The path in the remote git chart repository in which to find the chart (i.e. `stable`)
+    The path in the remote git chart repository in which to find the chart (i.e. `stable`). This will result in a git sparse checkout of `${path}/${chart-name}`
 - `name` _(string)_
     The name to use for this remote chart repository in `helm repo list`, if not defined then the key of the definition is used
 
