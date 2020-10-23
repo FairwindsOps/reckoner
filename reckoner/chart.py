@@ -129,7 +129,7 @@ class Chart(object):
         self._context = self._chart.get('context')
         value_strings = self._chart.get('values-strings', {})
         self._chart['values_strings'] = value_strings
-       
+
         if value_strings != {}:
             self._deprecation_messages.append(
                 "DEPRECATION NOTICE: values-strings will be removed in favor of values in a future release. Please migrate your course file"
