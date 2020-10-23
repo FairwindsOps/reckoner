@@ -81,6 +81,7 @@ class Chart(object):
     """
 
     def __init__(self, chart, helm):
+        self._deprecation_messages = []
         self.helm = helm
         self.config = Config()
         self._release_name = list(chart.keys())[0]
@@ -96,6 +97,11 @@ class Chart(object):
         self._chart['values'] = self._chart.get('values', {})
         self._temp_values_file_paths = []
         self._chart['set_values'] = self._chart.get('set-values', {})
+        if self._chart['set_values'] != {}:
+            self._deprecation_messages.append(
+                "DEPRECATION NOTICE: set-values will be removed in favor of values in a future release. Please migrate your course file"
+            )
+
         self.args = []
 
         # Parsing and prepping hooks from chart
@@ -123,11 +129,12 @@ class Chart(object):
         self._context = self._chart.get('context')
         value_strings = self._chart.get('values-strings', {})
         self._chart['values_strings'] = value_strings
-
+       
         if value_strings != {}:
+            self._deprecation_messages.append(
+                "DEPRECATION NOTICE: values-strings will be removed in favor of values in a future release. Please migrate your course file"
+            )
             del(self._chart['values-strings'])
-
-        self._deprecation_messages = []
 
     @property
     def helm_args(self):
