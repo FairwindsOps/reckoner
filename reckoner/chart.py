@@ -99,7 +99,7 @@ class Chart(object):
         self._chart['set_values'] = self._chart.get('set-values', {})
         if self._chart['set_values'] != {}:
             self._deprecation_messages.append(
-                "DEPRECATION NOTICE: set-values will be removed in favor of values in a future release. Please migrate your course file"
+                "DEPRECATION NOTICE: 'set-values' will be removed in favor of 'values' in a future release. Please migrate your course file"
             )
 
         self.args = []
@@ -132,7 +132,7 @@ class Chart(object):
 
         if value_strings != {}:
             self._deprecation_messages.append(
-                "DEPRECATION NOTICE: values-strings will be removed in favor of values in a future release. Please migrate your course file"
+                "DEPRECATION NOTICE: 'values-strings' will be removed in favor of 'values' in a future release. Please migrate your course file"
             )
             del(self._chart['values-strings'])
 
