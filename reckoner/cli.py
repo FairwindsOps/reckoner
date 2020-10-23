@@ -25,7 +25,7 @@ from reckoner.meta import __version__
 from reckoner.reckoner import Reckoner
 from reckoner.config import Config
 
-from reckoner.schema_validator.course import validate_course_file
+from reckoner.schema_validator.course import validate_course_file, lint_course_file
 
 class Mutex(click.Option):
     def __init__(self, *args, **kwargs):
@@ -330,6 +330,20 @@ def update(ctx, run_all, log_level, course_file=None, dry_run=False, debug=False
             click.echo(click.style(str(result), fg="bright_red"))
         ctx.exit(1)
 
+@cli.command()
+@click.pass_context
+@log_level_option
+@course_file_argument
+def lint(ctx, log_level, course_file=None):
+    """ Validate the course file schema """
+    coloredlogs.install(level=log_level)
+    try:
+        with open(course_file.name, 'rb') as course_file_stream:
+            validate_course_file(course_file_stream)
+    except exception.ReckonerException as err:
+        click.echo(click.style("{}".format(err), fg="red"))
+        ctx.exit(1)
+    click.echo(click.style("No schema validation errors found.", fg="green"))
 
 @cli.command()
 def version():

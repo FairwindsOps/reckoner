@@ -61,3 +61,15 @@ def validate_course_file(course_file: BufferedReader):
             "Course file has schema validation errors. "
             "Please see the docs on schema validation or --log-level debug for in depth validation output.\n\n{}.".format('\n'.join(v.errors))
         )
+
+def lint_course_file(course_file: BufferedReader):
+    v = Validator()
+    course_file_object = Handler.load(course_file)
+    v.check(course_file_object)
+    if len(v.errors) > 0:
+        logging.error("Schema Validation Errors:")
+        for err in v.raw_errors:
+            logging.error("{}".format(err))
+        raise SchemaValidationError(
+            "Course file has schema validation errors."
+        )
