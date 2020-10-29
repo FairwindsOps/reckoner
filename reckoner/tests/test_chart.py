@@ -22,7 +22,7 @@ from reckoner.hooks import Hook
 from reckoner.yaml.handler import Handler
 from reckoner.chart import Chart, ChartResult
 from reckoner.command_line_caller import Response
-from reckoner.exception import ReckonerCommandException
+from reckoner.exception import ReckonerCommandException, ReckonerException
 
 from .namespace_manager_mock import NamespaceManagerMock
 
@@ -56,7 +56,8 @@ class TestCharts(unittest.TestCase):
         chart.args = ['thing=${environVar}']
         environMock.environ = {}
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(Exception) as error:
+            self.assertTrue(str(error).contains("Invalid placeholder"))
             chart._check_env_vars()
 
     @mock.patch('reckoner.chart.Config', autospec=True)
@@ -67,11 +68,25 @@ class TestCharts(unittest.TestCase):
         chartConfig.course_base_directory = '.'
         chartConfig.dryrun = False
         chartConfig.debug = False
-        chart.args = ['thing=$(environVar)']
+        chart.args = ['thing=$$(environVar)']
         environMock.environ = {}
 
         chart._check_env_vars()
         self.assertEqual(chart.args[0], 'thing=$(environVar)')
+
+    @mock.patch('reckoner.chart.Config', autospec=True)
+    @mock.patch('reckoner.chart.os')
+    def test_interpolation_of_env_vars_raises(self, environMock, chartConfigMock):
+        chart = Chart({'name': {'values': {}}}, None)
+        chartConfig = chartConfigMock()
+        chartConfig.course_base_directory = '.'
+        chartConfig.dryrun = False
+        chartConfig.debug = False
+        chart.args = ['thing=$(environVar)']
+        environMock.environ = {}
+
+        with self.assertRaises((ReckonerException)):
+            chart._check_env_vars()
 
     @mock.patch('reckoner.chart.NamespaceManager', NamespaceManagerMock)
     @mock.patch('reckoner.chart.Config', autospec=True)
