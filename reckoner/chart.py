@@ -25,7 +25,7 @@ from .config import Config
 from .repository import Repository
 from .kube import NamespaceManager
 from .command_line_caller import call
-from .exception import ReckonerCommandException
+from .exception import ReckonerCommandException, ReckonerException
 from .yaml.handler import Handler as yaml_handler
 from .manifests import diff as manifestDiff
 
@@ -509,18 +509,23 @@ class Chart(object):
 
     @staticmethod
     def _interpolate_env_vars_from_string(original_string: str) -> str:
-
+        """
+        Accepts string, uses string.Template to apply environment variables to matching variables in the string
+        Returns interpolated string or raises error
+        """
         # We should never interpolate an env var in a comment. Strip comments from the string before interpolating.
         comments_removed = re.sub(r'([^#]*)(#.*)', r'\g<1>', original_string)
         try:
-            interpolated_string = Template(comments_removed).substitute(os.environ)
-        except KeyError as err:
-            raise Exception("Missing required environment variable: {}".format(", ".join(err.args)))
-        except ValueError:
-            logging.debug("Could not replace Variable {} with an Env Var: Formatting Error.".format(original_string))
-            logging.debug("This generally happens if you use $(THING) instead of $THING or ${THING}.")
-            return original_string
-        return interpolated_string
+            return Template(comments_removed).substitute(os.environ)
+        except KeyError as e:
+            raise ReckonerException(f"Encountered error interpolating environment variables: "
+                                    f"Missing requirement environment variable: {e}")
+        except ValueError as e:
+            raise ReckonerException(f"Encountered error \"{e}\" interpolating environment variables. "
+                                    "This can happens if you use $(THING) instead of $THING or ${THING}. "
+                                    "If you need $(THING) use $$(THING) to escape the `$`")
+        except Exception as e:
+            raise e
 
     def build_set_string_arguments(self):
         """
@@ -598,11 +603,4 @@ class Chart(object):
         an exception is raised
         """
         for idx in range(len(self.args)):
-            try:
-                self.args[idx] = self._interpolate_env_vars_from_string(self.args[idx])
-            except ValueError:
-                logging.debug("Could not replace Variable {} with an Env Var: Formatting Error.".format(self.args[idx]))
-                logging.debug("This generally happens if you use $(THING) instead of $THING or ${THING}.")
-                continue
-            except KeyError:
-                raise Exception("Missing requirement environment variable: {}".format(self.args[idx]))
+            self.args[idx] = self._interpolate_env_vars_from_string(self.args[idx])

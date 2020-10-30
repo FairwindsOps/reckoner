@@ -160,7 +160,8 @@ def template(ctx, only, run_all, log_level, course_file=None, helm_args=None, dr
         logging.debug(f'Only tempalating the following charts: {only}')
         template_results = r.template(only)
         for result in template_results:
-            print(result.response.stdout)
+            if result.response is not None:
+                print(result.response.stdout)
     except exception.ReckonerException as err:
         click.echo(click.style("⛵🔥 Encountered errors while reading course file ⛵🔥", fg="bright_red"))
         click.echo(click.style("{}".format(err), fg="red"))
