@@ -419,7 +419,11 @@ class Chart(object):
         return True
 
     def diff(self, default_namespace=None, default_namespace_management={}, context=None) -> None:
-        self.result.response = self.__diff_response()
+        self.result.response = self.__diff_response(
+            default_namespace,
+            default_namespace_management,
+            context
+        )
 
     def _append_arg(self, arg_string):
         for item in arg_string.split(" ", 1):
