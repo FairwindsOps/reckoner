@@ -11,19 +11,19 @@ testcases:
     assertions:
     - result.code ShouldEqual 0
   - script: |
-      reckoner diff {{.course}} -o chart_with_namespace
+      reckoner diff {{.course}} -o chart-with-namespace
     assertions:
     - result.code ShouldEqual 0
     - result.body ShouldEqual ""
   - script: |
-      reckoner diff {{.course}} -o chart_without_namespace
+      reckoner diff {{.course}} -o chart-without-namespace
     assertions:
     - result.code ShouldEqual 0
     - result.body ShouldEqual ""
 - name: cleanup
   steps:
     - script: |
-        helm -n {{.namespace}} delete chart_with_namespace
-        helm -n {{.namespace}}_diff delete chart_without_namespace
+        helm -n {{.namespace}} delete chart-with-namespace
+        helm -n {{.namespace}}-diff delete chart-without-namespace
         kubectl delete ns {{.namespace}}
-        kubectl delete ns {{.namespace}}_diff
+        kubectl delete ns {{.namespace}}-diff
