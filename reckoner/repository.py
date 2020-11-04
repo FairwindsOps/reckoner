@@ -23,6 +23,7 @@ import os
 from .config import Config
 from git import GitCommandError
 from .helm.client import HelmClientException, HelmClient
+from .exception import ReckonerException
 
 
 class Repository(object):
@@ -158,20 +159,20 @@ class Repository(object):
         try:
             fetch_pull(version)
         except GitCommandError as e:
-            logging.warning(e)
             if 'Sparse checkout leaves no entry on working directory' in str(e):
-                logging.warning("Error with path \"{}\"! Remove path when chart exists at the repository root".format(self.path))
-                logging.warning("Skipping chart {}".format(chart_name))
-                return None
-            elif 'did not match any file(s) known to git.' in str(e):
-                logging.warning("Branch/tag \"{}\" does not seem to exist!".format(version))
-                logging.warning("Skipping chart {}".format(chart_name))
-                return None
+                raise ReckonerException(
+                    f"Error with path \"{self.path}\"! "
+                    "Remove path when chart exists at the repository root "
+                    f"Skipping chart {chart_name} "
+                ) from None
+            elif 'did not match any file(s) known to git' in str(e):
+                raise ReckonerException(
+                    f"Git branch or tag \"{version}\" does not seem to exist! "
+                    f"Skipping chart {chart_name} "
+                ) from None
             else:
-                logging.error(e)
-                raise e
+                raise e from None
         except Exception as e:
-            logging.error(e)
             raise e
         finally:
             # Remove sparse-checkout to prevent path issues from poisoning the cache
@@ -181,4 +182,3 @@ class Repository(object):
             repo.git.config('core.sparseCheckout', 'false')
 
         return chart_path
-
