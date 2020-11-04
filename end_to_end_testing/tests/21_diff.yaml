@@ -1,0 +1,33 @@
+version: "2"
+name: Diff
+vars:
+  course: ../course_files/test_diff.yml
+  namespace: test
+testcases:
+- name: plot course
+  steps:
+  - script: |
+      reckoner plot -a {{.course}}
+    assertions:
+    - result.code ShouldEqual 0
+  - script: |
+      reckoner diff {{.course}} -o chart-with-namespace
+    assertions:
+    - result.code ShouldEqual 0
+    # Python logs to stderr
+    - result.systemerr ShouldContainSubstring "There are no differences in release"
+    - result.systemout ShouldEqual ""
+  - script: |
+      reckoner diff {{.course}} -o chart-without-namespace
+    assertions:
+    - result.code ShouldEqual 0
+    # Python logs to stderr
+    - result.systemerr ShouldContainSubstring "There are no differences in release"
+    - result.systemout ShouldEqual ""
+- name: cleanup
+  steps:
+    - script: |
+        helm -n {{.namespace}} delete chart-with-namespace
+        helm -n {{.namespace}}-diff delete chart-without-namespace
+        kubectl delete ns {{.namespace}}
+        kubectl delete ns {{.namespace}}-diff

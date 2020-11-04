@@ -312,7 +312,7 @@ class Chart(object):
         """
 
         try:
-            if self.requires_update:
+            if self.requires_update(default_namespace, default_namespace_management, context):
                 logging.info(f"Release {self.name} requires updating.")
                 self.__pre_command(default_namespace, default_namespace_management, context)
                 self.manage_namespace()
@@ -406,20 +406,27 @@ class Chart(object):
 
         return diff
 
-    @property
-    def requires_update(self):
+    def requires_update(self, default_namespace=None, default_namespace_management={}, context=None) -> bool:
         """
         Returns true if there is any differences between the installed release and the
         templates that would be generated from this run
         """
-        diff = self.__diff_response()
+        diff = self.__diff_response(
+            default_namespace,
+            default_namespace_management,
+            context
+        )
         if diff == "":
             return False
         logging.debug(f"\"{diff}\" != \"\"")
         return True
 
     def diff(self, default_namespace=None, default_namespace_management={}, context=None) -> None:
-        self.result.response = self.__diff_response()
+        self.result.response = self.__diff_response(
+            default_namespace,
+            default_namespace_management,
+            context
+        )
 
     def _append_arg(self, arg_string):
         for item in arg_string.split(" ", 1):

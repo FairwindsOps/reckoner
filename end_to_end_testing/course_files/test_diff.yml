@@ -1,0 +1,21 @@
+namespace: test #namespace to install the chart in, defaults to 'kube-system'
+repositories:
+  test_repo:
+    url: https://charts.helm.sh/stable
+  incubator:
+    url: https://charts.helm.sh/incubator
+  fairwinds-stable:
+    url: https://charts.fairwinds.com/stable
+  fairwinds-incubator:
+    url: https://charts.fairwinds.com/incubator
+minimum_versions: #set minimum version requirements here
+  helm: 0.0.0
+  reckoner: 0.0.0
+charts:
+  chart-with-namespace:
+    namespace: test-diff
+    repository: stable
+    chart: nginx-ingress
+  chart-without-namespace:
+    repository: stable
+    chart: nginx-ingress
