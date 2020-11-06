@@ -5,7 +5,7 @@ minimum_versions: #set minimum version requirements here
   reckoner: 0.0.0
 repositories:
   stable:
-    url: https://kubernetes-charts.storage.googleapis.com
+    url: https://charts.helm.sh/stable
 charts:
   chart-values:
     repository: stable

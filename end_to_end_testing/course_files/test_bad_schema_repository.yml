@@ -1,7 +1,7 @@
 namespace: "testing"
 repository: "stable"
 repositories:
-  stable: "https://kubernetes-charts.storage.googleapis.com"
+  stable: "https://charts.helm.sh/stable"
 charts:
   my-chart:
     namespace: new
