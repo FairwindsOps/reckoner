@@ -3,7 +3,7 @@ repositories:
   test_repo:
     url: https://kubernetes-charts.storage.googleapis.com
   incubator:
-    url: https://kubernetes-charts-incubator.storage.googleapis.com
+    url: https://charts.helm.sh/incubator
   fairwinds-stable:
     url: https://charts.fairwinds.com/stable
   fairwinds-incubator:
