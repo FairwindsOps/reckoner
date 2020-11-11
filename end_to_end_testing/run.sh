@@ -24,5 +24,5 @@ chmod +x /usr/local/bin/venom
 mkdir -p /tmp/test-results
 
 cd /reckoner/end_to_end_testing
-venom run tests/* --log debug --output-dir=/tmp/test-results --strict
+venom run --parallel=5 tests/* --log debug --output-dir=/tmp/test-results --strict
 exit $?
