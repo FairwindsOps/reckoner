@@ -293,7 +293,6 @@ class Chart(object):
         except Exception as err:
             logging.debug("Saving encountered error to chart result. See Below:")
             logging.debug("{}".format(err))
-            logging.debug(traceback.format_exc())
             self.result.failed = True
             self.result.error_reason = err
             raise err
