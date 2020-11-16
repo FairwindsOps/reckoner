@@ -1,0 +1,21 @@
+version: "2"
+name: Relative Hook Location
+vars:
+  course: ../course_files/testing_in_folder/testing_in_subfolder/testing_relative_hook_location.yml
+  namespace: infra
+testcases:
+- name: plot course
+  steps:
+  - script: |
+      reckoner plot -a {{.course}}
+    assertions:
+    - result.code ShouldEqual 0
+  - script: |
+      helm -n {{.namespace}} get all test-relative-hooks
+    assertions:
+    - result.code ShouldEqual 0
+- name: cleanup
+  steps:
+    - script: |
+        helm -n {{.namespace}} delete test-relative-hooks
+        kubectl delete ns {{.namespace}} relative-hook

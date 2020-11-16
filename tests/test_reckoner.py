@@ -34,7 +34,6 @@ from reckoner.repository import Repository
 from reckoner.helm.client import Helm2Client
 from reckoner import exception
 
-os.chdir("./tests")
 
 class TestBase(unittest.TestCase):
 
@@ -128,7 +127,7 @@ class TestCourseMocks(unittest.TestCase):
         self.assertTrue(instance.plot(['a-chart-that-is-not-defined', 'fake-chart']))
 
 
-test_course = "test_course.yml"
+test_course = "./tests/test_course.yml"
 git_repo_path = "./test"
 
 with open(test_course, 'r') as yaml_stream:

@@ -14,6 +14,7 @@
 
 from reckoner.command_line_caller import call
 from .cmd_response import HelmCmdResponse
+from reckoner.config import Config
 
 
 class HelmProvider(object):
@@ -51,7 +52,7 @@ class HelmProvider(object):
         for arg in instance._helm_command.arguments:
             args.append(arg)
 
-        call_response = call(args)
+        call_response = call(args,path=Config().course_base_directory)
 
         return HelmCmdResponse(
             exit_code=call_response.exitcode,
