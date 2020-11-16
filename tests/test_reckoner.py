@@ -190,7 +190,7 @@ test_nested_values = {
 test_values_strings_chart = "spotify-docker-gc"
 
 test_default_files_path = "~/.helm"
-test_files_path = 'test_files/.helm'
+test_files_path = '../test_files/.helm'
 test_archive_pathlet = 'cache/archive'
 test_helm_archive = "{}/{}".format(test_files_path, test_archive_pathlet)
 

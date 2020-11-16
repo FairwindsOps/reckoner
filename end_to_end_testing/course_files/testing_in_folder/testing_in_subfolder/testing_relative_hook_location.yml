@@ -1,0 +1,12 @@
+namespace: test #namespace to install the chart in, defaults to 'kube-system'
+minimum_versions: #set minimum version requirements here
+  helm: 0.0.0
+  reckoner: 0.0.0
+charts:
+  test-relative-hooks:
+    repository: stable
+    chart: nginx-ingress
+    namespace: infra
+    hooks:
+      pre_install:
+      - kubectl apply -f ../subfolder/relative_hook_namespace.yml

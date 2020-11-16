@@ -17,7 +17,6 @@ from unittest import mock
 from reckoner.yaml.handler import Handler as yaml_handler
 from reckoner.manifests import Manifest, Manifests, diff
 
-
 class TestManifests(unittest.TestCase):
     def setUp(self):
         with open('./reckoner/tests/files/templates.yaml') as templates:

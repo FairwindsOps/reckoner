@@ -131,7 +131,7 @@ class Reckoner(object):
             logging.error(error)
             raise ReckonerCommandException('Failed to find any valid charts to install.')
 
-    def template(self, charts: List[str] = [] ):
+    def template(self, charts: List[str] = []):
         selected_charts = charts or [chart._release_name for chart in self.course.charts]
         try:
             return self.course.template(selected_charts)
@@ -139,7 +139,7 @@ class Reckoner(object):
             logging.error(error)
             raise ReckonerCommandException('Failed to find any valid charts to template.')
 
-    def get_manifests(self, charts: List[str] = [] ):
+    def get_manifests(self, charts: List[str] = []):
         selected_charts = charts or [chart._release_name for chart in self.course.charts]
         try:
             return self.course.get_manifests(selected_charts)
@@ -147,14 +147,13 @@ class Reckoner(object):
             logging.error(error)
             raise ReckonerCommandException('Failed to find any valid charts to show manifests for.')
 
-    def diff(self, charts: List[str] = [] ):
+    def diff(self, charts: List[str] = []):
         selected_charts = charts or [chart._release_name for chart in self.course.charts]
         try:
             return self.course.diff(selected_charts)
         except NoChartsToInstall as error:
             logging.error(error)
             raise ReckonerCommandException('Failed to find any valid charts to show diff for.')
-
 
     def add_result(self, result: ChartResult) -> None:
         self.results.add_result(result)
