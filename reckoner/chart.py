@@ -24,7 +24,6 @@ from .hooks import Hook
 from .config import Config
 from .repository import Repository
 from .kube import NamespaceManager
-from .command_line_caller import call
 from .exception import ReckonerCommandException, ReckonerException
 from .yaml.handler import Handler as yaml_handler
 from .manifests import diff as manifestDiff

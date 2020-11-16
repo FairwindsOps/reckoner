@@ -17,10 +17,9 @@ from unittest import mock
 from reckoner.yaml.handler import Handler as yaml_handler
 from reckoner.manifests import Manifest, Manifests, diff
 
-
 class TestManifests(unittest.TestCase):
     def setUp(self):
-        with open('./reckoner/tests/files/templates.yaml') as templates:
+        with open('../reckoner/tests/files/templates.yaml') as templates:
             self.manifests = Manifests(templates.read())
 
     def test_manifest_load_error(self):
@@ -51,7 +50,7 @@ class TestManifests(unittest.TestCase):
         self.assertEqual(len(self.manifests.filtered_manifests), 5)
 
     def test_find_congruent_manifest(self):
-        with open('./reckoner/tests/files/service.yaml') as f:
+        with open('../reckoner/tests/files/service.yaml') as f:
             document = f.read()
         service_manifest = Manifest(yaml_handler.load(document))
 
@@ -74,7 +73,7 @@ class TestManifests(unittest.TestCase):
 
 class TestManifest(unittest.TestCase):
     def setUp(self):
-        with open('./reckoner/tests/files/service.yaml') as f:
+        with open('../reckoner/tests/files/service.yaml') as f:
             self.document = f.read()
         self.service_manifest = Manifest(yaml_handler.load(self.document))
 
@@ -98,19 +97,19 @@ class TestManifest(unittest.TestCase):
 class TestDiff(unittest.TestCase):
 
     def test_no_difference(self):
-        with open('./reckoner/tests/files/templates.yaml') as templates:
+        with open('../reckoner/tests/files/templates.yaml') as templates:
             t1 = templates.read()
 
-        with open('./reckoner/tests/files/templates.yaml') as templates:
+        with open('../reckoner/tests/files/templates.yaml') as templates:
             t2 = templates.read()
 
         self.assertEqual(diff(t1, t2), '')
 
     def test_with_name_difference(self):
-        with open('./reckoner/tests/files/templates.yaml') as templates:
+        with open('../reckoner/tests/files/templates.yaml') as templates:
             t1 = templates.read()
 
-        with open('./reckoner/tests/files/templates2.yaml') as templates:
+        with open('../reckoner/tests/files/templates2.yaml') as templates:
             t2 = templates.read()
         self.maxDiff = None
         template_diff = diff(t1, t2)
@@ -121,10 +120,10 @@ class TestDiff(unittest.TestCase):
         self.assertFalse(r'helm.sh/hook' in template_diff)
 
     def test_with_annotation_difference(self):
-        with open('./reckoner/tests/files/templates.yaml') as templates:
+        with open('../reckoner/tests/files/templates.yaml') as templates:
             t1 = templates.read()
 
-        with open('./reckoner/tests/files/templates3.yaml') as templates:
+        with open('../reckoner/tests/files/templates3.yaml') as templates:
             t2 = templates.read()
         self.maxDiff = None
         template_diff = diff(t1, t2)

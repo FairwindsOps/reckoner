@@ -34,6 +34,7 @@ from reckoner.repository import Repository
 from reckoner.helm.client import Helm2Client
 from reckoner import exception
 
+os.chdir("./tests")
 
 class TestBase(unittest.TestCase):
 
@@ -127,7 +128,7 @@ class TestCourseMocks(unittest.TestCase):
         self.assertTrue(instance.plot(['a-chart-that-is-not-defined', 'fake-chart']))
 
 
-test_course = "./tests/test_course.yml"
+test_course = "test_course.yml"
 git_repo_path = "./test"
 
 with open(test_course, 'r') as yaml_stream:
@@ -190,7 +191,7 @@ test_nested_values = {
 test_values_strings_chart = "spotify-docker-gc"
 
 test_default_files_path = "~/.helm"
-test_files_path = 'test_files/.helm'
+test_files_path = '../test_files/.helm'
 test_archive_pathlet = 'cache/archive'
 test_helm_archive = "{}/{}".format(test_files_path, test_archive_pathlet)
 

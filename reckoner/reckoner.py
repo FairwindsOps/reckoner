@@ -76,7 +76,8 @@ class Reckoner(object):
             self.config.course_path = course_file.name
             course_file_dirname = os.path.dirname(course_file.name)
             logging.debug(f"Changing working directory to {course_file_dirname}")
-            os.chdir(course_file_dirname)
+            if course_file_dirname != '':
+                os.chdir(course_file_dirname)
 
         if self.config.debug:
             logging.warn("The --debug flag will be deprecated.  Please use --helm-args or --dry-run instead.")
