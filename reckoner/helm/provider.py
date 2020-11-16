@@ -52,7 +52,7 @@ class HelmProvider(object):
         for arg in instance._helm_command.arguments:
             args.append(arg)
 
-        call_response = call(args,path=Config().course_base_directory)
+        call_response = call(args, path=Config().course_base_directory)
 
         return HelmCmdResponse(
             exit_code=call_response.exitcode,
