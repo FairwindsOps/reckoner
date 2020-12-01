@@ -18,28 +18,25 @@ orbs:
   rok8s-scripts: fairwinds/rok8s-scripts@11
 
 executors:
-  python-3-6:
-    docker:
-      - image: circleci/python:3.6-stretch
   python-3-7:
     docker:
-      - image: circleci/python:3.7-stretch
+      - image: circleci/python:3.7
   python-3-8:
     docker:
-      - image: circleci/python:3.8-buster
+      - image: circleci/python:3.8
   vm:
     machine:
       enabled: true
-      image: ubuntu-1604:202007-01
+      image: ubuntu-2004:202010-01
   darwin:
     macos:
-      xcode: 11.3.0
+      xcode: 12.2.0
 
 references:
   e2e_configuration: &e2e_configuration
     pre_script: end_to_end_testing/pre.sh
     script: end_to_end_testing/run.sh
-    command_runner_image: quay.io/reactiveops/ci-images:v11-stretch
+    command_runner_image: quay.io/reactiveops/ci-images:v11-buster
     enable_docker_layer_caching: true
     store-test-results: /tmp/test-results
     attach-workspace: true
@@ -55,21 +52,6 @@ references:
         ignore: /v.*/
 
 jobs:
-  build-3-6:
-    executor: python-3-6
-    working_directory: ~/reckoner
-    steps:
-      - run:
-          name: Setup PATH to support pip user installs
-          command: echo 'export PATH=$PATH:/home/circleci/.local/bin' >> $BASH_ENV
-      - checkout
-      - run:
-          name: Unit Tests
-          command: |
-            pip install --user -r development-requirements.txt
-            pip install --user -e .
-            reckoner --version
-            pytest
   build-3-7:
     executor: python-3-7
     working_directory: ~/reckoner
@@ -103,7 +85,7 @@ jobs:
             pytest --cov ./
             codecov
   release:
-    executor: python-3-7
+    executor: python-3-8
     environment:
       PYPI_USERNAME: ReactiveOps
       GITHUB_ORGANIZATION: $CIRCLE_PROJECT_USERNAME
@@ -185,7 +167,7 @@ jobs:
           path: installer/dist/reckoner
           destination: reckoner-darwin
   publish-binaries:
-    executor: python-3-7
+    executor: python-3-8
     steps:
       - attach_workspace:
           at: /tmp/binaries
@@ -213,12 +195,6 @@ workflows:
   version: 2
   build:
     jobs:
-      - build-3-6:
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              only: /.*/
       - build-3-7:
           filters:
             tags:
@@ -233,7 +209,6 @@ workflows:
               only: /.*/
       - compile-darwin:
           requires:
-            - build-3-6
             - build-3-7
             - build-3-8
           filters:
@@ -243,7 +218,6 @@ workflows:
               only: /.*/
       - compile:
           requires:
-            - build-3-6
             - build-3-7
             - build-3-8
           filters:

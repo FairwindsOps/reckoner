@@ -26,7 +26,7 @@ def get_helm_client(helm_arguments, client_version=None, helm_provider=HelmProvi
       helm_arguments(list): Arguments passed into the HelmClient class
 
     Returns:
-      Helm2Client or Helm3Client
+      Helm3Client
 
 
     Raises
@@ -34,32 +34,17 @@ def get_helm_client(helm_arguments, client_version=None, helm_provider=HelmProvi
     """
     try:
         if client_version is not None:
-            if client_version == "2":
-                logging.warning("Helm 2 will be deprecated in a soon-to-come release. Please upgrade.")
-                return Helm2Client(default_helm_arguments=helm_arguments, provider=helm_provider)
-            elif client_version == "3":
+            if client_version == "3":
                 return Helm3Client(default_helm_arguments=helm_arguments, provider=helm_provider)
             else:
                 raise HelmClientException("Unsupported version explicitly specified: client_version={}".format(client_version))
         else:
             logging.debug('Helm version not declared, detecting version...')
-            # checking for helm2 binary
-            client2 = Helm2Client(default_helm_arguments=helm_arguments, provider=helm_provider)
             client3 = Helm3Client(default_helm_arguments=helm_arguments, provider=helm_provider)
-            try:
-                logging.debug('Checking for Helm 2 client')
-                detected_version = client2.version
-                logging.warning("Helm 2 will be deprecated in a soon-to-come release. Please upgrade.")
-                logging.info('Found Helm Client Version {}'.format(detected_version))
-                logging.info('Tiller version {}'.format(client2.tiller_version))
-                return client2
-            except (HelmClientException, HelmVersionException) as e:
-                logging.debug('Helm 2 check failed')
-                logging.debug(e)
-                logging.debug('Checking for Helm 3 client')
-                detected_version = client3.version
-                logging.info('Found Helm Version {}'.format(detected_version))
-                return client3
+            logging.debug('Checking for Helm 3 client')
+            detected_version = client3.version
+            logging.info('Found Helm Version {}'.format(detected_version))
+            return client3
     except HelmClientException as e:
         logging.error(e)
         raise HelmClientException('Could not detect helm version')
@@ -243,49 +228,6 @@ class HelmClientException(Exception):
 
 class HelmVersionException(Exception):
     pass
-
-
-class Helm2Client(HelmClient):
-    version_regex = re.compile(r'[a-zA-Z]+: v([0-9\.]+)(\+g[0-9a-f]+)?')
-    global_helm_flags = ['debug', 'home', 'host', 'kube-context', 'kubeconfig',
-                         'tiller-connection_timeout', 'tiller-namespace']
-
-    @property
-    def version(self):
-        return self._get_version(kind='--client')
-
-    @property
-    def tiller_version(self):
-        return self._get_version(kind='--server')
-
-    def _get_version(self, kind):
-        try:
-            get_ver = self.execute("version", arguments=['--short', kind], filter_non_global_flags=True)
-        except HelmClientException:
-            raise HelmVersionException("Error getting helm version")
-        ver = self._find_version(get_ver.stdout)
-        if ver is None:
-            raise HelmClientException(
-                """Could not find version!! Could the helm response format have changed?
-                STDOUT: {}
-                STDERR: {}
-                COMMAND: {}""".format(get_ver.stdout, get_ver.stderr, get_ver.command)
-            )
-
-        return ver
-
-    @staticmethod
-    def _find_version(raw_version):
-        ver = Helm2Client.version_regex.search(str(raw_version))
-        if ver:
-            return ver.group(1)
-        else:
-            return None
-
-    @property
-    def _cache(self):
-        # Get the value of the HELM_HOME from the helm home command
-        return self.execute("home", filter_non_global_flags=True).stdout.strip().replace('"', '')
 
 
 class Helm3Client(HelmClient):

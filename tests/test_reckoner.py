@@ -31,7 +31,7 @@ from reckoner.reckoner import Reckoner
 from reckoner.config import Config
 from reckoner.course import Course
 from reckoner.repository import Repository
-from reckoner.helm.client import Helm2Client
+from reckoner.helm.client import Helm3Client
 from reckoner import exception
 
 
@@ -59,8 +59,7 @@ class TestBase(unittest.TestCase):
 
 @mock.patch('reckoner.reckoner.Config', autospec=True)
 @mock.patch('reckoner.reckoner.Course', autospec=True)
-@mock.patch.object(Helm2Client, 'tiller_version')
-@mock.patch.object(Helm2Client, 'check_helm_command')
+@mock.patch.object(Helm3Client, 'check_helm_command')
 class TestReckonerAttributes(TestBase):
     name = "test-reckoner-attributes"
 
