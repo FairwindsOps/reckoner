@@ -1,0 +1,14 @@
+namespace: test #namespace to install the chart in, defaults to 'kube-system'
+repositories:
+  test_repo:
+    url: https://charts.helm.sh/stable
+  incubator:
+    url: https://charts.helm.sh/incubator
+minimum_versions: #set minimum version requirements here
+  helm: 0.0.0
+  reckoner: 0.0.0
+charts:
+  env-var-name-space:
+    repository: stable
+    chart: nginx-ingress
+    namespace: $TEST_ENVIRONMENT_NAMESPACE

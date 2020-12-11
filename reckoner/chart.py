@@ -123,7 +123,7 @@ class Chart(object):
             self.config.course_base_directory
         )
 
-        self._namespace = self._chart.get('namespace')
+        self._namespace = self._interpolate_env_vars_from_string(self._chart.get('namespace', ''))
         self._namespace_management = self._chart.get('namespace_management')
         self._context = self._chart.get('context')
         value_strings = self._chart.get('values-strings', {})
@@ -238,7 +238,7 @@ class Chart(object):
 
     def __pre_command(self, default_namespace=None, default_namespace_management={}, context=None) -> None:
         # Set the namespace
-        if self.namespace is None:
+        if self.namespace == '':
             self._namespace = default_namespace
 
         # Set the namespace-management settings
