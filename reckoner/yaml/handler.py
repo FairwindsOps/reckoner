@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ruamel.yaml import YAML
+from ruamel.yaml.main import YAML
 from ruamel.yaml.constructor import DuplicateKeyError
 from reckoner.exception import ReckonerConfigException
 import logging
