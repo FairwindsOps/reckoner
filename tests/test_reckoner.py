@@ -23,7 +23,7 @@ import logging
 import os
 import shutil
 import reckoner
-import ruamel.yaml as yaml
+import ruyaml
 
 from reckoner.tests.namespace_manager_mock import NamespaceManagerMock
 
@@ -131,7 +131,7 @@ test_course = "./tests/test_course.yml"
 git_repo_path = "./test"
 
 with open(test_course, 'r') as yaml_stream:
-    course_yaml_dict = yaml.load(yaml_stream, Loader=yaml.Loader)
+    course_yaml_dict = ruyaml.load(yaml_stream, Loader=ruyaml.Loader)
 test_release_names = list(course_yaml_dict['charts'].keys())
 test_repositories = ['stable', 'incubator'],
 test_minimum_versions = ['helm', 'reckoner']

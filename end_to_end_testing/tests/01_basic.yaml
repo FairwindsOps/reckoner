@@ -8,13 +8,13 @@ testcases:
 - name: get manifests {{.course}} not installed yet
   steps:
   - script: |
-      reckoner get-manifests {{.course}} -a
+      reckoner get-manifests {{.course}} -a --log-level=debug
     assertions:
     - result.code ShouldEqual 1
 - name: plot {{.course}}
   steps:
   - script: |
-      reckoner plot -a {{.course}}
+      reckoner plot -a {{.course}} --log-level=debug
     assertions:
     - result.code ShouldEqual 0
   - script: |
@@ -26,43 +26,43 @@ testcases:
 - name: template {{.course}} all
   steps:
   - script: |
-      reckoner template {{.course}} -a
+      reckoner template {{.course}} -a --log-level=debug
     assertions:
     - result.code ShouldEqual 0
 - name: template {{.course}} -o {{.release}}
   steps:
   - script: |
-      reckoner template {{.course}} -o {{.release}}
+      reckoner template {{.course}} -o {{.release}} --log-level=debug
     assertions:
     - result.code ShouldEqual 0
 - name: get manifests {{.course}} all
   steps:
   - script: |
-      reckoner get-manifests {{.course}} -a
+      reckoner get-manifests {{.course}} -a --log-level=debug
     assertions:
     - result.code ShouldEqual 0
 - name: get manifests {{.course}} not in course
   steps:
   - script: |
-      reckoner get-manifests {{.course}} -o doesnotexist
+      reckoner get-manifests {{.course}} -o doesnotexist --log-level=debug
     assertions:
     - result.code ShouldEqual 1
 - name: diff {{.course}} all
   steps:
   - script: |
-      reckoner diff {{.course}} -a
+      reckoner diff {{.course}} -a --log-level=debug
     assertions:
     - result.code ShouldEqual 0
 - name: update {{.course}} all
   steps:
   - script: |
-      reckoner update {{.course}} -a
+      reckoner update {{.course}} -a --log-level=debug
     assertions:
     - result.code ShouldEqual 0
 - name: update {{.course}} -o {{.release}}
   steps:
   - script: |
-      reckoner template {{.course}} -o {{.release}}
+      reckoner template {{.course}} -o {{.release}} --log-level=debug
     assertions:
     - result.code ShouldEqual 0
 - name: cleanup

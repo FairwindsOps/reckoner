@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ruamel.yaml import YAML
-from ruamel.yaml.constructor import DuplicateKeyError
+from ruyaml.constructor import DuplicateKeyError
+from ruyaml import YAML
 from reckoner.exception import ReckonerConfigException
 import logging
 from io import BufferedReader, StringIO

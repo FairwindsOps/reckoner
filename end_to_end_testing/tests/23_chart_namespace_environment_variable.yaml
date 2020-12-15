@@ -1,0 +1,23 @@
+version: "2"
+name: Chart Namespace as Environment Variable
+vars:
+  course: ../course_files/test_environment_variable_namespace_on_chart.yml
+  namespace: test-environment-namespace
+  release: env-var-name-space
+testcases:
+- name: plot course
+  steps:
+  - script: |
+      export TEST_ENVIRONMENT_NAMESPACE={{.namespace}}
+      reckoner plot {{.course}} -o {{.release}}
+    assertions:
+    - result.code ShouldEqual 0
+  - script: |
+      helm -n {{.namespace}} get all {{.release}}
+    assertions:
+    - result.code ShouldEqual 0
+- name: cleanup
+  steps:
+    - script: |
+        helm -n {{.namespace}} delete {{.release}}
+        kubectl delete ns {{.namespace}}
