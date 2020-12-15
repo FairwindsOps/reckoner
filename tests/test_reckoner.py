@@ -23,8 +23,6 @@ import logging
 import os
 import shutil
 import reckoner
-#import ruamel.yaml as yaml
-#import ruyaml.YAML as yaml
 import ruyaml
 
 from reckoner.tests.namespace_manager_mock import NamespaceManagerMock
