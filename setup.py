@@ -43,7 +43,7 @@ setup(name='reckoner',
           "semver>=2.8.1",
           "ruyaml @ git+ssh://git@github.com/pycontribs/ruyaml@903c66f8e34a171fd470a9db980cc8f087e1db62#egg=ruyaml",
           "jsonschema>=3.0.2",
-          "kubernetes==12.0.0"
+          "kubernetes==12.0.1"
       ],
       entry_points=''' #for click integration
           [console_scripts]
