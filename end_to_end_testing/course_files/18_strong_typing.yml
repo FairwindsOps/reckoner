@@ -1,15 +1,15 @@
 ---
-namespace: testing #namespace to install the chart in, defaults to 'kube-system'
-minimum_versions: #set minimum version requirements here
+namespace: 18-testing
+minimum_versions:
   helm: 0.0.0
   reckoner: 0.0.0
 repositories:
-  stable:
-    url: https://charts.helm.sh/stable
+  ingrss-nginx:
+    url: https://kubernetes.github.io/ingress-nginx
 charts:
   chart-values:
-    repository: stable
-    chart: nginx-ingress
+    repository: ingress-nginx
+    chart: ingress-nginx
     values:
       expect-float: 1.05
       expect-bool-false: false
@@ -20,8 +20,8 @@ charts:
       expect-null-from-null: null
       expect-string-from-null: "null"
   chart-set-values:
-    repository: stable
-    chart: nginx-ingress
+    repository: ingress-nginx
+    chart: ingress-nginx
     set-values:
       expect-string-from-float: 1.05
       expect-bool-from-string: "true"
@@ -34,16 +34,16 @@ charts:
       expect-null-from-string-NUll-2: "NUll"
       expect-null-from-string-NULL-3: "NULL"
   chart-values-string:
-    repository: stable
-    chart: nginx-ingress
+    repository: ingress-nginx
+    chart: ingress-nginx
     values-strings:
       expect-string-from-integer: "1000"
       expect-string-from-bool: true
       expect-string-from-bool-false: false
       expect-string-from-null: null
   chart-env-values:
-    repository: stable
-    chart: nginx-ingress
+    repository: ingress-nginx
+    chart: ingress-nginx
     values:
       expect-string-from-env-var-yes: "${yes_var}"
       expect-bool-from-env-var-yes-no-quotes: ${yes_var}
@@ -55,8 +55,8 @@ charts:
       expect-float-from-float-no-quotes: ${float_var}
       expect-string-from-float: "${float_var}"
   chart-env-set-values:
-    repository: stable
-    chart: nginx-ingress
+    repository: ingress-nginx
+    chart: ingress-nginx
     set-values:
       expect-string-from-env-var-yes: "${yes_var}"
       expect-string-from-env-var-yes-no-quotes: ${yes_var}
@@ -69,8 +69,8 @@ charts:
       expect-string-from-float-no-quotes: ${float_var}
       expect-string-from-float: "${float_var}"
   chart-env-values-strings:
-    repository: stable
-    chart: nginx-ingress
+    repository: ingress-nginx
+    chart: ingress-nginx
     values-strings:
       expect-string-from-env-var-yes: "${yes_var}"
       expect-string-from-env-var-yes-no-quotes: ${yes_var}

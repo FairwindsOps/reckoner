@@ -1,11 +1,11 @@
 version: "2"
 name: Default Namespace Management
 vars:
-  course: ../course_files/test_default_namespace_annotation_and_labels.yml
-  namespace: annotatednamespace
+  course: ../course_files/15_test_default_namespace_annotation_and_labels.yml
+  namespace: 15-annotatednamespace
   release: namespace-test
 testcases:
-- name: plot {{.course}}
+- name: 15 - plot course
   steps:
   - script: |
       reckoner plot -a {{.course}}
@@ -23,7 +23,7 @@ testcases:
       kubectl get ns {{.namespace}} -ojson | jq -e ".metadata.labels[\"rocks\"] == \"reckoner\""
     assertions:
     - result.code ShouldEqual 0
-- name: cleanup
+- name: 15 - cleanup
   steps:
     - script: |
         helm -n {{.namespace}} delete {{.release}}

@@ -1,13 +1,14 @@
-namespace: 14-infra
+namespace: 20-test
 repositories:
-  ingress-nginx:
+  ingrss-nginx:
     url: https://kubernetes.github.io/ingress-nginx
 minimum_versions:
   helm: 0.0.0
   reckoner: 0.0.0
 charts:
-  chart-one:
+  first-chart:
     repository: ingress-nginx
     chart: ingress-nginx
-    files:
-      - subfolder/yaml_values.yml
+  second-chart:
+    repository: ingress-nginx
+    chart: ingress-nginx

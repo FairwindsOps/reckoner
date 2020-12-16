@@ -1,6 +1,15 @@
-namespace: test #namespace to install the chart in, defaults to 'kube-system'
+namespace: 16-annotatednamespace #namespace to install the chart in, defaults to 'kube-system'
+namespace_management:
+  default:
+    metadata:
+      annotations:
+        reckoner: doesnotrock
+      labels:
+        rocks: reckonerstill
+    settings:
+      overwrite: True
 repositories:
-  test_repo:
+  stable:
     url: https://charts.helm.sh/stable
   incubator:
     url: https://charts.helm.sh/incubator
@@ -12,11 +21,6 @@ minimum_versions: #set minimum version requirements here
   helm: 0.0.0
   reckoner: 0.0.0
 charts:
-  nginx-ingress:
+  namespace-test:
     repository: stable
     chart: nginx-ingress
-    namespace: infra
-    hooks:
-      pre_install:
-        - whoami
-      post_install: exit 1

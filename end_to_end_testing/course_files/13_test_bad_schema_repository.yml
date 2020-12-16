@@ -1,0 +1,7 @@
+namespace: "doesnotmatter"
+repository: "stable"
+repositories:
+  stable: "this is invalid schema"
+charts:
+  my-chart:
+    chart: nginx-ingress

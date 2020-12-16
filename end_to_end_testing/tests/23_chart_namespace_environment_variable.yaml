@@ -1,11 +1,11 @@
 version: "2"
 name: Chart Namespace as Environment Variable
 vars:
-  course: ../course_files/test_environment_variable_namespace_on_chart.yml
-  namespace: test-environment-namespace
+  course: ../course_files/23_test_environment_variable_namespace_on_chart.yml
+  namespace: 23-test-environment-namespace
   release: env-var-name-space
 testcases:
-- name: plot course
+- name: 23 - plot course
   steps:
   - script: |
       export TEST_ENVIRONMENT_NAMESPACE={{.namespace}}
@@ -16,7 +16,7 @@ testcases:
       helm -n {{.namespace}} get all {{.release}}
     assertions:
     - result.code ShouldEqual 0
-- name: cleanup
+- name: 23 - cleanup
   steps:
     - script: |
         helm -n {{.namespace}} delete {{.release}}

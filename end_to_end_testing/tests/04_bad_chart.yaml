@@ -1,11 +1,11 @@
 version: "2"
 name: Bad Chart
 vars:
-  course: ../course_files/test_failed_chart.yml
-  namespace: test
+  course: ../course_files/04_test_failed_chart.yml
+  namespace: 04-test
   release: bad-chart
 testcases:
-- name: plot {{.course}}
+- name: 04 - plot course
   steps:
   - script: |
       reckoner plot -a {{.course}}
@@ -15,7 +15,7 @@ testcases:
       helm -n {{.namespace}} get all {{.release}}
     assertions:
     - result.code ShouldEqual 1
-- name: cleanup
+- name: 04 - cleanup
   steps:
     - script: |
         helm -n {{.namespace}} delete {{.release}}

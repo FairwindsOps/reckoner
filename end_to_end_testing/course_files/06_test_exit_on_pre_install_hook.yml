@@ -1,4 +1,4 @@
-namespace: 14-infra
+namespace: 06-infra
 repositories:
   ingress-nginx:
     url: https://kubernetes.github.io/ingress-nginx
@@ -6,8 +6,9 @@ minimum_versions:
   helm: 0.0.0
   reckoner: 0.0.0
 charts:
-  chart-one:
-    repository: ingress-nginx
+  ingress-nginx:
+    repository: stable
     chart: ingress-nginx
-    files:
-      - subfolder/yaml_values.yml
+    hooks:
+      pre_install:
+        - nonexistent command here

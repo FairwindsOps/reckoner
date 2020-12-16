@@ -2,10 +2,10 @@ version: "2"
 name: Files in Folders
 vars:
   course: ../course_files/testing_in_folder/test_files_in_folders.yml
-  namespace: infra
+  namespace: 14-infra
   release: chart-one
 testcases:
-- name: plot {{.course}}
+- name: 14 - plot course
   steps:
   - script: |
       reckoner plot -a {{.course}}
@@ -19,7 +19,7 @@ testcases:
       helm -n {{.namespace}} get values {{.release}} -ojson | jq -e ".[\"new_key\"] == \"new_value\""
     assertions:
     - result.code ShouldEqual 0
-- name: cleanup
+- name: 14 - cleanup
   steps:
     - script: |
         helm -n {{.namespace}} delete {{.release}}

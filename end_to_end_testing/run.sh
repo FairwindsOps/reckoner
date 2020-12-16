@@ -19,5 +19,7 @@ chmod +x /usr/local/bin/venom
 mkdir -p /tmp/test-results
 
 cd /reckoner/end_to_end_testing
-venom run tests/* --log debug --output-dir=/tmp/test-results --strict
+
+# The parallelization number must remain relatively low otherwise the tests become flaky due to resources and pending pods and such
+venom run tests/* --log debug --output-dir=/tmp/test-results --parallel=3
 exit $?

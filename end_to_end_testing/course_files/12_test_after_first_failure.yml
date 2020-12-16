@@ -1,0 +1,23 @@
+namespace: 12-test
+repositories:
+  ingress-nginx:
+    url: https://kubernetes.github.io/ingress-nginx
+  runatlantis:
+    url: https://runatlantis.github.io/helm-charts
+minimum_versions:
+  helm: 0.0.0
+  reckoner: 0.0.0
+charts:
+  good-chart:
+    repository: ingress-nginx
+    chart: ingress-nginx
+  bad-chart:
+    repository: runatlantis
+    chart: atlantis
+    version: 3.5.2
+    set-values:
+      github:
+        broken: yep # This value causes an execution error
+  expected-skipped-chart: # This chart should never be installed due to bad-chart failing (if applied in order)
+    repository: ingress-nginx
+    chart: ingress-nginx
