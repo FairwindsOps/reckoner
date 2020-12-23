@@ -6,7 +6,7 @@ set -e
 python --version
 
 cd /reckoner
-pip install --user reckoner
+pip install reckoner
 reckoner --version
 
 curl -LO https://github.com/ovh/venom/releases/download/v0.27.0/venom.linux-amd64
