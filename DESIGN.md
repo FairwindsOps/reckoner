@@ -1,4 +1,4 @@
-# Reckoner 
+# Reckoner
 
 ## Intent
 Reckoner is intended to provide a declarative syntax to install and manage multiple Helm releases. A primary additional feature is the ability to pull from a git repository instead of a local chart or chart repository.

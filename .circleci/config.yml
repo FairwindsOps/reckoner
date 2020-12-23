@@ -24,13 +24,6 @@ executors:
   python-3-8:
     docker:
       - image: circleci/python:3.8
-  vm:
-    machine:
-      enabled: true
-      image: ubuntu-2004:202010-01
-  darwin:
-    macos:
-      xcode: 12.2.0
 
 references:
   e2e_configuration: &e2e_configuration
@@ -43,8 +36,8 @@ references:
     workspace-location: /tmp/binaries
     kind_version: 0.9.0
     requires:
-      - compile
-      - compile-darwin
+      - build-3-8
+      - build-3-7
     filters:
       branches:
         only: /.*/
@@ -105,91 +98,6 @@ jobs:
             sudo pip install twine
             python setup.py sdist bdist_wheel
             twine upload dist/*
-  compile:
-    executor: python-3-7
-    working_directory: ~/reckoner
-    steps:
-      - run:
-          name: Setup PATH to support pip user installs
-          command: echo 'export PATH=$PATH:/home/circleci/.local/bin' >> $BASH_ENV
-      - checkout
-      - run:
-          name: build binary for linux
-          command: |
-            pip install --user pyinstaller setuptools-scm
-            pip install --user .
-            cd installer
-            python -c 'from setuptools_scm import get_version; get_version(root="..", write_to="reckoner/version.txt")'
-            pyinstaller --hidden-import='pkg_resources.py2_warn' --noconfirm --paths .:../ --onefile --add-data ../reckoner/version.txt:reckoner --add-data ../reckoner/assets/course.schema.json:reckoner/assets --name reckoner cli.py
-      - run:
-          name: persist binaries
-          command: |
-            sudo mkdir /tmp/binaries/
-            sudo cp installer/dist/reckoner /tmp/binaries/reckoner-linux-amd64
-      - persist_to_workspace:
-          root: /tmp/binaries
-          paths:
-            - reckoner-linux-amd64
-      - store_artifacts:
-          path: installer/dist/reckoner
-          destination: reckoner-linux-amd64
-  compile-darwin:
-    executor: darwin
-    working_directory: ~/reckoner
-    steps:
-      - checkout
-      - run:
-          name: build binary for os x
-          command: |
-            echo "Setting Up environment"
-            pip3 install pyinstaller setuptools-scm
-            pip3 install .
-            cd installer
-
-            echo "Building the version.txt from git"
-            python3 -c 'from setuptools_scm import get_version; get_version(root="..", write_to="reckoner/version.txt")'
-
-            echo "Running the binary compiler"
-            pyinstaller --hidden-import='pkg_resources.py2_warn' --noconfirm --paths .:../ --onefile --add-data ../reckoner/version.txt:reckoner --add-data ../reckoner/assets/course.schema.json:reckoner/assets --name reckoner cli.py
-
-            echo "Running the new Binary"
-            ./dist/reckoner version
-      - run:
-          name: persist binaries
-          command: |
-            sudo mkdir /tmp/binaries/
-            sudo cp installer/dist/reckoner /tmp/binaries/reckoner-darwin
-      - persist_to_workspace:
-          root: /tmp/binaries
-          paths:
-            - reckoner-darwin
-      - store_artifacts:
-          path: installer/dist/reckoner
-          destination: reckoner-darwin
-  publish-binaries:
-    executor: python-3-8
-    steps:
-      - attach_workspace:
-          at: /tmp/binaries
-      - run:
-          name: find release tag
-          command: |
-            release_id=$(curl -s -H "Authorization: token ${GITHUB_ACCESS_TOKEN}" -X GET https://api.github.com/repos/FairwindsOps/reckoner/releases/tags/${CIRCLE_TAG} | jq -e .id)
-            echo "Found Release (${release_id})"
-            echo "Posting Binaries to Release"
-
-            for filename in /tmp/binaries/*; do
-              publish_url="https://uploads.github.com/repos/FairwindsOps/reckoner/releases/${release_id}/assets?name=$(basename ${filename})"
-              echo "Publishing ${filename} to ${publish_url}"
-              curl \
-                --fail \
-                -H "Accept: application/json" \
-                -H "Authorization: token ${GITHUB_ACCESS_TOKEN}" \
-                -H "Content-Type: application/octet-stream" \
-                --request POST \
-                --data-binary @"${filename}" \
-                ${publish_url}
-            done
 
 workflows:
   version: 2
@@ -207,24 +115,6 @@ workflows:
               only: /.*/
             branches:
               only: /.*/
-      - compile-darwin:
-          requires:
-            - build-3-7
-            - build-3-8
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              only: /.*/
-      - compile:
-          requires:
-            - build-3-7
-            - build-3-8
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              only: /.*/
       - rok8s-scripts/kubernetes_e2e_tests:
           name: "End-To-End Kubernetes 1.18.8"
           kind_node_image: "kindest/node:v1.18.8@sha256:f4bcc97a0ad6e7abaf3f643d890add7efe6ee4ab90baeb374b4f41a4c95567eb"
@@ -234,17 +124,6 @@ workflows:
           kind_node_image: "kindest/node:v1.19.1@sha256:98cf5288864662e37115e362b23e4369c8c4a408f99cbc06e58ac30ddc721600"
           <<: *e2e_configuration
       - release:
-          requires:
-            - compile
-            - compile-darwin
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - publish-binaries:
-          requires:
-            - release
           filters:
             tags:
               only: /.*/
