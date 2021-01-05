@@ -3,7 +3,7 @@ minimum_versions:
   helm: 0.0.0
   reckoner: 0.0.0
 repositories:
-  ingrss-nginx:
+  ingress-nginx:
     url: https://kubernetes.github.io/ingress-nginx
 charts:
   test-relative-hooks:

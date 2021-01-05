@@ -1,6 +1,6 @@
 namespace: 21-test
 repositories:
-  ingrss-nginx:
+  ingress-nginx:
     url: https://kubernetes.github.io/ingress-nginx
 minimum_versions: #set minimum version requirements here
   helm: 0.0.0

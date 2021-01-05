@@ -1,6 +1,6 @@
 namespace: 23-should-not-get-used #namespace to install the chart in, defaults to 'kube-system'
 repositories:
-  ingrss-nginx:
+  ingress-nginx:
     url: https://kubernetes.github.io/ingress-nginx
 minimum_versions: #set minimum version requirements here
   helm: 0.0.0
