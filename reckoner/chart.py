@@ -95,11 +95,6 @@ class Chart(object):
         self._plugin = self._chart.get('plugin')
         self._chart['values'] = self._chart.get('values', {})
         self._temp_values_file_paths = []
-        self._chart['set_values'] = self._chart.get('set-values', {})
-        if self._chart['set_values'] != {}:
-            self._deprecation_messages.append(
-                "DEPRECATION NOTICE: 'set-values' will be removed in favor of 'values' in a future release. Please migrate your course file"
-            )
 
         self.args = []
 
@@ -126,14 +121,6 @@ class Chart(object):
         self._namespace = self._interpolate_env_vars_from_string(self._chart.get('namespace', ''))
         self._namespace_management = self._chart.get('namespace_management')
         self._context = self._chart.get('context')
-        value_strings = self._chart.get('values-strings', {})
-        self._chart['values_strings'] = value_strings
-
-        if value_strings != {}:
-            self._deprecation_messages.append(
-                "DEPRECATION NOTICE: 'values-strings' will be removed in favor of 'values' in a future release. Please migrate your course file"
-            )
-            del(self._chart['values-strings'])
 
     @property
     def helm_args(self):
