@@ -45,8 +45,9 @@ charts: # list of charts
   datadog:
     version: "0.8.2"
     repository: stable
-    set-values:
-      datadog.apiKey: notthekey
+    values:
+      datadog:
+        apiKey: notthekey
       list_of_values:
         - value1
         - value2
@@ -65,7 +66,7 @@ charts: # list of charts
       git: https://github.com/kubernetes/charts.git
       path: stable
     version: aaaf98b
-    set-values:
+    values:
       nested:
         values:
           are: supported
@@ -73,11 +74,16 @@ charts: # list of charts
     chart: vault
     repository: incubator
     namespace: infra
-    set-values:
-      vault.dev: "false"
+    values:
       replicaCount: 1
-      vault.config.storage.consul.address: "consul-consul.infra.svc:8500"
-      service.type: LoadBalancer
-      service.annotations:
-        service\.beta\.kubernetes\.io\/aws-load-balancer-internal: "0.0.0.0/0"
-        # '.' Characters must be escape or they are swallowed by helm --set
+      vault:
+        dev:
+          "false"
+        config:
+          storage:
+            consul:
+              address: "consul-consul.infra.svc:8500"
+      service:
+        type: LoadBalancer
+        annotations:
+          service.beta.kubernetes.io/aws-load-balancer-internal: "0.0.0.0/0"
