@@ -19,45 +19,10 @@ charts:
       expect-integer: 1000
       expect-null-from-null: null
       expect-string-from-null: "null"
-  chart-set-values:
-    repository: ingress-nginx
-    chart: ingress-nginx
-    set-values:
-      expect-string-from-float: 1.05
-      expect-bool-from-string: "true"
-      expect-bool-from-string-two: "false"
-      expect-integer-from-string: "1000"
-      expect-integer-from-integer: 1000
-      expect-null-from-null: null
-      expect-null-from-string: "null"
-      expect-null-from-string-Null-1: "Null"
-      expect-null-from-string-NUll-2: "NUll"
-      expect-null-from-string-NULL-3: "NULL"
-  chart-values-string:
-    repository: ingress-nginx
-    chart: ingress-nginx
-    values-strings:
-      expect-string-from-integer: "1000"
-      expect-string-from-bool: true
-      expect-string-from-bool-false: false
-      expect-string-from-null: null
   chart-env-values:
     repository: ingress-nginx
     chart: ingress-nginx
     values:
-      expect-string-from-env-var-yes: "${yes_var}"
-      expect-bool-from-env-var-yes-no-quotes: ${yes_var}
-      expect-bool-from-env-var-true-no-quotes: ${true_var}
-      expect-bool-from-env-var-false-no-quotes: ${false_var}
-      expect-string-from-env-var-false: "${false_var}"
-      expect-string-from-integer: "${int_var}"
-      expect-integer-from-integer-no-quotes: ${int_var}
-      expect-float-from-float-no-quotes: ${float_var}
-      expect-string-from-float: "${float_var}"
-  chart-env-set-values:
-    repository: ingress-nginx
-    chart: ingress-nginx
-    set-values:
       expect-string-from-env-var-yes: "${yes_var}"
       expect-string-from-env-var-yes-no-quotes: ${yes_var}
       expect-bool-from-env-var-true-no-quotes: ${true_var}
@@ -66,18 +31,5 @@ charts:
       expect-bool-from-env-var-false: "${false_var}"
       expect-integer-from-integer: "${int_var}"
       expect-integer-from-integer-no-quotes: ${int_var}
-      expect-string-from-float-no-quotes: ${float_var}
-      expect-string-from-float: "${float_var}"
-  chart-env-values-strings:
-    repository: ingress-nginx
-    chart: ingress-nginx
-    values-strings:
-      expect-string-from-env-var-yes: "${yes_var}"
-      expect-string-from-env-var-yes-no-quotes: ${yes_var}
-      expect-string-from-env-var-true-no-quotes: ${true_var}
-      expect-string-from-env-var-false-no-quotes: ${false_var}
-      expect-string-from-env-var-false: "${false_var}"
-      expect-string-from-integer: "${int_var}"
-      expect-string-from-integer-no-quotes: ${int_var}
       expect-string-from-float-no-quotes: ${float_var}
       expect-string-from-float: "${float_var}"

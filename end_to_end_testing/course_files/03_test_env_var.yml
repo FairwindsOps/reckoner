@@ -15,16 +15,3 @@ charts:
       comment-problem-detector:
         # This is a comment "${this_var_should_not_be_parsed}"
         - test-value
-  check-set-values:
-    repository: ingress-nginx
-    chart: ingress-nginx
-    namespace: 03-infra # ${dont_parse_me}
-    set-values:
-      # This comment ${should_also_not_be_parsed}
-      non-used: "${myvar}"
-  check-values-strings:
-    repository: ingress-nginx
-    chart: ingress-nginx
-    namespace: 03-infra
-    values-strings:
-      non-used: "${myvar}"
