@@ -1,16 +1,16 @@
 version: "2"
 name: Environment Variable Interpolation
 vars:
-  course: ../course_files/test_env_var.yml
-  namespace: infra
+  course: ../course_files/03_test_env_var.yml
+  namespace: 03-infra
 testcases:
-- name: plot {{.course}} without var
+- name: 03 - plot without var
   steps:
   - script: |
       reckoner plot -a {{.course}}
     assertions:
     - result.code ShouldEqual 1
-- name: plot {{.course}} with var
+- name: 03 - plot course with var
   steps:
   - script: |
       myvar=testing reckoner plot -a {{.course}}
@@ -23,25 +23,25 @@ testcases:
     - result.systemout ShouldContainSubstring 'check-values'
     - result.systemout ShouldContainSubstring 'check-set-values'
     - result.systemout ShouldContainSubstring 'check-values-strings'
-- name: check values
+- name: 03 - check values
   steps:
   - script: |
       helm -n {{.namespace}} get values check-values -ojson | jq -e ".[\"non-used\"] == \"testing\""
   assertions:
     - result.code ShouldEqual 0
-- name: check set  values
+- name: 03 - check set-values
   steps:
   - script: |
       helm -n {{.namespace}} get values check-set-values -ojson | jq -e ".[\"non-used\"] == \"testing\""
   assertions:
     - result.code ShouldEqual 0
-- name: check values strings
+- name: 03 - check values strings
   steps:
   - script: |
       helm -n {{.namespace}} get values check-values-strings -ojson | jq -e ".[\"non-used\"] == \"testing\""
   assertions:
     - result.code ShouldEqual 0
-- name: cleanup
+- name: 03 - cleanup
   steps:
     - script: |
         helm -n {{.namespace}} delete check-values check-set-values check-values-strings

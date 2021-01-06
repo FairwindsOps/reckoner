@@ -1,10 +1,10 @@
 version: "2"
 name: Diff
 vars:
-  course: ../course_files/test_diff.yml
-  namespace: test
+  course: ../course_files/21_test_diff.yml
+  namespace: 21-test
 testcases:
-- name: plot course
+- name: 21 - plot course
   steps:
   - script: |
       reckoner plot -a {{.course}}
@@ -24,7 +24,7 @@ testcases:
     # Python logs to stderr
     - result.systemerr ShouldContainSubstring "There are no differences in release"
     - result.systemout ShouldEqual ""
-- name: cleanup
+- name: 21 - cleanup
   steps:
     - script: |
         helm -n {{.namespace}} delete chart-with-namespace

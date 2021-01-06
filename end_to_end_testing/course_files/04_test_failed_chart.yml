@@ -1,0 +1,15 @@
+namespace: 04-test
+repositories:
+  runatlantis:
+    url: https://runatlantis.github.io/helm-charts
+minimum_versions:
+  helm: 0.0.0
+  reckoner: 0.0.0
+charts:
+  bad-chart:
+    repository: runatlantis
+    chart: atlantis
+    version: 3.12.4
+    set-values:
+      github:
+        broken: yep # This value should cause an execution error

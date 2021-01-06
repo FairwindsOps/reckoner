@@ -1,0 +1,16 @@
+namespace: 07-redis-test-namespace
+repositories:
+  ingress-nginx:
+    url: https://kubernetes.github.io/ingress-nginx
+minimum_versions:
+  helm: 0.0.0
+  reckoner: 0.0.0
+charts:
+  should-install:
+    chart: ingress-nginx
+    repository: ingress-nginx
+    hooks:
+      pre_install:
+        - whoami
+      post_install:
+        - whoami

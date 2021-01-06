@@ -1,0 +1,24 @@
+namespace: 10-test #namespace to install the chart in, defaults to 'kube-system'
+repositories:
+  polaris-repo-test:
+    git: https://github.com/FairwindsOps/charts
+    path: stable
+minimum_versions: #set minimum version requirements here
+  helm: 0.0.0
+  reckoner: 0.0.0
+charts:
+  polaris-release:
+    namespace: 10-polaris
+    chart: polaris
+    repository: polaris-repo-test
+  polaris:
+    namespace: 10-another-polaris
+    repository:
+      git: https://github.com/FairwindsOps/charts.git
+      path: stable
+  goldilocks-10:
+    chart: goldilocks
+    version: e3ff9b07be83cad790365402166574977a47491d
+    repository:
+      git: https://github.com/FairwindsOps/charts
+      path: stable

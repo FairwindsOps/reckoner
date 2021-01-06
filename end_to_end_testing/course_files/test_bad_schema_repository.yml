@@ -1,8 +1,0 @@
-namespace: "testing"
-repository: "stable"
-repositories:
-  stable: "https://charts.helm.sh/stable"
-charts:
-  my-chart:
-    namespace: new
-    chart: nginx-ingress

@@ -1,0 +1,12 @@
+namespace: 23-should-not-get-used #namespace to install the chart in, defaults to 'kube-system'
+repositories:
+  ingress-nginx:
+    url: https://kubernetes.github.io/ingress-nginx
+minimum_versions: #set minimum version requirements here
+  helm: 0.0.0
+  reckoner: 0.0.0
+charts:
+  env-var-name-space:
+    repository: ingress-nginx
+    chart: ingress-nginx
+    namespace: $TEST_ENVIRONMENT_NAMESPACE

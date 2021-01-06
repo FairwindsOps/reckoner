@@ -1,11 +1,11 @@
 version: "2"
 name: Namespace Management Overwrite
 vars:
-  course: ../course_files/test_overwrite_namespace_annotation_and_labels.yml
-  namespace: annotatednamespace
+  course: ../course_files/16_test_overwrite_namespace_annotation_and_labels.yml
+  namespace: 16-annotatednamespace
   release: namespace-test
 testcases:
-- name: plot {{.course}}
+- name: 16 - plot course
   steps:
   - script: |
       kubectl create ns {{.namespace}}
@@ -26,7 +26,7 @@ testcases:
       kubectl get ns {{.namespace}} -ojson | jq -e ".metadata.labels[\"rocks\"] == \"reckonerstill\""
     assertions:
     - result.code ShouldEqual 0
-- name: cleanup
+- name: 16 - cleanup
   steps:
     - script: |
         helm -n {{.namespace}} delete {{.release}}

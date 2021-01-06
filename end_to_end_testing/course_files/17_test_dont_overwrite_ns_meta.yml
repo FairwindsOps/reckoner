@@ -1,11 +1,11 @@
-namespace: annotatednamespace #namespace to install the chart in, defaults to 'kube-system'
+namespace: 17-annotatednamespace #namespace to install the chart in, defaults to 'kube-system'
 namespace_management:
   default:
     metadata:
       annotations:
-        reckoner: doesnotrockalsoshoulenotbewritten
+        reckoner: doesnotrock
       labels:
-        rocks: reckonerstillshouldnotbewritten
+        rocks: reckonerstill
     settings:
       overwrite: False
 repositories:
@@ -18,4 +18,3 @@ charts:
   namespace-test:
     repository: ingress-nginx
     chart: ingress-nginx
-    namespace: annotatednamespace

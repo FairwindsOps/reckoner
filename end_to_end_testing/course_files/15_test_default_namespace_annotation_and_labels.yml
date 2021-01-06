@@ -1,0 +1,20 @@
+namespace: 15-annotatednamespace
+namespace_management:
+  default:
+    metadata:
+      annotations:
+        reckoner: rocks
+      labels:
+        rocks: reckoner
+    settings:
+      overwrite: True
+repositories:
+  ingress-nginx:
+    url: https://kubernetes.github.io/ingress-nginx
+minimum_versions:
+  helm: 0.0.0
+  reckoner: 0.0.0
+charts:
+  namespace-test:
+    repository: ingress-nginx
+    chart: ingress-nginx

@@ -1,16 +1,16 @@
 version: "2"
 name: Strong Typing
 vars:
-  course: ../course_files/strong_typing.yml
-  namespace: testing
+  course: ../course_files/18_strong_typing.yml
+  namespace: 18-testing
 testcases:
-- name: plot {{.course}}
+- name: 18 - plot course
   steps:
   - script: |
       yes_var=yes true_var=true false_var=false int_var=123 float_var=1.234 reckoner plot {{.course}} -a
     assertions:
     - result.code ShouldEqual 0
-- name: check values
+- name: 18 - check values
   steps:
   - script: |
       set -e
@@ -45,7 +45,7 @@ testcases:
       done
     assertions:
     - result.code ShouldEqual 0
-- name: cleanup
+- name: 18 - cleanup
   steps:
     - script: |
         kubectl delete ns {{.namespace}}

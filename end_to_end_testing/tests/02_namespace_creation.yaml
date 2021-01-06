@@ -1,11 +1,11 @@
 version: "2"
 name: Namespace Creation
 vars:
-  course: ../course_files/test_create_namespace.yml
-  namespace: farglebargle
+  course: ../course_files/02_test_create_namespace.yml
+  namespace: 02-farglebargle
   release: namespace-test
 testcases:
-- name: plot --no-create-namespace {{.course}} fails
+- name: 02 - plot --no-create-namespace course fails
   steps:
   - script: |
       reckoner plot --no-create-namespace -a {{.course}}
@@ -15,7 +15,7 @@ testcases:
       helm -n {{.namespace}} get all {{.release}}
     assertions:
     - result.code ShouldNotEqual 0
-- name: plot {{.course}}
+- name: 02 - plot course
   steps:
   - script: |
       reckoner plot -a {{.course}}
@@ -27,7 +27,7 @@ testcases:
     - result.code ShouldEqual 0
     - result.systemout ShouldContainSubstring "{{.namespace}}"
     - result.systemout ShouldContainSubstring "{{.release}}"
-- name: cleanup
+- name: 02 - cleanup
   steps:
     - script: |
         helm -n {{.namespace}} delete {{.release}}

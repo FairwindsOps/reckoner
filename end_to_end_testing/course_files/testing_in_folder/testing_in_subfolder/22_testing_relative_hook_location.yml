@@ -1,0 +1,14 @@
+namespace: 22-infra
+minimum_versions:
+  helm: 0.0.0
+  reckoner: 0.0.0
+repositories:
+  ingress-nginx:
+    url: https://kubernetes.github.io/ingress-nginx
+charts:
+  test-relative-hooks:
+    repository: ingress-nginx
+    chart: ingress-nginx
+    hooks:
+      pre_install:
+      - kubectl apply -f ../subfolder/relative_hook_namespace.yml
