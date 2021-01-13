@@ -10,6 +10,6 @@ charts:
     repository: runatlantis
     chart: atlantis
     version: 3.12.4
-    set-values:
+    values:
       github:
         broken: yep # This value should cause an execution error

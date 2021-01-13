@@ -19,7 +19,7 @@ This utility adds to the functionality of [Helm](https://github.com/kubernetes/h
 * helm (>= 3.0.0), installed and initialized
 
 *Note:* Python2 is no longer supported by Reckoner.
-*Note2:* Helm2 support will not be tested from v4.3.0. The maintainters have [deprecated helm2](https://helm.sh/blog/helm-v2-deprecation-timeline/).
+*Note2:* Helm2 support will not be tested from v4.3.0. The maintainers have [deprecated helm2](https://helm.sh/blog/helm-v2-deprecation-timeline/).
 
 ### Installation
 

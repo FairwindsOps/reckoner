@@ -15,7 +15,7 @@ charts:
     repository: runatlantis
     chart: atlantis
     version: 3.12.4
-    set-values:
+    values:
       github:
         broken: yep # This value causes an execution error
   expected-skipped-chart: # This chart should never be installed due to bad-chart failing (if applied in order)

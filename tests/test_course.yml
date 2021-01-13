@@ -20,14 +20,14 @@ charts:
   cluster-autoscaler:
     repository: stable
     version: "0.2.1"
-    set-values:
+    values:
       string: string
       integer: 10
       boolean: True
       test_environ_var: ${test_environ_var}
   spotify-docker-gc:
     version: "0.1.0"
-    values-strings:
+    values:
       string: string
       integer: 10
       boolean: True
@@ -36,7 +36,7 @@ charts:
       git: https://github.com/kubernetes/charts.git
       path: stable
     version: 263bc80322056455c7120b51f1992a40667ec686
-    set-values:
+    values:
       nested:
         values:
           are: supported
@@ -58,5 +58,5 @@ charts:
     version: master
   redis:
     namespace: redis-test-namespace
-    set-values:
+    values:
       test_environ_var: ${test_environ_var} # test "${no_env_var}"

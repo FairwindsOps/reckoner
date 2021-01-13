@@ -71,10 +71,6 @@ The `charts` block in your course define all the charts you'd like to install an
     Translates into `-f filename` for the helm install command line arguments (files are pathed relative to your course file)
 - `values` _(object)_
     Translates into a direct YAML values file for use with `-f <tmpfile>` for the helm install command line arguments
-- `set-values` _(object)_
-    DEPRECATED Translates all key-values into `--set` values for the helm install command line arguments
-- `values-strings` _(object)_
-    DEPRECATED Translates all key-values into `--set-string` values for the helm install command line arguments
 - `plugins` _(string)_
     Prepend your helm commands with this `plugins` string (see [PR 99](https://github.com/FairwindsOps/reckoner/pull/99))
 

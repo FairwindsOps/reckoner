@@ -21,28 +21,14 @@ testcases:
     assertions:
     - result.code ShouldEqual 0
     - result.systemout ShouldContainSubstring 'check-values'
-    - result.systemout ShouldContainSubstring 'check-set-values'
-    - result.systemout ShouldContainSubstring 'check-values-strings'
 - name: 03 - check values
   steps:
   - script: |
       helm -n {{.namespace}} get values check-values -ojson | jq -e ".[\"non-used\"] == \"testing\""
   assertions:
     - result.code ShouldEqual 0
-- name: 03 - check set-values
-  steps:
-  - script: |
-      helm -n {{.namespace}} get values check-set-values -ojson | jq -e ".[\"non-used\"] == \"testing\""
-  assertions:
-    - result.code ShouldEqual 0
-- name: 03 - check values strings
-  steps:
-  - script: |
-      helm -n {{.namespace}} get values check-values-strings -ojson | jq -e ".[\"non-used\"] == \"testing\""
-  assertions:
-    - result.code ShouldEqual 0
 - name: 03 - cleanup
   steps:
     - script: |
-        helm -n {{.namespace}} delete check-values check-set-values check-values-strings
+        helm -n {{.namespace}} delete check-values
         kubectl delete ns {{.namespace}}

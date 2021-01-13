@@ -95,11 +95,6 @@ class Chart(object):
         self._plugin = self._chart.get('plugin')
         self._chart['values'] = self._chart.get('values', {})
         self._temp_values_file_paths = []
-        self._chart['set_values'] = self._chart.get('set-values', {})
-        if self._chart['set_values'] != {}:
-            self._deprecation_messages.append(
-                "DEPRECATION NOTICE: 'set-values' will be removed in favor of 'values' in a future release. Please migrate your course file"
-            )
 
         self.args = []
 
@@ -126,14 +121,6 @@ class Chart(object):
         self._namespace = self._interpolate_env_vars_from_string(self._chart.get('namespace', ''))
         self._namespace_management = self._chart.get('namespace_management')
         self._context = self._chart.get('context')
-        value_strings = self._chart.get('values-strings', {})
-        self._chart['values_strings'] = value_strings
-
-        if value_strings != {}:
-            self._deprecation_messages.append(
-                "DEPRECATION NOTICE: 'values-strings' will be removed in favor of 'values' in a future release. Please migrate your course file"
-            )
-            del(self._chart['values-strings'])
 
     @property
     def helm_args(self):
@@ -466,11 +453,6 @@ class Chart(object):
         # Build the file arguments from the `values: {}` in course.yml
         self.build_temp_values_files()
 
-        # Build the list of --set arguments
-        self.build_set_arguments()
-
-        # Build the list of --set-string arguments
-        self.build_set_string_arguments()
 
     def build_temp_values_files(self):
         """
@@ -532,37 +514,6 @@ class Chart(object):
         except Exception as e:
             raise e
 
-    def build_set_string_arguments(self):
-        """
-        Builder for "set-string" arguments in helm command line
-        This method specifically modifies the Chart object to
-        prepare the command line arguments.
-
-        Note running this multiple times will provide duplicate arguments
-        """
-        for key, value in self.values_strings.items():
-            for k, v in self._format_set(key, value):
-                if v is None:
-                    arg_val = "null"
-                else:
-                    arg_val = v
-                self._append_arg("--set-string {}={}".format(k, arg_val))
-
-    def build_set_arguments(self):
-        """
-        Builder for "set" arguments in helm command line
-        This method specifically modifies the Chart object to
-        prepare the command line arguments.
-
-        Note running this multiple times will provide duplicate arguments
-        """
-        for key, value in self.set_values.items():
-            for k, v in self._format_set(key, value):
-                if v is None:
-                    arg_val = "null"
-                else:
-                    arg_val = v
-                self._append_arg("--set {}={}".format(k, arg_val))
 
     def clean_up_temp_files(self):
         # Clean up all temp files used in the helm run
