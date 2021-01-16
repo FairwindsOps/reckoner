@@ -24,6 +24,7 @@ from .hooks import Hook
 from .config import Config
 from .repository import Repository
 from .chart import Chart, ChartResult
+from .secrets import Secret
 from .helm.client import get_helm_client
 from .yaml.handler import Handler as yaml_handler
 from .meta import __version__ as reckoner_version
@@ -65,10 +66,14 @@ class Course(object):
             raise ReckonerException("Helm Client Failed to initialize: {}".format(e))
 
         self._repositories = []
+        self._secrets = []
         self._charts = []
         for name, repository in self._dict.get('repositories', {}).items():
             repository['name'] = name
             self._repositories.append(Repository(repository, self.helm))
+
+        for secret in self._dict.get('secrets',[]):
+            self._secrets.append(Secret(**secret))
 
         for name, chart in self._dict.get('charts', {}).items():
             self._set_chart_repository(chart)
@@ -137,6 +142,11 @@ class Course(object):
     def repositories(self):
         """ Course repositories """
         return self._repositories
+
+    @property
+    def secrets(self):
+        """ Secrets Defined in the Chart """
+        return self._secrets
 
     @property
     def namespace_management(self):
