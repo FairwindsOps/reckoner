@@ -18,6 +18,7 @@ import traceback
 import logging
 import semver
 import sys
+import os
 from typing import List
 
 from .hooks import Hook
@@ -66,14 +67,14 @@ class Course(object):
             raise ReckonerException("Helm Client Failed to initialize: {}".format(e))
 
         self._repositories = []
-        self._secrets = []
         self._charts = []
         for name, repository in self._dict.get('repositories', {}).items():
             repository['name'] = name
             self._repositories.append(Repository(repository, self.helm))
 
         # Send entire dictionary of the secret as kwargs
-        for secret in self._dict.get('secrets',[]):
+        self._secrets = []
+        for secret in self._dict.get('secrets', []):
             self._secrets.append(Secret(**secret))
 
         for name, chart in self._dict.get('charts', {}).items():
@@ -180,8 +181,31 @@ class Course(object):
     def post_install_hook(self):
         return self._post_install_hook
 
+    def __merge_secrets_into_environment(self) -> None:
+        """
+        Accepts no Argument
+        Returns None
+
+        Loops over list of secrets and merges the name:values into the environment
+        Throws ReckonerException if there is an existing Environment of the same name
+        """
+
+        for secret in self.secrets:
+            if secret.name in os.environ.keys():
+                raise ReckonerException(
+                    f"Found Secret {secret.name} with the same nam as existing evironment variable. "
+                    "Secrets may not have the same name as and existing environment variable"
+                )
+            try:
+                os.environ[secret.name] = secret.value
+            except Exception as e:
+                logging.error(f"Error retrieving value of secret {secret.name}")
+                logging.debug(traceback.format_exc())
+                raise e
+
     def __run_command_for_charts_list(self, command: str, charts: list) -> List[ChartResult]:
         results = []
+        self.__merge_secrets_into_environment()
         for chart in charts:
             logging.info(f"Running '{command}' on {chart.release_name} in {self.namespace}")
             try:
