@@ -2,6 +2,7 @@ import unittest
 from unittest import mock
 
 from reckoner.secrets import Secret
+from reckoner.secrets.providers.base import SecretProvider
 from reckoner.secrets.providers import *
 from reckoner.exception import ReckonerCommandException
 
@@ -27,12 +28,32 @@ class TestSecrets(unittest.TestCase):
 
         secret = Secret(name="foo", backend="testbackend")
         self.assertEqual(secret.name, "foo")
+        self.assertEqual(str(secret), "foo")
 
     def test_allowed_backend(self):
 
         Secret(name="foo", backend="testbackend")
         with self.assertRaises(TypeError):
             Secret(name="foo", backend="clearlythisisanunsupportedbackend")
+
+    def test_value(self):
+        secret = Secret(name="foo", backend="testbackend")
+        secret._value = "test_value"
+        self.assertEqual(secret.value, "test_value")
+
+    def test_provider_call(self):
+        secret = Secret(name="foo", backend="testbackend")
+
+        class testbackedprovider(SecretProvider):
+            def __init__(self,**kwargs):
+                pass
+
+            def get_value(self):
+                return "testbackendprovider.get_value"
+
+        secret._provider = testbackedprovider
+
+        self.assertEqual(secret.value, "testbackendprovider.get_value")
 
 
 class TestAWSParameterStoreProvider(unittest.TestCase):

@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import os
 import unittest
 from unittest import mock
 from reckoner.hooks import Hook
@@ -19,7 +19,7 @@ from reckoner.course import Course
 from reckoner.secrets import Secret
 from reckoner.command_line_caller import Response
 from reckoner.helm.client import HelmClientException
-from reckoner.exception import ReckonerException
+from reckoner.exception import ReckonerException, ReckonerCommandException
 
 from .namespace_manager_mock import NamespaceManagerMock
 
@@ -172,6 +172,39 @@ class TestCourse(unittest.TestCase):
 
         self.assertIsInstance(course.secrets, (list))
         self.assertIsInstance(course.secrets[0], (Secret))
+
+    def test_secret_error_with_set_environment(self, mockHook, mockGetHelm, mockYAML):
+
+        course_with_secrets = self.course_yaml.copy()
+        course_with_secrets['secrets'] = [
+            {
+                'name': 'TEST_SECRET',
+                'backend': 'ShellExecutor',
+                'script': 'false'
+            }
+        ]
+
+        mockYAML.load.return_value = course_with_secrets
+        os.environ['TEST_SECRET'] = "SET"
+        with self.assertRaises(ReckonerException):
+            course = Course(None)
+            course.merge_secrets_into_environment()
+
+    def test_secret_error_with_get_value(self, mockHook, mockGetHelm, mockYAML):
+
+        course_with_secrets = self.course_yaml.copy()
+        course_with_secrets['secrets'] = [
+            {
+                'name': 'TEST_SECRET',
+                'backend': 'ShellExecutor',
+                'script': 'false'
+            }
+        ]
+
+        mockYAML.load.return_value = course_with_secrets
+        with self.assertRaises(ReckonerCommandException):
+            course = Course(None)
+            course.merge_secrets_into_environment()
 
     def test_plot(self, mockHook, mockGetHelm, mockYAML):
         mockYAML.load.return_value = self.course_yaml

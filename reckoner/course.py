@@ -181,7 +181,7 @@ class Course(object):
     def post_install_hook(self):
         return self._post_install_hook
 
-    def __merge_secrets_into_environment(self) -> None:
+    def merge_secrets_into_environment(self) -> None:
         """
         Accepts no Argument
         Returns None
@@ -205,7 +205,7 @@ class Course(object):
 
     def __run_command_for_charts_list(self, command: str, charts: list) -> List[ChartResult]:
         results = []
-        self.__merge_secrets_into_environment()
+        self.merge_secrets_into_environment()
         for chart in charts:
             logging.info(f"Running '{command}' on {chart.release_name} in {self.namespace}")
             try:

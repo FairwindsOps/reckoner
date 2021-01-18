@@ -34,7 +34,7 @@ class Secret(object):
     """
     ALLOWED_BACKENDS = ['AWSParameterStore', 'ShellExecutor']
 
-    def __init__(self, name, backend, *args, **kwargs):
+    def __init__(self, name, backend, *args, **kwargs) -> None:
         self.__kwargs = kwargs
         if backend not in self.ALLOWED_BACKENDS:
             raise TypeError(
@@ -45,19 +45,28 @@ class Secret(object):
         self._name = name
         self._backend = backend
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Returns the name of the secret"""
         return self._name
 
     @property
-    def value(self):
+    def provider(self):
+        """
+        Gets provider class from loaded modules based on
+        `backend`, and returns it
+        """
+        if not hasattr(self, "_provider"):
+            self._provider = globals()[self._backend]
+        return self._provider
+
+
+    @property
+    def value(self) -> str:
         "Returns the value of the secret from the secret provider"
         if not hasattr(self, "_value"):
-            provider = globals()[self._backend](**self.__kwargs)
-            self._value = provider.get_value()
-
+            self._value = self.provider(**self.__kwargs).get_value()
         return self._value
