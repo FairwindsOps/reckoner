@@ -14,6 +14,7 @@
 
 from .providers import *
 
+
 class Secret(object):
 
     """
@@ -34,7 +35,7 @@ class Secret(object):
     ALLOWED_BACKENDS = ['AWSParameterStore']
 
     def __init__(self, name, backend, *args, **kwargs):
-
+        self.__kwargs = kwargs
         if backend not in self.ALLOWED_BACKENDS:
             raise TypeError(
                 f"Provided Backend: '{backend}' is not supported."
@@ -49,8 +50,14 @@ class Secret(object):
 
     @property
     def name(self):
+        """Returns the name of the secret"""
         return self._name
 
     @property
     def value(self):
-        return False
+        "Returns the value of the secret from the secret provider"
+        if not hasattr(self, "_value"):
+            provider = globals()[self._backend](**self.__kwargs)
+            self._value = provider.get_value()
+
+        return self._value

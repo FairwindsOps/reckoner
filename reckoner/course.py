@@ -72,6 +72,7 @@ class Course(object):
             repository['name'] = name
             self._repositories.append(Repository(repository, self.helm))
 
+        # Send entire dictionary of the secret as kwargs
         for secret in self._dict.get('secrets',[]):
             self._secrets.append(Secret(**secret))
 
