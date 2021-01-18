@@ -19,6 +19,8 @@ class SecretProvider(ABC):
     """
     Abstract base class for secret providers to inherit
     from to ensure SecretProvider.get_value() method
+
+    When writing new SecretProviders, always inherit from this class.
     """
     @abstractmethod
     def get_value(self):
