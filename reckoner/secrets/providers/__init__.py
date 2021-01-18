@@ -13,3 +13,4 @@
 # limitations under the License.
 
 from .aws_parameter_store import AWSParameterStore
+from .shell import ShellExecutor

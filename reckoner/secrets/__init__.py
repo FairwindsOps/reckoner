@@ -32,7 +32,7 @@ class Secret(object):
     `value`: The retrieved value from the provider
 
     """
-    ALLOWED_BACKENDS = ['AWSParameterStore']
+    ALLOWED_BACKENDS = ['AWSParameterStore', 'ShellExecutor']
 
     def __init__(self, name, backend, *args, **kwargs):
         self.__kwargs = kwargs
