@@ -2,6 +2,8 @@ import unittest
 from unittest import mock
 
 from reckoner.secrets import Secret
+from reckoner.secrets.providers import *
+from reckoner.exception import ReckonerCommandException
 
 
 class TestSecrets(unittest.TestCase):
@@ -28,6 +30,40 @@ class TestSecrets(unittest.TestCase):
 
     def test_allowed_backend(self):
 
-        secret = Secret(name="foo", backend="testbackend")
+        Secret(name="foo", backend="testbackend")
         with self.assertRaises(TypeError):
             Secret(name="foo", backend="clearlythisisanunsupportedbackend")
+
+
+class TestAWSParameterStoreProvider(unittest.TestCase):
+
+    def test_provider_instantiation_with_region(self):
+        provider = AWSParameterStore(**{"parameter_name": "/test/parameter/foo", "region": "us-left-3"})
+        self.assertEqual(provider.ssm_parameter_name, '/test/parameter/foo')
+        self.assertEqual(provider.ssm_client_extra_args['region_name'], 'us-left-3')
+
+    def test_provider_instantiation_without_region(self):
+        provider = AWSParameterStore(**{"parameter_name": "/test/parameter/foo"})
+        self.assertEqual(provider.ssm_parameter_name, '/test/parameter/foo')
+        self.assertEqual(provider.ssm_client_extra_args, {})
+
+
+class TestShellExecutorProvider(unittest.TestCase):
+
+    def test_shell_executor_with_string(self):
+        test_script_string = "echo 'test-exec' | grep exec | awk -F'-' '{ print $1 }'"
+        provider = ShellExecutor(test_script_string)
+        self.assertEqual(provider.get_value(), 'test')
+
+    def test_shell_executor_with_bad_call(self):
+        test_script_string = "notarealbinary"
+        provider = ShellExecutor(test_script_string)
+
+        with self.assertRaises(ReckonerCommandException):
+            provider.get_value()
+
+    def test_shell_executor_with_bad_exit_code(self):
+        test_script_string = "echo test | grep -q nottest"
+        provider = ShellExecutor(test_script_string)
+        with self.assertRaises(ReckonerCommandException):
+            provider.get_value()

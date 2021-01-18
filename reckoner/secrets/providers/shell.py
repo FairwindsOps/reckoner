@@ -37,52 +37,43 @@ class ShellExecutor(SecretProvider):
 
     """
 
-    def __init__(self, script: (str, list), shell=True, executable="/bin/bash", path="./") -> None:
-        self._script = script
+    def __init__(self, script: str, shell: bool = True, executable: str = "/bin/bash", path: str = "./") -> None:
+        self.script = script
         self.shell = shell
         self.executable = executable
         self.path = path
 
-    @property
-    def commands(self) -> List[str]:
-        if isinstance(self._script, (str)):
-            self._script = [self._script]
-
-        return self._script
-
     def get_value(self):
+        try:
+            result = call(
+                self.script,
+                shell=self.shell,
+                executable=self.executable,
+                path=self.path
+            )
+        except Exception as error:
+            # NOTE This block is only used when we cannot send the call or
+            #      have other unexpected errors running the command.
+            #      The call()->Response should pass a Response object back
+            #      even when the exit code != 0.
+            logger.error("Critical Error running shell command.")
+            logger.error(error)
+            logger.debug(traceback.format_exc())
+            raise ReckonerCommandException(
+                "Uncaught exception while running shell command "
+                "'{}'".format(self.script)
+            )
 
-        for command in self.commands:
-            try:
-                result = call(
-                    command,
-                    shell=self.shell,
-                    executable=self.executable,
-                    path=self.path
-                )
-            except Exception as error:
-                # NOTE This block is only used when we cannot send the call or
-                #      have other unexpected errors running the command.
-                #      The call()->Response should pass a Response object back
-                #      even when the exit code != 0.
-                logger.error("Critical Error running shell command.")
-                logger.error(error)
-                logger.debug(traceback.format_exc())
-                raise ReckonerCommandException(
-                    "Uncaught exception while running shell command "
-                    "'{}'".format(command)
-                )
+        logger.debug("'Shell' type secret debug:")
+        logger.debug(f"stdout: {result.stdout}")
+        logger.debug(f"stderr: {result.stderr}")
 
-            logger.debug("'Shell' type secret debug:")
-            logger.debug(f"stdout: {result.stdout}")
-            logger.debug(f"stderr: {result.stderr}")
+        # Always raise an error after failures
+        if result.stderr or result.exitcode != 0:
+            raise ReckonerCommandException(
+                f"'Shell' type secret command ({result.command_string}) exited with an error.",
+                stdout=result.stdout,
+                stderr=result.stderr,
+            )
 
-            # Always raise an error after failures
-            if result.stderr:
-                raise ReckonerCommandException(
-                    f"'Shell' type secret command ({result.command_string}) failed to run",
-                    stdout=result.stdout,
-                    stderr=result.stderr,
-                )
-
-            return result.stdout
+        return result.stdout.strip()

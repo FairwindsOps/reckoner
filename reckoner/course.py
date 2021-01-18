@@ -193,7 +193,7 @@ class Course(object):
         for secret in self.secrets:
             if secret.name in os.environ.keys():
                 raise ReckonerException(
-                    f"Found Secret {secret.name} with the same nam as existing evironment variable. "
+                    f"Found Secret {secret.name} with the same name as existing environment variable. "
                     "Secrets may not have the same name as and existing environment variable"
                 )
             try:
