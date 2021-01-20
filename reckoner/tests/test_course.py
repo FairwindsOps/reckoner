@@ -157,7 +157,7 @@ class TestCourse(unittest.TestCase):
     def test_secrets_parsed(self, mockHook, mockGetHelm, mockYAML):
 
         course_with_secrets = self.course_yaml.copy()
-        # Doing this because the way secretes get injected into the environment
+        # Doing this because the way secrets get injected into the environment
         # there was a naming collision every subsequent time this loaded
         course_with_secrets['secrets'] = [
             {

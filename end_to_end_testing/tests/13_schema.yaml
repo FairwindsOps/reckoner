@@ -21,16 +21,16 @@ testcases:
   steps:
   - script: |
       reckoner lint ../course_files/13_test_lint_bad_secret.yml
-    assertios:
+    assertions:
     - result.code ShouldEqual 1
     - result.systemout ShouldContainString 'Course file has schema validation errors'
     - result.systemout ShouldContainString '\'backend\' is a required property'
     - result.systemout ShouldContainString '\'name\' is a required property.'
 
-- name: 13 - plot 13_test_lint_good_secret.yml
+- name: 13 - lint 13_test_lint_good_secret.yml
   steps:
   - script: |
       reckoner lint ../course_files/13_test_lint_good_secret.yml
-    assertios:
+    assertions:
     - result.code ShouldEqual 0
     - result.systemout ShouldContainString 'No schema validation errors found'

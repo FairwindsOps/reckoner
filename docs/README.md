@@ -194,7 +194,6 @@ namespace_management:
 ## Secrets
   A list of maps that define how and where to get secret values to inject into the environment.
 
-
   Required Keys:
   * `name`: The name of the secret. Must match the target inline variable. For example if your `values` has an template vairables `${PASSWORD}` the name must be `PASSWORD`
 

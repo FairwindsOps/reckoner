@@ -22,9 +22,9 @@ class Secret(object):
 
     Required Arguments:
     `name`: The name of the secret. Must match the target inline variable. For example
-    if your `values` has an template vairables `${PASSWORD}` the name must be `PASSWORD`
+    if your `values` has a template variable `${PASSWORD}` the name must be `PASSWORD`
 
-    `backend`: Defines what secret provider to use to retreive the secrets value.
+    `backend`: Defines what secret provider to use to retrieve the secrets value.
     `backend` must be one of the Secret.ALLOWED_BACKENDS
 
     Properties:
