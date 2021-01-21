@@ -98,7 +98,7 @@
                     "hooks": {
                         "$ref": "#definitions/hooks"
                     },
-                    "plugins": {
+                    "plugin": {
                         "type": "string"
                     },
                     "files": {
