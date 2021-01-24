@@ -88,7 +88,7 @@ class Chart(object):
             response=None
         )
         self._chart = chart[self._release_name]
-        self._repository = Repository(self._chart.get('repository'), self.helm)
+        self._repository = Repository(self._chart.get('repository', {}), self.helm)
         self._plugin = self._chart.get('plugin')
         self._chart['values'] = self._chart.get('values', {})
         self._temp_values_file_paths = []
