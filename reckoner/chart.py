@@ -34,9 +34,6 @@ from string import Template
 from tempfile import NamedTemporaryFile as tempfile
 
 
-default_repository = {'name': 'stable', 'url': 'https://kubernetes-charts.storage.googleapis.com'}
-
-
 class ChartResult:
 
     def __init__(self, name: str, failed: bool, error_reason: str, response: HelmCmdResponse):
@@ -91,7 +88,7 @@ class Chart(object):
             response=None
         )
         self._chart = chart[self._release_name]
-        self._repository = Repository(self._chart.get('repository', default_repository), self.helm)
+        self._repository = Repository(self._chart.get('repository'), self.helm)
         self._plugin = self._chart.get('plugin')
         self._chart['values'] = self._chart.get('values', {})
         self._temp_values_file_paths = []
@@ -235,7 +232,6 @@ class Chart(object):
         # Set the context
         if self.context is None:
             self._context = context
-        # Try to run the install process for mark the result as failed
 
         self.repository.install(self.name, self.version)
 
@@ -453,7 +449,6 @@ class Chart(object):
         # Build the file arguments from the `values: {}` in course.yml
         self.build_temp_values_files()
 
-
     def build_temp_values_files(self):
         """
         This method builds temporary files based on the values: settings
@@ -513,7 +508,6 @@ class Chart(object):
                                     "If you need $(THING) use $$(THING) to escape the `$`")
         except Exception as e:
             raise e
-
 
     def clean_up_temp_files(self):
         # Clean up all temp files used in the helm run
