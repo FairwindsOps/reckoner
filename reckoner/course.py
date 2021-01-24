@@ -172,7 +172,8 @@ class Course(object):
     def __run_command_for_charts_list(self, command: str, charts: list) -> List[ChartResult]:
         results = []
         for chart in charts:
-            logging.info(f"Running '{command}' on {chart.release_name} in {self.namespace}")
+            namespace = chart.namespace or self.namespace
+            logging.info(f"Running '{command}' on {chart.release_name} in {namespace}")
             try:
                 getattr(chart, command)(
                     default_namespace=self.namespace,
