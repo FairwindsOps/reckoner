@@ -371,7 +371,6 @@ class Chart(object):
             # Perform the template with the arguments
             return self.helm.get_manifest(self.args, plugin=self.plugin)
         except Exception as e:
-            logging.debug(traceback.format_exc())
             raise e
         finally:
             self.clean_up_temp_files()
@@ -382,7 +381,9 @@ class Chart(object):
         except HelmClientException as e:
             if "not found" in str(e):
                 logging.warn(f"Release {self.release_name} does not exist. Output will be the equal to 'template'")
-            manifest_response = ""
+                manifest_response = ""
+            else:
+                raise e
 
         template_response = self.__template_response(default_namespace, default_namespace_management, context).stdout
         diff = manifestDiff(manifest_response, template_response)
@@ -453,7 +454,6 @@ class Chart(object):
         # Build the file arguments from the `values: {}` in course.yml
         self.build_temp_values_files()
 
-
     def build_temp_values_files(self):
         """
         This method builds temporary files based on the values: settings
@@ -513,7 +513,6 @@ class Chart(object):
                                     "If you need $(THING) use $$(THING) to escape the `$`")
         except Exception as e:
             raise e
-
 
     def clean_up_temp_files(self):
         # Clean up all temp files used in the helm run

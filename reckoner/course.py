@@ -188,11 +188,7 @@ class Course(object):
                 logging.error(f'ERROR: {command} Failed on {chart.release_name}')
                 if not self.config.continue_on_error:
                     logging.error(f"Stopping '{command}' for chart due to an error! Some of your requested actions may not have been completed!")
-                    try:
-                        # Try to spit out the actuall useful error but not all responses are int he same format
-                        logging.error(str(e).splitlines()[2].replace('STDERR: ', ''))
-                    except Exception:
-                        logging.error(str(e))
+                    logging.error(str(e))
                     break
             finally:
                 # Always grab any results in the chart results
