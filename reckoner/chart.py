@@ -368,6 +368,9 @@ class Chart(object):
                 if debug_arg != '--dry-run':
                     self._append_arg(debug_arg)
 
+            # Need this here because of the bespoke arg list
+            self._check_env_vars()
+
             # Perform the template with the arguments
             return self.helm.get_manifest(self.args, plugin=self.plugin)
         except Exception as e:
@@ -453,7 +456,6 @@ class Chart(object):
         # Build the file arguments from the `values: {}` in course.yml
         self.build_temp_values_files()
 
-
     def build_temp_values_files(self):
         """
         This method builds temporary files based on the values: settings
@@ -513,7 +515,6 @@ class Chart(object):
                                     "If you need $(THING) use $$(THING) to escape the `$`")
         except Exception as e:
             raise e
-
 
     def clean_up_temp_files(self):
         # Clean up all temp files used in the helm run
