@@ -58,7 +58,6 @@ def list_release(release: str, namespace: str) -> dict:
     response = helm_client.list_releases(
         [f'--namespace={namespace}']
     )
-
     if response.exit_code:
         raise ReckonerException(f'Error getting release: {response.stderr}')
 
