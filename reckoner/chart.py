@@ -272,7 +272,13 @@ class Chart(object):
             finally:
                 self.clean_up_temp_files()
             # Log the stdout response in info
-            logging.info(self.result.response.stdout)
+
+
+            # Add new chart version to the response
+            log_output = self.result.response.stdout
+            if self.version:
+                log_output = log_output.replace('has been upgraded', f'has been upgraded to {self.version}')
+            logging.info(log_output)
 
             # Fire the post_install_hook
             self.post_install_hook.run()
