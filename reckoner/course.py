@@ -18,12 +18,14 @@ import traceback
 import logging
 import semver
 import sys
+import os
 from typing import List
 
 from .hooks import Hook
 from .config import Config
 from .repository import Repository
 from .chart import Chart, ChartResult
+from .secrets import Secret
 from .helm.client import get_helm_client
 from .yaml.handler import Handler as yaml_handler
 from .meta import __version__ as reckoner_version
@@ -69,6 +71,11 @@ class Course(object):
         for name, repository in self._dict.get('repositories', {}).items():
             repository['name'] = name
             self._repositories.append(Repository(repository, self.helm))
+
+        # Send entire dictionary of the secret as kwargs
+        self._secrets = []
+        for secret in self._dict.get('secrets', []):
+            self._secrets.append(Secret(**secret))
 
         for name, chart in self._dict.get('charts', {}).items():
             self._set_chart_repository(chart)
@@ -139,6 +146,11 @@ class Course(object):
         return self._repositories
 
     @property
+    def secrets(self):
+        """ Secrets Defined in the Chart """
+        return self._secrets
+
+    @property
     def namespace_management(self):
         """ The default namespace manager block from the course if it exists
         Otherwise, returns {} """
@@ -169,10 +181,34 @@ class Course(object):
     def post_install_hook(self):
         return self._post_install_hook
 
+    def merge_secrets_into_environment(self) -> None:
+        """
+        Accepts no Argument
+        Returns None
+
+        Loops over list of secrets and merges the name:values into the environment
+        Throws ReckonerException if there is an existing Environment of the same name
+        """
+
+        for secret in self.secrets:
+            if secret.name in os.environ.keys():
+                raise ReckonerException(
+                    f"Found Secret {secret.name} with the same name as existing environment variable. "
+                    "Secrets may not have the same name as and existing environment variable"
+                )
+            try:
+                os.environ[secret.name] = secret.value
+            except Exception as e:
+                logging.error(f"Error retrieving value of secret {secret.name}")
+                logging.debug(traceback.format_exc())
+                raise e
+
     def __run_command_for_charts_list(self, command: str, charts: list) -> List[ChartResult]:
         results = []
+        self.merge_secrets_into_environment()
         for chart in charts:
-            logging.info(f"Running '{command}' on {chart.release_name} in {self.namespace}")
+            namespace = chart.namespace or self.namespace
+            logging.info(f"Running '{command}' on {chart.release_name} in {namespace}")
             try:
                 getattr(chart, command)(
                     default_namespace=self.namespace,
