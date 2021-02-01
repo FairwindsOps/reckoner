@@ -25,6 +25,9 @@ We'll be breaking this documentation down into sections to make reference easier
     An area in which you can put repeat code to be used throughout your course YAML. (See [this article on anchors](https://medium.com/@kinghuang/docker-compose-anchors-aliases-extensions-a1e4105d70bd))
 - `helm_args` _(string)_
     The default helm arguments to provide to any helm command run by Reckoner in this course
+- `secrets` _(list of objects)_
+    A list of objects that define where and how to get secrets from your secret backend
+    Required keys are `name` and `backend`.
 
 Example:
 ```yaml
@@ -42,6 +45,15 @@ context: my-kube-cluster
 repositories:
   stable:
     url: https://kubernetes-charts.storage.googleapis.com
+secrets:
+- name: API_KEY
+  backend: AWSParameterStore
+  parameter_name: /path/to/api/key
+  region: us-west-2
+- name: APP_KEY
+  backend: ShellExecutor
+  script: |-
+    cat ./secrets | grep app_key | base64
 hooks:
   pre_install:
     - ls ./
@@ -60,7 +72,7 @@ The `charts` block in your course define all the charts you'd like to install an
     The namespace in which to install this chart (overrides root level `namespace` definition)
 - `namespace_management` _(object)_ **(optional)** a structure the defines default annotations and labels to the namespace that Reckoner will create. Structure matches the `default` structure at the top level `namespace_management` block.
 - `chart` _(string)_
-    The name of the chart in the remote chart respository (example: `nginx-ingress`) and when using git repositories this is the folder in which the chart files exist
+    The name of the chart in the remote chart repository (example: `nginx-ingress`) and when using git repositories this is the folder in which the chart files exist
 - `repository` _(string)_ or _(object)_
     The name of the remote chart repository defined in the root level of your course (example: `stable`) and also can be passed a repository definition (like in the root key `repositories`)
 - `version` _(string)_
@@ -178,6 +190,27 @@ namespace_management:
     settings:
       overwrite: True
 ```
+
+## Secrets
+  A list of maps that define how and where to get secret values to inject into the environment.
+
+  Required Keys:
+  * `name`: The name of the secret. Must match the target inline variable. For example if your `values` has an template vairables `${PASSWORD}` the name must be `PASSWORD`
+
+  * `backend`: Defines what secret provider to use to retreive the secrets value `backend` must be one of the Secret.ALLOWED_BACKENDS
+
+  ### Currently Supported Backends:
+  #### `AWSParameterStore`
+  Retrieves value from the AWSParameterStore at the path specified. Decrypts Secure Strings:
+  Required Arguments:
+  * `parameter_name`: _(string)_ The path to the secrets
+  Optional Arguemnts:
+  * `region`: _(string)_ Region in which the secret is stored, if different from the $AWS_PROFILE configured
+
+  #### `ShellExecutor`
+  Runs a shell command and returns the output with with whitespace stripped.
+  Required Arguments:
+  * `script`: _(string)_  The script to run
 
 # CLI Usage
 

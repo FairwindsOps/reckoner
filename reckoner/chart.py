@@ -34,9 +34,6 @@ from string import Template
 from tempfile import NamedTemporaryFile as tempfile
 
 
-default_repository = {'name': 'stable', 'url': 'https://kubernetes-charts.storage.googleapis.com'}
-
-
 class ChartResult:
 
     def __init__(self, name: str, failed: bool, error_reason: str, response: HelmCmdResponse):
@@ -91,7 +88,7 @@ class Chart(object):
             response=None
         )
         self._chart = chart[self._release_name]
-        self._repository = Repository(self._chart.get('repository', default_repository), self.helm)
+        self._repository = Repository(self._chart.get('repository', {}), self.helm)
         self._plugin = self._chart.get('plugin')
         self._chart['values'] = self._chart.get('values', {})
         self._temp_values_file_paths = []
@@ -235,7 +232,6 @@ class Chart(object):
         # Set the context
         if self.context is None:
             self._context = context
-        # Try to run the install process for mark the result as failed
 
         self.repository.install(self.name, self.version)
 
@@ -272,7 +268,13 @@ class Chart(object):
             finally:
                 self.clean_up_temp_files()
             # Log the stdout response in info
-            logging.info(self.result.response.stdout)
+
+
+            # Add new chart version to the response
+            log_output = self.result.response.stdout
+            if self.version:
+                log_output = log_output.replace('has been upgraded', f'has been upgraded to {self.version}')
+            logging.info(log_output)
 
             # Fire the post_install_hook
             self.post_install_hook.run()
@@ -374,7 +376,6 @@ class Chart(object):
             # Perform the template with the arguments
             return self.helm.get_manifest(self.args, plugin=self.plugin)
         except Exception as e:
-            logging.debug(traceback.format_exc())
             raise e
         finally:
             self.clean_up_temp_files()
@@ -385,7 +386,9 @@ class Chart(object):
         except HelmClientException as e:
             if "not found" in str(e):
                 logging.warn(f"Release {self.release_name} does not exist. Output will be the equal to 'template'")
-            manifest_response = ""
+                manifest_response = ""
+            else:
+                raise e
 
         template_response = self.__template_response(default_namespace, default_namespace_management, context).stdout
         diff = manifestDiff(manifest_response, template_response)

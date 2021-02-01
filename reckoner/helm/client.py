@@ -115,7 +115,6 @@ class HelmClient(ABC):
         else:
             err = HelmClientException('Command Failed with output below:\nSTDOUT: {}\nSTDERR: {}\nCOMMAND: {}'.format(
                 response.stdout, response.stderr, response.command))
-            logging.debug(err)
             raise err
 
     @property
