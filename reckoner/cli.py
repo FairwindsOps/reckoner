@@ -157,7 +157,7 @@ def template(ctx, only, run_all, log_level, course_file=None, helm_args=None, dr
         r = Reckoner(course_file=course_file, helm_args=helm_args)
         # Convert tuple to list
         only = list(only)
-        logging.debug(f'Only tempalating the following charts: {only}')
+        logging.debug(f'Only templating the following charts: {only}')
         template_results = r.template(only)
         for result in template_results:
             if result.response is not None:
@@ -208,7 +208,7 @@ def get_manifests(ctx, only, run_all, log_level, course_file=None, helm_args=Non
         r = Reckoner(course_file=course_file, helm_args=helm_args)
         # Convert tuple to list
         only = list(only)
-        logging.debug(f'Only tempalating the following charts: {only}')
+        logging.debug(f'Only getting manifests for the following charts: {only}')
         manifests_results = r.get_manifests(only)
         for result in manifests_results:
             print(result.response.stdout)

@@ -377,7 +377,6 @@ class Chart(object):
             # Perform the template with the arguments
             return self.helm.get_manifest(self.args, plugin=self.plugin)
         except Exception as e:
-            logging.debug(traceback.format_exc())
             raise e
         finally:
             self.clean_up_temp_files()
@@ -388,7 +387,9 @@ class Chart(object):
         except HelmClientException as e:
             if "not found" in str(e):
                 logging.warn(f"Release {self.release_name} does not exist. Output will be the equal to 'template'")
-            manifest_response = ""
+                manifest_response = ""
+            else:
+                raise e
 
         template_response = self.__template_response(default_namespace, default_namespace_management, context).stdout
         diff = manifestDiff(manifest_response, template_response)
