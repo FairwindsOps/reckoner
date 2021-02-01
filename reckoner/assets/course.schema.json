@@ -59,7 +59,7 @@
                     },
                     "namespace_management": {
                         "type": "object",
-                        "additionalProperties": false, 
+                        "additionalProperties": false,
                         "properties": {
                             "metadata": {
                                 "type": "object",
@@ -126,7 +126,7 @@
         },
         "namespace_management": {
             "type": "object",
-            "additionalProperties": false, 
+            "additionalProperties": false,
             "properties": {
                 "default": {
                     "type": "object",
@@ -186,6 +186,26 @@
             "items": {
                 "type": "string"
             }
+        },
+        "secrets": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "additionalProperties": true,
+                "properties": {
+                    "backend":{
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                   "backend",
+                   "name"
+                ]
+            }
+
         }
     },
     "required": [
