@@ -370,6 +370,9 @@ class Chart(object):
                 if debug_arg != '--dry-run':
                     self._append_arg(debug_arg)
 
+            # Need this here because of the bespoke arg list
+            self._check_env_vars()
+
             # Perform the template with the arguments
             return self.helm.get_manifest(self.args, plugin=self.plugin)
         except Exception as e:
