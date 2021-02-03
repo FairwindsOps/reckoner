@@ -56,11 +56,12 @@ def draft_release(release, namespace, repository):
         release: {
             'chart': release_info.get('chart', '').split('-')[0],
             'repository': repository,
-            'version': release_info.get('chart', '').split('-')[1],
+            'version': release_info.get('chart', '').split('-')[-1],
             'namespace': namespace,
             'values': release_values,
         }
     }
 
-
-    print(yaml.dump(output))
+    # Indenting by one to enable redirection of output
+    for line in yaml.dump(output).split('\n'):
+        print(f"  {line}")
