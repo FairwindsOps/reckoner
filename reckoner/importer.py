@@ -15,14 +15,26 @@
 # limitations under the License.
 
 import json
+import logging
 
 from .helm.client import get_helm_client
 from .config import Config
 from .exception import ReckonerException
 from .yaml.handler import Handler as yaml
 
+logger = logger = logging.getLogger(__name__)
 
-def get_values(release, namespace):
+
+def get_values(release: str, namespace: str) -> dict:
+    """
+    Gets the user supplied values from the helm release specified
+    Arguments:
+    release: The name of the release to import. No default.
+    namespace: The namespace of the release to import. No default.
+
+    Returns:
+    Dictionary of release values
+    """
     helm_client = get_helm_client(helm_arguments=Config().helm_args)
     response = helm_client.get_values(
         [f'--namespace={namespace}', release]
@@ -33,11 +45,21 @@ def get_values(release, namespace):
     return json.loads(response.stdout)
 
 
-def list_release(release, namespace):
+def list_release(release: str, namespace: str) -> dict:
+    """
+    Gets chart name and chart version information about the release specified
+    Arguments:
+    release: The name of the release to import. No default.
+    namespace: The namespace of the release to import. No default.
+
+    Returns:
+    Dictionary of realease information
+    """
     helm_client = get_helm_client(helm_arguments=Config().helm_args)
     response = helm_client.list_releases(
         [f'--namespace={namespace}']
     )
+
     if response.exit_code:
         raise ReckonerException(f'Error getting release: {response.stderr}')
 
@@ -48,7 +70,18 @@ def list_release(release, namespace):
     raise ReckonerException(f"Release {release} not found in {namespace}")
 
 
-def draft_release(release, namespace, repository):
+def draft_release(release: str, namespace: str, repository: str) -> dict:
+    """
+    Parses release information and release values and parses it together into a dictionary
+    with the specified release, namespace, and repository
+    Arguments:
+    release: The name of the release to import. No default.
+    namespace: The namespace of the release to import. No default.
+    repository: The repository the chart is from. No Default
+
+    Returns:
+    Dictionary of realease information
+    """
     release_info = list_release(release, namespace)
     release_values = get_values(release, namespace)
 
@@ -62,6 +95,4 @@ def draft_release(release, namespace, repository):
         }
     }
 
-    # Indenting by one to enable redirection of output
-    for line in yaml.dump(output).split('\n'):
-        print(f"  {line}")
+    return output

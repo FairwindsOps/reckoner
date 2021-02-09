@@ -25,6 +25,7 @@ from reckoner import exception
 from reckoner.meta import __version__
 from reckoner.reckoner import Reckoner
 from reckoner.config import Config
+from reckoner.yaml.handler import Handler as yaml
 
 from reckoner.schema_validator.course import validate_course_file, lint_course_file
 
@@ -351,7 +352,7 @@ def lint(ctx, log_level, course_file=None):
     click.echo(click.style("No schema validation errors found.", fg="green"))
 
 
-@cli.command(name='import') #import is special word in python, need to rename command here
+@cli.command(name='import')  # import is special word in python, need to rename command here
 @click.pass_context
 @log_level_option
 @click.option("--release_name", help='The release name to import', required=True)
@@ -361,7 +362,10 @@ def import_release(ctx, log_level, release_name, namespace, repository):
     """Outputs a chart block that can be used to import the specified release"""
     coloredlogs.install(level=log_level)
     logging.warn("Import is experimental and may be unreliable. Double check all output.")
-    draft_release(release_name, namespace, repository)
+    release = draft_release(release_name, namespace, repository)
+    # Indenting by one to enable redirection of output
+    for line in yaml.dump(release).split('\n'):
+        print(f"  {line}")
 
 
 @cli.command()
