@@ -57,6 +57,10 @@ reckoner plot course.yaml --run-all
 
 Grafana and Polaris should now be installed on your cluster!
 
+## Adopting Reckoner
+If you're already using Helm but want to start using `reckoner`, you can use `reckoner import` to facilitate your migration!
+
+
 ## More Documentation
 
 More advanced usage docs and course definition information can be found in the [docs/](/docs) folder of this repository.

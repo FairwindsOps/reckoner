@@ -62,7 +62,7 @@ class TestDraftRelease(unittest.TestCase):
 
         self.assertEqual(
             chart_block,
-            {'test-release': {'chart': 'test',
+            {'test-release': {'chart': 'test-chart',
                               'namespace': 'test-namespace',
                               'repository': 'test-repository',
                               'values': {'test_value_one': 'one_value_test'},

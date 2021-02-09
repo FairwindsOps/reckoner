@@ -230,6 +230,7 @@ Commands:
   diff           Output diff of the templates that would be installed and the manifests as they are installed
   update         Checks to see if anything will be changed, if so, update the release, if not, does nothing
   version  Takes no arguments, outputs version info
+  import         Outputs a chart block that can be used to import the specified release
 ```
 
 You can add `--help` to any `Command` and get output like the one below:
@@ -342,4 +343,20 @@ Options:
                                  (default=INFO)
 
   --help                         Show this message and exit.
+```
+Or
+```text
+# reckoner import --help
+Usage: reckoner import [OPTIONS]
+
+  Outputs a chart block that can be used to import the specified release
+
+Options:
+  --log-level TEXT     Log Level. [INFO | DEBUG | WARN | ERROR].
+                       (default=INFO)
+
+  --release_name TEXT  The release name to import  [required]
+  --namespace TEXT     The namespace of the release  [required]
+  --repository TEXT    The repository of the chart  [required]
+  --help               Show this message and exit.
 ```

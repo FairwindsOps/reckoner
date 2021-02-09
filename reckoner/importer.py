@@ -20,7 +20,6 @@ import logging
 from .helm.client import get_helm_client
 from .config import Config
 from .exception import ReckonerException
-from .yaml.handler import Handler as yaml
 
 logger = logger = logging.getLogger(__name__)
 
@@ -87,7 +86,7 @@ def draft_release(release: str, namespace: str, repository: str) -> dict:
 
     output = {
         release: {
-            'chart': release_info.get('chart', '').split('-')[0],
+            'chart': "-".join(release_info.get('chart', '').split('-')[0:-1]),
             'repository': repository,
             'version': release_info.get('chart', '').split('-')[-1],
             'namespace': namespace,

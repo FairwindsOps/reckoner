@@ -1,0 +1,30 @@
+version: "2"
+name: Shell Executor Secret
+vars:
+  course: ../course_files/25_test_import.yml
+  namespace: 25-test-import
+  release: import-test
+testcases:
+  - name: 25 - plot course
+    steps:
+      - script: |
+          reckoner plot -a {{.course}}
+        assertions:
+          - result.code ShouldEqual 0
+  - name: 25 - import release
+    steps:
+      - script: |
+          reckoner import --namespace {{.namespace}} --release_name {{.release}} --repository ingress-nginx
+        assertions:
+          - "result.code ShouldEqual 0"
+          - 'result.systemout ShouldContainSubstring "namespace: {{.namespace}}"'
+          - 'result.systemout ShouldContainSubstring "version: 3.23.0"'
+          - 'result.systemout ShouldContainSubstring "chart: ingress-nginx"'
+          - 'result.systemout ShouldContainSubstring "{{.release}}:"'
+          - 'result.systemout ShouldContainSubstring "expect-value: 1.05"'
+          - 'result.systemout ShouldContainSubstring "expect-bool-value: false"'
+  - name: 25 - cleanup
+    steps:
+      - script: |
+          helm -n {{.namespace}} delete
+          kubectl delete ns {{.namespace}}
