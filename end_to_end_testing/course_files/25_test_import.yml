@@ -1,0 +1,16 @@
+---
+namespace: 25-test-import
+minimum_versions:
+  helm: 0.0.0
+  reckoner: 0.0.0
+repositories:
+  ingress-nginx:
+    url: https://kubernetes.github.io/ingress-nginx
+charts:
+  import-test:
+    repository: ingress-nginx
+    chart: ingress-nginx
+    version: 3.23.0
+    values:
+      expect-value: 1.05
+      expect-bool-value: false

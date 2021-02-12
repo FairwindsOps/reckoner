@@ -20,12 +20,15 @@ import logging
 import traceback
 import coloredlogs
 
+from reckoner.importer import draft_release
 from reckoner import exception
 from reckoner.meta import __version__
 from reckoner.reckoner import Reckoner
 from reckoner.config import Config
+from reckoner.yaml.handler import Handler as yaml
 
 from reckoner.schema_validator.course import validate_course_file, lint_course_file
+
 
 class Mutex(click.Option):
     def __init__(self, *args, **kwargs):
@@ -44,6 +47,7 @@ class Mutex(click.Option):
                 else:
                     self.prompt = None
         return super(Mutex, self).handle_parse_result(ctx, opts, args)
+
 
 # Options and Arguments
 course_file_argument = click.argument('course_file', type=click.File('rb'))
@@ -331,6 +335,7 @@ def update(ctx, run_all, log_level, course_file=None, dry_run=False, debug=False
             click.echo(click.style(str(result), fg="bright_red"))
         ctx.exit(1)
 
+
 @cli.command()
 @click.pass_context
 @log_level_option
@@ -345,6 +350,23 @@ def lint(ctx, log_level, course_file=None):
         click.echo(click.style("{}".format(err), fg="red"))
         ctx.exit(1)
     click.echo(click.style("No schema validation errors found.", fg="green"))
+
+
+@cli.command(name='import')  # import is special word in python, need to rename command here
+@click.pass_context
+@log_level_option
+@click.option("--release_name", help='The release name to import', required=True)
+@click.option("--namespace", help='The namespace of the release being imported', required=True)
+@click.option("--repository", help='The repository of the chart being imported', required=True)
+def import_release(ctx, log_level, release_name, namespace, repository):
+    """Outputs a release block that can be used to import the specified release"""
+    coloredlogs.install(level=log_level)
+    logging.warn("Import is experimental and may be unreliable. Double check all output.")
+    release = draft_release(release_name, namespace, repository)
+    # Indenting by one to enable redirection of output
+    for line in yaml.dump(release).split('\n'):
+        print(f"  {line}")
+
 
 @cli.command()
 def version():
