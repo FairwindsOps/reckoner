@@ -356,10 +356,10 @@ def lint(ctx, log_level, course_file=None):
 @click.pass_context
 @log_level_option
 @click.option("--release_name", help='The release name to import', required=True)
-@click.option("--namespace", help='The namespace of the release', required=True)
-@click.option("--repository", help='The repository of the chart', required=True)
+@click.option("--namespace", help='The namespace of the release being imported', required=True)
+@click.option("--repository", help='The repository of the chart being imported', required=True)
 def import_release(ctx, log_level, release_name, namespace, repository):
-    """Outputs a chart block that can be used to import the specified release"""
+    """Outputs a release block that can be used to import the specified release"""
     coloredlogs.install(level=log_level)
     logging.warn("Import is experimental and may be unreliable. Double check all output.")
     release = draft_release(release_name, namespace, repository)

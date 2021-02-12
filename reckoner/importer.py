@@ -71,8 +71,8 @@ def list_release(release: str, namespace: str) -> dict:
 
 def draft_release(release: str, namespace: str, repository: str) -> dict:
     """
-    Parses release information and release values and parses it together into a dictionary
-    with the specified release, namespace, and repository
+    Parses release information and values, then parses them together into a dictionary
+    with the specified release, namespace, repository, and values
     Arguments:
     release: The name of the release to import. No default.
     namespace: The namespace of the release to import. No default.
