@@ -15,7 +15,7 @@
 version: 2.1
 
 orbs:
-  rok8s-scripts: fairwinds/rok8s-scripts@11
+  rok8s: fairwinds/rok8s-scripts@11
 
 executors:
   python-3-7:
