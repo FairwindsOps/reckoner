@@ -117,11 +117,11 @@ workflows:
               only: /.*/
             branches:
               only: /.*/
-      - rok8s-scripts/kubernetes_e2e_tests:
+      - rok8s/kubernetes_e2e_tests:
           name: "End-To-End Kubernetes 1.18.8"
           kind_node_image: "kindest/node:v1.18.8@sha256:f4bcc97a0ad6e7abaf3f643d890add7efe6ee4ab90baeb374b4f41a4c95567eb"
           <<: *e2e_configuration
-      - rok8s-scripts/kubernetes_e2e_tests:
+      - rok8s/kubernetes_e2e_tests:
           name: "End-To-End Kubernetes 1.19.1"
           kind_node_image: "kindest/node:v1.19.1@sha256:98cf5288864662e37115e362b23e4369c8c4a408f99cbc06e58ac30ddc721600"
           <<: *e2e_configuration
@@ -136,7 +136,10 @@ workflows:
           registry: quay.io
           username: fairwinds+circleci
           requires:
-            - test
+            - build-3-7
+            - build-3-8
+            - "End-To-End Kubernetes 1.18.8"
+            - "End-To-End Kubernetes 1.19.1"
           filters:
             branches:
               ignore: /pull\/[0-9]+/
