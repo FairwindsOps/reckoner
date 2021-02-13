@@ -26,24 +26,50 @@ executors:
       - image: circleci/python:3.8
 
 references:
-  e2e_configuration: &e2e_configuration
-    pre_script: end_to_end_testing/pre.sh
-    script: end_to_end_testing/run.sh
+  e2e_configuration_python: &e2e_configuration_python
+    pre_script: end_to_end_testing/pre_python.sh
+    script: end_to_end_testing/run_python.sh
     command_runner_image: quay.io/reactiveops/ci-images:v11-buster
-    enable_docker_layer_caching: true
+    enable_docker_layer_caching: false
     store-test-results: /tmp/test-results
-    attach-workspace: true
-    workspace-location: /tmp/binaries
-    kind_version: 0.9.0
+    kind_version: 0.10.0
     requires:
-      - build-3-8
       - build-3-7
+      - build-3-8
     filters:
       branches:
         only: /.*/
       tags:
-        ignore: /v.*/
-
+        ignore: /.*/
+  e2e_configuration_go: &e2e_configuration_go
+    pre_script: end_to_end_testing/pre_go.sh
+    script: end_to_end_testing/run_go.sh
+    command_runner_image: quay.io/reactiveops/ci-images:v11-buster
+    enable_docker_layer_caching: false
+    store-test-results: /tmp/test-results
+    kind_version: 0.10.0
+    requires:
+      - test-go
+    filters:
+      branches:
+        only: /.*/
+      tags:
+        ignore: /.*/
+  install_goreleaser: &install_goreleaser
+    run:
+      name: Install Goreleaser
+      command: |
+        curl -fsSLo goreleaser_amd64.deb https://github.com/goreleaser/goreleaser/releases/download/v0.164.0/goreleaser_amd64.deb
+        echo "577c88019cca787161ee1ff853d45be7f635ad7d8a204bd7a2735ab04abcc255  goreleaser_amd64.deb" | sha256sum -c -
+        sudo dpkg -i goreleaser_amd64.deb
+        rm goreleaser_amd64.deb
+  install_go: &install_go
+    run:
+      name: Install Golang
+      command: |
+        curl -LO https://golang.org/dl/go1.16.4.linux-amd64.tar.gz
+        tar -C /usr/local -xzf go1.16.4.linux-amd64.tar.gz
+        echo "PATH=$PATH:/usr/local/go/bin" >> ${BASH_ENV}
 jobs:
   build-3-7:
     executor: python-3-7
@@ -76,7 +102,29 @@ jobs:
             pip install --user -e .
             reckoner --version
             pytest --cov ./
-
+  test-go:
+    working_directory: /go/src/github.com/fairwindsops/reckoner
+    docker:
+      - image: circleci/golang:1.16
+        environment:
+          GO111MODULE: "on"
+    steps:
+      - checkout
+      - run: make test
+  snapshot-go:
+    docker:
+      - image: quay.io/reactiveops/ci-images:v11-buster
+    steps:
+      - checkout
+      - *install_go
+      - *install_goreleaser
+      - setup_remote_docker
+      - run:
+          name: Goreleaser Snapshot
+          command: goreleaser --snapshot
+      - store_artifacts:
+          path: dist
+          destination: snapshot
   release:
     executor: python-3-8
     environment:
@@ -122,50 +170,45 @@ jobs:
             cd ./dist
             aws s3 sync ./ s3://reckoner.docs.fairwinds.com --delete
 
+
 workflows:
   version: 2
   build_and_test:
     jobs:
+      - test-go:
+          filters:
+            tags:
+              ignore: /.*/
+            branches:
+              only: /.*/
       - build-3-7:
           filters:
             tags:
-              only: /.*/
+              ignore: /.*/
             branches:
               only: /.*/
       - build-3-8:
           filters:
             tags:
-              only: /.*/
-            branches:
-              only: /.*/
-      - rok8s/kubernetes_e2e_tests:
-          name: "End-To-End Kubernetes 1.18.8"
-          kind_node_image: "kindest/node:v1.18.8@sha256:f4bcc97a0ad6e7abaf3f643d890add7efe6ee4ab90baeb374b4f41a4c95567eb"
-          <<: *e2e_configuration
-      - rok8s/kubernetes_e2e_tests:
-          name: "End-To-End Kubernetes 1.19.1"
-          kind_node_image: "kindest/node:v1.19.1@sha256:98cf5288864662e37115e362b23e4369c8c4a408f99cbc06e58ac30ddc721600"
-          <<: *e2e_configuration
-      - rok8s/docker_build_and_push:
-          name: build-and-push-container
-          docker-push: true
-          enable_docker_layer_caching: true
-          config_file: .circleci/build.config
-          context: org-global
-          docker-login: true
-          password-variable: "fairwinds_quay_token"
-          registry: quay.io
-          username: fairwinds+circleci
-          requires:
-            - build-3-7
-            - build-3-8
-            - "End-To-End Kubernetes 1.18.8"
-            - "End-To-End Kubernetes 1.19.1"
-          filters:
-            branches:
-              ignore: /pull\/[0-9]+/
-            tags:
               ignore: /.*/
+            branches:
+              only: /.*/
+      - rok8s/kubernetes_e2e_tests:
+          name: "End-To-End Kubernetes 1.19 - Python"
+          kind_node_image: "kindest/node:v1.19.7@sha256:a70639454e97a4b733f9d9b67e12c01f6b0297449d5b9cbbef87473458e26dca"
+          <<: *e2e_configuration_python
+      - rok8s/kubernetes_e2e_tests:
+          name: "End-To-End Kubernetes 1.20 - Python"
+          kind_node_image: "kindest/node:v1.20.2@sha256:8f7ea6e7642c0da54f04a7ee10431549c0257315b3a634f6ef2fecaaedb19bab"
+          <<: *e2e_configuration_python
+      - rok8s/kubernetes_e2e_tests:
+          name: "End-To-End Kubernetes 1.19 - Go"
+          kind_node_image: "kindest/node:v1.19.7@sha256:a70639454e97a4b733f9d9b67e12c01f6b0297449d5b9cbbef87473458e26dca"
+          <<: *e2e_configuration_go
+      - rok8s/kubernetes_e2e_tests:
+          name: "End-To-End Kubernetes 1.20 - Go"
+          kind_node_image: "kindest/node:v1.20.2@sha256:8f7ea6e7642c0da54f04a7ee10431549c0257315b3a634f6ef2fecaaedb19bab"
+          <<: *e2e_configuration_go
   release:
     jobs:
       - release:
