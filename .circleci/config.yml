@@ -17,14 +17,6 @@ version: 2.1
 orbs:
   rok8s: fairwinds/rok8s-scripts@11
 
-executors:
-  python-3-7:
-    docker:
-      - image: circleci/python:3.7
-  python-3-8:
-    docker:
-      - image: circleci/python:3.8
-
 references:
   e2e_configuration: &e2e_configuration
     pre_script: end_to_end_testing/pre.sh
@@ -32,139 +24,45 @@ references:
     command_runner_image: quay.io/reactiveops/ci-images:v11-buster
     enable_docker_layer_caching: true
     store-test-results: /tmp/test-results
-    attach-workspace: true
-    workspace-location: /tmp/binaries
-    kind_version: 0.9.0
+    kind_version: 0.10.0
     requires:
-      - build-3-8
-      - build-3-7
+      - test
     filters:
       branches:
         only: /.*/
       tags:
-        ignore: /v.*/
-
+        ignore: /.*/
 jobs:
-  build-3-7:
-    executor: python-3-7
-    working_directory: ~/reckoner
-    steps:
-      - run:
-          name: Setup PATH to support pip user installs
-          command: echo 'export PATH=$PATH:/home/circleci/.local/bin' >> $BASH_ENV
-      - checkout
-      - run:
-          name: Unit Tests
-          command: |
-            pip install --user -r development-requirements.txt
-            pip install --user -e .
-            reckoner --version
-            pytest --cov ./
-            codecov
-
-  build-3-8:
-    executor: python-3-8
-    working_directory: ~/reckoner
-    steps:
-      - run:
-          name: Setup PATH to support pip user installs
-          command: echo 'export PATH=$PATH:/home/circleci/.local/bin' >> $BASH_ENV
-      - checkout
-      - run:
-          name: Unit Tests
-          command: |
-            pip install --user -r development-requirements.txt
-            pip install --user -e .
-            reckoner --version
-            pytest --cov ./
-            codecov
-
-  release:
-    executor: python-3-8
-    environment:
-      PYPI_USERNAME: ReactiveOps
-      GITHUB_ORGANIZATION: $CIRCLE_PROJECT_USERNAME
-      GITHUB_REPOSITORY: $CIRCLE_PROJECT_REPONAME
-    working_directory: ~/reckoner
+  test:
+    working_directory: /go/src/github.com/fairwindsops/reckoner
+    docker:
+      - image: circleci/golang:1.15
+        environment:
+          GO111MODULE: "on"
     steps:
       - checkout
-      - run:
-          name: init .pypirc
-          command: |
-            echo -e "[pypi]" >> ~/.pypirc
-            echo -e "username = $PYPI_USERNAME" >> ~/.pypirc
-            echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
-      - run:
-          name: package and upload
-          command: |
-            sudo pip install twine
-            python setup.py sdist bdist_wheel
-            twine upload dist/*
-
+      - run: go mod download && go mod verify
+      - run: go test -v ./... -coverprofile=coverage.txt -covermode=atomic
+      - run: bash <(curl -s https://codecov.io/bash)
 workflows:
   version: 2
   build_and_test:
     jobs:
-      - build-3-7:
+      - test:
           filters:
             tags:
-              only: /.*/
-            branches:
-              only: /.*/
-      - build-3-8:
-          filters:
-            tags:
-              only: /.*/
+              ignore: /.*/
             branches:
               only: /.*/
       - rok8s/kubernetes_e2e_tests:
-          name: "End-To-End Kubernetes 1.18.8"
-          kind_node_image: "kindest/node:v1.18.8@sha256:f4bcc97a0ad6e7abaf3f643d890add7efe6ee4ab90baeb374b4f41a4c95567eb"
+          name: "End-To-End Kubernetes 1.18"
+          kind_node_image: "kindest/node:v1.18.15@sha256:5c1b980c4d0e0e8e7eb9f36f7df525d079a96169c8a8f20d8bd108c0d0889cc4"
           <<: *e2e_configuration
       - rok8s/kubernetes_e2e_tests:
-          name: "End-To-End Kubernetes 1.19.1"
-          kind_node_image: "kindest/node:v1.19.1@sha256:98cf5288864662e37115e362b23e4369c8c4a408f99cbc06e58ac30ddc721600"
+          name: "End-To-End Kubernetes 1.19"
+          kind_node_image: "kindest/node:v1.19.7@sha256:a70639454e97a4b733f9d9b67e12c01f6b0297449d5b9cbbef87473458e26dca"
           <<: *e2e_configuration
-      - rok8s/docker_build_and_push:
-          name: build-and-push-container
-          docker-push: true
-          enable_docker_layer_caching: true
-          config_file: .circleci/build.config
-          context: org-global
-          docker-login: true
-          password-variable: "fairwinds_quay_token"
-          registry: quay.io
-          username: fairwinds+circleci
-          requires:
-            - build-3-7
-            - build-3-8
-            - "End-To-End Kubernetes 1.18.8"
-            - "End-To-End Kubernetes 1.19.1"
-          filters:
-            branches:
-              ignore: /pull\/[0-9]+/
-            tags:
-              ignore: /.*/
-  release:
-    jobs:
-      - release:
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - rok8s/docker_build_and_push:
-          name: build-and-push-container
-          docker-push: true
-          enable_docker_layer_caching: false
-          config_file: .circleci/build.config
-          context: org-global
-          docker-login: true
-          password-variable: "fairwinds_quay_token"
-          registry: quay.io
-          username: fairwinds+circleci
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /.*/
+      - rok8s/kubernetes_e2e_tests:
+          name: "End-To-End Kubernetes 1.20"
+          kind_node_image: "kindest/node:v1.20.2@sha256:8f7ea6e7642c0da54f04a7ee10431549c0257315b3a634f6ef2fecaaedb19bab"
+          <<: *e2e_configuration

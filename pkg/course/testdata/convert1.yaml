@@ -1,0 +1,26 @@
+namespace: namespace
+context: farglebargle
+repository: stable
+repositories:
+  git-repo-test:
+    git: https://github.com/FairwindsOps/charts
+    path: stable
+  helm-repo:
+    url: https://ahelmrepo.example.com
+charts:
+  basic:
+    chart: somechart
+    repository: 
+      name: helm-repo
+    version: "2.0.0"
+    values:
+      dummyvalue: false
+  gitrelease:
+    chart: "gitchart"
+    repository:
+      git: giturl
+      path: gitpath
+    version: main
+  standard:
+    chart: "basic"
+    repository: "helm-repo"

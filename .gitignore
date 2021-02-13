@@ -11,3 +11,6 @@ htmlcov/
 build/
 reckoner/version.txt
 installer/reckoner.spec
+/bin
+
+coverage.txt

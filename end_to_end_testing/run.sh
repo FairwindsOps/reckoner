@@ -3,14 +3,8 @@
 set -x
 set -e
 
-python --version
-
-apt-get update
-apt-get install python3-pip
-
-cd /reckoner
-pip3 install .
-reckoner --version
+mv /reckoner/bin/reckoner /usr/local/bin/reckoner
+reckoner version
 
 curl -LO https://github.com/ovh/venom/releases/download/v0.27.0/venom.linux-amd64
 mv venom.linux-amd64 /usr/local/bin/venom

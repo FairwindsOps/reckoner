@@ -1,0 +1,58 @@
+builds:
+  - ldflags:
+      - -X main.version={{.Version}} -X main.commit={{.Commit}} -s -w
+    goarch:
+      - amd64
+      - arm
+      - arm64
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarm:
+      - 6
+      - 7
+dockers:
+- image_templates:
+  - "quay.io/fairwinds/reckoner:{{ .Tag }}-amd64"
+  - "quay.io/fairwinds/reckoner:v{{ .Major }}-amd64"
+  - "quay.io/fairwinds/reckoner:v{{ .Major }}.{{ .Minor }}-amd64"
+  use_buildx: true
+  dockerfile: Dockerfile
+  build_flag_templates:
+  - "--platform=linux/amd64"
+- image_templates:
+  - "quay.io/fairwinds/reckoner:{{ .Tag }}-arm64v8"
+  - "quay.io/fairwinds/reckoner:v{{ .Major }}-arm64v8"
+  - "quay.io/fairwinds/reckoner:v{{ .Major }}.{{ .Minor }}-arm64v8"
+  use_buildx: true
+  goarch: arm64
+  dockerfile: Dockerfile
+  build_flag_templates:
+  - "--platform=linux/arm64/v8"
+- image_templates:
+  - "quay.io/fairwinds/reckoner:{{ .Tag }}-armv7"
+  - "quay.io/fairwinds/reckoner:v{{ .Major }}-armv7"
+  - "quay.io/fairwinds/reckoner:v{{ .Major }}.{{ .Minor }}-armv7"
+  use_buildx: true
+  goarch: arm64
+  dockerfile: Dockerfile
+  build_flag_templates:
+  - "--platform=linux/arm/v7"
+docker_manifests:
+- name_template: quay.io/fairwinds/reckoner:{{ .Tag }}
+  image_templates:
+  - "quay.io/fairwinds/reckoner:{{ .Tag }}-amd64"
+  - "quay.io/fairwinds/reckoner:{{ .Tag }}-arm64v8"
+  - "quay.io/fairwinds/reckoner:{{ .Tag }}-armv7"
+- name_template: quay.io/fairwinds/reckoner:v{{ .Major }}
+  image_templates:
+  - "quay.io/fairwinds/reckoner:v{{ .Major }}-amd64"
+  - "quay.io/fairwinds/reckoner:v{{ .Major }}-arm64v8"
+  - "quay.io/fairwinds/reckoner:v{{ .Major }}-armv7"
+- name_template: quay.io/fairwinds/reckoner:v{{ .Major }}.{{ .Minor }}
+  image_templates:
+  - "quay.io/fairwinds/reckoner:v{{ .Major }}.{{ .Minor }}-amd64"
+  - "quay.io/fairwinds/reckoner:v{{ .Major }}.{{ .Minor }}-arm64v8"
+  - "quay.io/fairwinds/reckoner:v{{ .Major }}.{{ .Minor }}-armv7"
