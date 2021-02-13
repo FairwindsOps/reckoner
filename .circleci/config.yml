@@ -15,7 +15,7 @@
 version: 2.1
 
 orbs:
-  rok8s-scripts: fairwinds/rok8s-scripts@11
+  rok8s: fairwinds/rok8s-scripts@11
 
 executors:
   python-3-7:
@@ -61,6 +61,7 @@ jobs:
             reckoner --version
             pytest --cov ./
             codecov
+
   build-3-8:
     executor: python-3-8
     working_directory: ~/reckoner
@@ -77,6 +78,7 @@ jobs:
             reckoner --version
             pytest --cov ./
             codecov
+
   release:
     executor: python-3-8
     environment:
@@ -101,7 +103,7 @@ jobs:
 
 workflows:
   version: 2
-  build:
+  build_and_test:
     jobs:
       - build-3-7:
           filters:
@@ -115,17 +117,54 @@ workflows:
               only: /.*/
             branches:
               only: /.*/
-      - rok8s-scripts/kubernetes_e2e_tests:
+      - rok8s/kubernetes_e2e_tests:
           name: "End-To-End Kubernetes 1.18.8"
           kind_node_image: "kindest/node:v1.18.8@sha256:f4bcc97a0ad6e7abaf3f643d890add7efe6ee4ab90baeb374b4f41a4c95567eb"
           <<: *e2e_configuration
-      - rok8s-scripts/kubernetes_e2e_tests:
+      - rok8s/kubernetes_e2e_tests:
           name: "End-To-End Kubernetes 1.19.1"
           kind_node_image: "kindest/node:v1.19.1@sha256:98cf5288864662e37115e362b23e4369c8c4a408f99cbc06e58ac30ddc721600"
           <<: *e2e_configuration
+      - rok8s/docker_build_and_push:
+          name: build-and-push-container
+          docker-push: true
+          enable_docker_layer_caching: true
+          config_file: .circleci/build.config
+          context: org-global
+          docker-login: true
+          password-variable: "fairwinds_quay_token"
+          registry: quay.io
+          username: fairwinds+circleci
+          requires:
+            - build-3-7
+            - build-3-8
+            - "End-To-End Kubernetes 1.18.8"
+            - "End-To-End Kubernetes 1.19.1"
+          filters:
+            branches:
+              ignore: /pull\/[0-9]+/
+            tags:
+              ignore: /.*/
+  release:
+    jobs:
       - release:
           filters:
             tags:
               only: /.*/
             branches:
               ignore: /.*/
+      - rok8s/docker_build_and_push:
+          name: build-and-push-container
+          docker-push: true
+          enable_docker_layer_caching: false
+          config_file: .circleci/build.config
+          context: org-global
+          docker-login: true
+          password-variable: "fairwinds_quay_token"
+          registry: quay.io
+          username: fairwinds+circleci
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /.*/
