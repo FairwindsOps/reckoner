@@ -20,8 +20,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	shortVersion bool
+)
+
 func init() {
 	rootCmd.AddCommand(versionCmd)
+	rootCmd.PersistentFlags().BoolVar(&shortVersion, "short", false, "Display only the version. Useful for automation")
 }
 
 var versionCmd = &cobra.Command{
@@ -29,6 +34,10 @@ var versionCmd = &cobra.Command{
 	Short: "Prints the current version of the tool.",
 	Long:  `Prints the current version.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Version:" + version + " Commit:" + versionCommit)
+		if shortVersion {
+			fmt.Println(version)
+		} else {
+			fmt.Println("Version:" + version + " Commit:" + versionCommit)
+		}
 	},
 }

@@ -5,7 +5,7 @@ GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
 BINARY_NAME=bin/reckoner
 COMMIT := $(shell git rev-parse HEAD)
-VERSION := "local-dev"
+VERSION := "0.0.0"
 
 all: lint test
 build:

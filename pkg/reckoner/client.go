@@ -33,11 +33,12 @@ import (
 
 // Client is a configuration struct
 type Client struct {
-	KubeClient kubernetes.Interface
-	Helm       helm.Client
-	CourseFile course.FileV2
-	PlotAll    bool
-	Releases   []string
+	KubeClient      kubernetes.Interface
+	Helm            helm.Client
+	ReckonerVersion string
+	CourseFile      course.FileV2
+	PlotAll         bool
+	Releases        []string
 }
 
 var once sync.Once
@@ -45,7 +46,7 @@ var clientset *kubernetes.Clientset
 
 // NewClient returns a client. Attempts to open a v2 schema course file
 // If getClient is true, attempts to get a Kubernetes client from config
-func NewClient(fileName string, plotAll bool, releases []string, kubeClient bool) (*Client, error) {
+func NewClient(fileName, version string, plotAll bool, releases []string, kubeClient bool) (*Client, error) {
 	// Get the course file
 	courseFile, err := course.OpenCourseV2(fileName)
 	if err != nil {
@@ -59,14 +60,19 @@ func NewClient(fileName string, plotAll bool, releases []string, kubeClient bool
 	}
 
 	client := &Client{
-		CourseFile: *courseFile,
-		PlotAll:    plotAll,
-		Releases:   releases,
-		Helm:       *helmClient,
+		CourseFile:      *courseFile,
+		PlotAll:         plotAll,
+		Releases:        releases,
+		Helm:            *helmClient,
+		ReckonerVersion: version,
 	}
 
+	// Check versions
 	if !client.HelmVersionValid() {
 		return nil, fmt.Errorf("helm version check failed")
+	}
+	if !client.ReckonerVersionValid() {
+		return nil, fmt.Errorf("reckoner version check failed")
 	}
 
 	if kubeClient {
@@ -104,7 +110,7 @@ func (c Client) HelmVersionValid() bool {
 		klog.Errorf("error getting current helm version: %s", err.Error())
 		return false
 	}
-	klog.V(3).Infof("found current helm version: %s", currentVersion.String())
+	klog.V(3).Infof("current helm version: %s", currentVersion.String())
 
 	constraintString := fmt.Sprintf(">=%s", c.CourseFile.MinimumVersions.Helm)
 	constraint, err := semver.NewConstraint(constraintString)
@@ -113,5 +119,32 @@ func (c Client) HelmVersionValid() bool {
 		return false
 	}
 	klog.V(3).Infof("using helm version constraint: %s", constraintString)
+	return constraint.Check(currentVersion)
+}
+
+// ReckonerVersionValid determines if the current helm version high enough
+func (c Client) ReckonerVersionValid() bool {
+	if c.CourseFile.MinimumVersions.Reckoner == "" {
+		klog.V(2).Infof("no minimum reckoner version found, assuming okay")
+		return true
+	}
+	if c.ReckonerVersion == "0.0.0" {
+		klog.V(2).Infof("development version of reckoner found - skipping version check")
+		return true
+	}
+	currentVersion, err := semver.NewVersion(c.ReckonerVersion)
+	if err != nil {
+		klog.Errorf("error parsing current reckoner version: %s", err.Error())
+		return false
+	}
+	klog.V(3).Infof("current reckoner version: %s", currentVersion.String())
+
+	constraintString := fmt.Sprintf(">=%s", c.CourseFile.MinimumVersions.Reckoner)
+	constraint, err := semver.NewConstraint(constraintString)
+	if err != nil {
+		klog.Errorf("could not parse reckoner minimum version: %s", err.Error())
+		return false
+	}
+	klog.V(3).Infof("using reckoner version constraint: %s", constraintString)
 	return constraint.Check(currentVersion)
 }

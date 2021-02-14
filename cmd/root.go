@@ -86,7 +86,7 @@ var templateCmd = &cobra.Command{
 	PreRunE: validateCourseFileArg,
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO: This is just a stub
-		client, err := reckoner.NewClient(courseFile, runAll, onlyRun, false)
+		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false)
 		if err != nil {
 			klog.Fatal(err)
 		}
