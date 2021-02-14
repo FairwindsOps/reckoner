@@ -19,11 +19,13 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/fairwindsops/reckoner/pkg/course"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"gopkg.in/yaml.v3"
 	"k8s.io/klog"
+
+	"github.com/fairwindsops/reckoner/pkg/course"
+	"github.com/fairwindsops/reckoner/pkg/reckoner"
 )
 
 var (
@@ -78,11 +80,21 @@ var plotCmd = &cobra.Command{
 }
 
 var templateCmd = &cobra.Command{
-	Use:   "template",
-	Short: "template <course file>",
-	Long:  "Templates a helm chart for a release or several releases.",
+	Use:     "template",
+	Short:   "template <course file>",
+	Long:    "Templates a helm chart for a release or several releases.",
+	PreRunE: validateCourseFileArg,
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: Call Template
+		// TODO: This is just a stub
+		client, err := reckoner.NewClient(courseFile, runAll, onlyRun, false)
+		if err != nil {
+			klog.Fatal(err)
+		}
+		tmpl, err := client.Template()
+		if err != nil {
+			klog.Fatal(err)
+		}
+		fmt.Println(tmpl)
 	},
 }
 

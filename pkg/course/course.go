@@ -166,13 +166,8 @@ func ConvertV1toV2(fileName string) (*FileV2, error) {
 	newFile := &FileV2{
 		SchemaVersion: "v2",
 	}
-	oldFile := &FileV1{}
 
-	data, err := ioutil.ReadFile(fileName)
-	if err != nil {
-		return nil, err
-	}
-	err = yaml.Unmarshal(data, oldFile)
+	oldFile, err := OpenCourseV1(fileName)
 	if err != nil {
 		return nil, err
 	}
@@ -231,4 +226,37 @@ func ConvertV1toV2(fileName string) (*FileV2, error) {
 		})
 	}
 	return newFile, nil
+}
+
+// OpenCourseV2 opens a v2 schema course file
+func OpenCourseV2(fileName string) (*FileV2, error) {
+	courseFile := &FileV2{}
+	data, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		return nil, err
+	}
+	err = yaml.Unmarshal(data, courseFile)
+	if err != nil {
+		return nil, err
+	}
+
+	if courseFile.SchemaVersion != "v2" {
+		return nil, fmt.Errorf("unsupported schema version: %s", courseFile.SchemaVersion)
+	}
+	return courseFile, nil
+}
+
+// OpenCourseV1 opens a v1 schema course file
+func OpenCourseV1(fileName string) (*FileV1, error) {
+	courseFile := &FileV1{}
+	data, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		return nil, err
+	}
+	err = yaml.Unmarshal(data, courseFile)
+	if err != nil {
+		return nil, err
+	}
+
+	return courseFile, nil
 }
