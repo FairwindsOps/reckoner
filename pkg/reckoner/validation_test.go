@@ -85,7 +85,8 @@ func TestValidateArgs(t *testing.T) {
 		{
 			name: "course.yaml does not exist",
 			args: args{
-				args: []string{"course.yaml"},
+				args:   []string{"course.yaml"},
+				runAll: true,
 			},
 			want:    "",
 			wantErr: true,
@@ -104,6 +105,43 @@ func TestValidateArgs(t *testing.T) {
 				args: []string{"testdata/course.yaml"},
 			},
 			want:    "",
+			wantErr: true,
+		},
+		{
+			name: "course.yaml exists, Only one of runAll or onlyRun can be set",
+			args: args{
+				args:    []string{"testdata/course.yaml"},
+				runAll:  true,
+				onlyRun: []string{"rbac-manager"},
+			},
+			wantErr: true,
+		},
+		{
+			name: "course.yaml exists, pass onlyrun with success",
+			args: args{
+				args:    []string{"testdata/course.yaml"},
+				runAll:  false,
+				onlyRun: []string{"rbac-manager"},
+			},
+			want:    "testdata/course.yaml",
+			wantErr: false,
+		},
+		{
+			name: "course.yaml exists, pass runall with success",
+			args: args{
+				args:   []string{"testdata/course.yaml"},
+				runAll: true,
+			},
+			want:    "testdata/course.yaml",
+			wantErr: false,
+		},
+		{
+			name: "course.yaml exists, length of args = 2",
+			args: args{
+				args:    []string{"testdata/course.yaml", "course.yml"},
+				runAll:  false,
+				onlyRun: []string{"rbac-manager"},
+			},
 			wantErr: true,
 		},
 	}
