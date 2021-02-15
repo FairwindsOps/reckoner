@@ -37,7 +37,7 @@ type FileV2 struct {
 	// if that context is not available, then reckoner should fail
 	Context string `yaml:"context,omitempty"`
 	// Repositories is a list of helm repositories that can be used to look for charts
-	Repositories []Repository `yaml:"repositories"`
+	Repositories RepositoryList `yaml:"repositories"`
 	// MinimumVersions is a block that restricts this course file from being used with
 	// outdated versions of helm or reckoner
 	MinimumVersions struct {
@@ -52,16 +52,18 @@ type FileV2 struct {
 		Default NamespaceConfig `yaml:"default"`
 	} `yaml:"namespace_management,omitempty"`
 	// Releases is the list of releases that should be maintained by this course file.
-	Releases []Release `yaml:"releases"`
+	Releases ReleaseList `yaml:"releases"`
 }
 
 // Repository is a helm reposotory definition
 type Repository struct {
-	Name string `yaml:"name"`
 	URL  string `yaml:"url,omitempty"`
 	Git  string `yaml:"git,omitempty"`
 	Path string `yaml:"path,omitempty"`
 }
+
+// RepositoryList is a set of repositories
+type RepositoryList map[string]Repository
 
 // Hooks are a set of short scripts to run before or after installation
 type Hooks struct {
@@ -110,6 +112,9 @@ type Release struct {
 	Values map[string]interface{} `yaml:"values,omitempty"`
 }
 
+// ReleaseList is a set of releases
+type ReleaseList map[string]Release
+
 // ReleaseV1 represents a helm release and all of its configuration from v1 schema
 type ReleaseV1 struct {
 	// Name is the name of the release that will be installed
@@ -143,7 +148,7 @@ type FileV1 struct {
 	// if that context is not available, then reckoner should fail
 	Context string `yaml:"context"`
 	// Repositories is a list of helm repositories that can be used to look for charts
-	Repositores map[string]Repository `yaml:"repositories"`
+	Repositories RepositoryList `yaml:"repositories"`
 	// MinimumVersions is a block that restricts this course file from being used with
 	// outdated versions of helm or reckoner
 	MinimumVersions struct {
@@ -161,6 +166,17 @@ type FileV1 struct {
 	Charts map[string]ReleaseV1
 }
 
+// Repository is a helm reposotory definition
+type RepositoryV1 struct {
+	Name string `yaml:"name,omitempty"`
+	URL  string `yaml:"url,omitempty"`
+	Git  string `yaml:"git,omitempty"`
+	Path string `yaml:"path,omitempty"`
+}
+
+// RepositoryList is a set of repositories
+type RepositoryV1List map[string]Repository
+
 // ConvertV1toV2 converts the old python course file to the newer golang v2 schema
 func ConvertV1toV2(fileName string) (*FileV2, error) {
 	newFile := &FileV2{
@@ -177,23 +193,13 @@ func ConvertV1toV2(fileName string) (*FileV2, error) {
 	newFile.Context = oldFile.Context
 	newFile.NamespaceMgmt = oldFile.NamespaceMgmt
 	newFile.DefaultRepository = oldFile.DefaultRepository
+	newFile.Repositories = oldFile.Repositories
 
-	// Repositories has become a list
-	for repoName, repo := range oldFile.Repositores {
-		newFile.Repositories = append(newFile.Repositories, Repository{
-			Name: repoName,
-			URL:  repo.URL,
-			Git:  repo.Git,
-			Path: repo.Path,
-		})
-	}
-
-	// Releases has become a list and has changed slightly
 	for releaseName, release := range oldFile.Charts {
 		// Handle repository
 		repositoryName, ok := release.Repository.(string)
 		if !ok {
-			addRepo := &Repository{}
+			addRepo := map[string]RepositoryV1{}
 			data, err := yaml.Marshal(release.Repository)
 			if err != nil {
 				return nil, err
@@ -203,19 +209,21 @@ func ConvertV1toV2(fileName string) (*FileV2, error) {
 				return nil, err
 			}
 			// Find old style git repositories
-			if addRepo.Name == "" && addRepo.Git != "" {
+			if addRepo[repositoryName].Git != "" {
 				klog.V(3).Infof("detected a git-based inline repository. Attempting to convert to repository in header")
 
 				repositoryName = fmt.Sprintf("%s-git-repository", releaseName)
-				addRepo.Name = repositoryName
-				newFile.Repositories = append(newFile.Repositories, *addRepo)
+				newFile.Repositories[repositoryName] = Repository{
+					Git:  addRepo[repositoryName].Git,
+					Path: addRepo[repositoryName].Path,
+				}
+
 			} else {
 				// Another legacy style where repository.name was used instead of just repository
-				repositoryName = addRepo.Name
+				repositoryName = addRepo[repositoryName].Name
 			}
-
 		}
-		newFile.Releases = append(newFile.Releases, Release{
+		newFile.Releases[releaseName] = Release{
 			Name:          releaseName,
 			Namespace:     release.Namespace,
 			NamespaceMgmt: release.NamespaceMgmt,
@@ -223,7 +231,7 @@ func ConvertV1toV2(fileName string) (*FileV2, error) {
 			Chart:         release.Chart,
 			Version:       release.Version,
 			Values:        release.Values,
-		})
+		}
 	}
 	return newFile, nil
 }
