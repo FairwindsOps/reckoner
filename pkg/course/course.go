@@ -87,8 +87,6 @@ type NamespaceConfig struct {
 
 // Release represents a helm release and all of its configuration
 type Release struct {
-	// Name is the name of the release that will be installed
-	Name string `yaml:"name"`
 	// Namespace is the namespace that this release should be placed in
 	Namespace string `yaml:"namespace,omitempty"`
 	// NamespaceMgmt is a set of labels and annotations to be added to the namespace for this release
@@ -117,8 +115,6 @@ type ReleaseList map[string]Release
 
 // ReleaseV1 represents a helm release and all of its configuration from v1 schema
 type ReleaseV1 struct {
-	// Name is the name of the release that will be installed
-	Name string `yaml:"name"`
 	// Namespace is the namespace that this release should be placed in
 	Namespace string `yaml:"namespace,omitempty"`
 	// NamespaceMgmt is a set of labels and annotations to be added to the namespace for this release
@@ -194,12 +190,13 @@ func ConvertV1toV2(fileName string) (*FileV2, error) {
 	newFile.NamespaceMgmt = oldFile.NamespaceMgmt
 	newFile.DefaultRepository = oldFile.DefaultRepository
 	newFile.Repositories = oldFile.Repositories
+	newFile.Releases = make(map[string]Release)
 
 	for releaseName, release := range oldFile.Charts {
-		// Handle repository
 		repositoryName, ok := release.Repository.(string)
+		// The repository is not in the format repository: string. Need to handle that
 		if !ok {
-			addRepo := map[string]RepositoryV1{}
+			addRepo := &RepositoryV1{}
 			data, err := yaml.Marshal(release.Repository)
 			if err != nil {
 				return nil, err
@@ -209,22 +206,21 @@ func ConvertV1toV2(fileName string) (*FileV2, error) {
 				return nil, err
 			}
 			// Find old style git repositories
-			if addRepo[repositoryName].Git != "" {
+			if addRepo.Git != "" {
 				klog.V(3).Infof("detected a git-based inline repository. Attempting to convert to repository in header")
 
 				repositoryName = fmt.Sprintf("%s-git-repository", releaseName)
 				newFile.Repositories[repositoryName] = Repository{
-					Git:  addRepo[repositoryName].Git,
-					Path: addRepo[repositoryName].Path,
+					Git:  addRepo.Git,
+					Path: addRepo.Path,
 				}
 
 			} else {
 				// Another legacy style where repository.name was used instead of just repository
-				repositoryName = addRepo[repositoryName].Name
+				repositoryName = addRepo.Name
 			}
 		}
 		newFile.Releases[releaseName] = Release{
-			Name:          releaseName,
 			Namespace:     release.Namespace,
 			NamespaceMgmt: release.NamespaceMgmt,
 			Repository:    repositoryName,
