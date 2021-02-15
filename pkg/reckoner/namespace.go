@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/fairwindsops/reckoner/pkg/course"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -60,4 +61,44 @@ func (c *Client) PatchNamespace(namespace string, annotations, labels map[string
 	}
 
 	return nil
+}
+
+// NamespaceMangement manages namespace names, annotations and labels
+func (c *Client) NamespaceMangement() error {
+	releases := c.CourseFile.Releases
+
+	if len(c.Releases) > 0 {
+		var selectedReleases course.ReleaseList
+		for _, releaseName := range c.Releases {
+			selectedReleases[releaseName] = c.CourseFile.Releases[releaseName]
+		}
+		releases = selectedReleases
+	}
+
+	namespaces, err := c.KubeClient.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
+
+	if err != nil {
+		return err
+	}
+
+	for _, release := range releases {
+		namespaceExists := checkIfNamespaceExists(namespaces, release.Namespace)
+		var err error
+		if namespaceExists {
+			err = c.PatchNamespace(release.Namespace, release.NamespaceMgmt.Metadata.Annotations, release.NamespaceMgmt.Metadata.Labels)
+		} else {
+			err = c.CreateNamespace(release.Namespace, release.NamespaceMgmt.Metadata.Annotations, release.NamespaceMgmt.Metadata.Labels)
+		}
+
+		if err != nil {
+			return err
+		}
+
+	}
+
+	return nil
+}
+
+func checkIfNamespaceExists(nsList *v1.NamespaceList, nsName string) bool {
+	return true
 }
