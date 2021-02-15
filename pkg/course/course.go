@@ -268,8 +268,8 @@ func OpenCourseV1(fileName string) (*FileV1, error) {
 	return courseFile, nil
 }
 
-// This will populate the default namespaces in each release
-// if the release does not have a namespace
+// populateDefaultNamespace sets the default namespace in each release
+// if the release does not have a namespace. If the DefaultNamespace is blank, simply returns
 func (f *FileV2) populateDefaultNamespace() {
 	if f.DefaultNamespace == "" {
 		klog.V(2).Info("no default namespace set - skipping filling out defaults")
@@ -284,8 +284,8 @@ func (f *FileV2) populateDefaultNamespace() {
 	}
 }
 
-// This will populate the default repository in each release
-// if the release does not have a repository specified
+// populateDefaultRepository sets the default repository in each release
+// if the release does not have a repository specified. If the DefaultRepository is blank, simply returns.
 func (f *FileV2) populateDefaultRepository() {
 	if f.DefaultRepository == "" {
 		klog.V(2).Info("no default repository set - skipping filling out defaults")
