@@ -21,6 +21,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// ValidateArgs validates the reckoner command arguments
 func TestValidateArgs(t *testing.T) {
 	var runAll bool
 	var onlyRun []string

@@ -6,7 +6,7 @@ import (
 )
 
 func ValidateArgs(runAll bool, onlyRun, args []string) (string, error) {
-	if runAll == true && len(onlyRun) != 0 {
+	if runAll && len(onlyRun) != 0 {
 		return "", fmt.Errorf("you must either use run-all or only")
 	}
 
