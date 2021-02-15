@@ -50,13 +50,11 @@ func (c *Client) PatchNamespace(namespace string, annotations, labels map[string
 	}
 
 	data, err := json.Marshal(ns)
-
 	if err != nil {
 		return err
 	}
 
 	_, err = c.KubeClient.CoreV1().Namespaces().Patch(context.TODO(), namespace, types.StrategicMergePatchType, data, metav1.PatchOptions{})
-
 	if err != nil {
 		return err
 	}
