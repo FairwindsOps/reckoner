@@ -32,11 +32,11 @@ var (
 	version       string
 	versionCommit string
 
-	//runAll contains the boolean flag to install all the releases
+	// runAll contains the boolean flag to install all the releases
 	runAll bool
-	//courseFile is the name and path of the course.yml file
+	// courseFile is the name and path of the course.yml file
 	courseFile string
-	//onlyRun contains the list of releases to install
+	// onlyRun contains the list of releases to install
 	onlyRun []string
 )
 
