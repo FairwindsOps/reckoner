@@ -68,12 +68,14 @@ func NewClient(fileName, version string, plotAll bool, releases []string, kubeCl
 	}
 
 	// Check versions
-	if !client.HelmVersionValid() {
+	if !client.helmVersionValid() {
 		return nil, fmt.Errorf("helm version check failed")
 	}
-	if !client.ReckonerVersionValid() {
+	if !client.reckonerVersionValid() {
 		return nil, fmt.Errorf("reckoner version check failed")
 	}
+
+	client.filterReleases()
 
 	if kubeClient {
 		client.KubeClient = getKubeClient()
@@ -99,8 +101,8 @@ func getKubeClient() *kubernetes.Clientset {
 	return clientset
 }
 
-// HelmVersionValid determines if the current helm version high enough
-func (c Client) HelmVersionValid() bool {
+// helmVersionValid determines if the current helm version high enough
+func (c Client) helmVersionValid() bool {
 	if c.CourseFile.MinimumVersions.Helm == "" {
 		klog.V(2).Infof("no minimum helm version found, assuming okay")
 		return true
@@ -122,8 +124,8 @@ func (c Client) HelmVersionValid() bool {
 	return constraint.Check(currentVersion)
 }
 
-// ReckonerVersionValid determines if the current helm version high enough
-func (c Client) ReckonerVersionValid() bool {
+// reckonerVersionValid determines if the current helm version high enough
+func (c Client) reckonerVersionValid() bool {
 	if c.CourseFile.MinimumVersions.Reckoner == "" {
 		klog.V(2).Infof("no minimum reckoner version found, assuming okay")
 		return true
@@ -162,4 +164,18 @@ func (c Client) UpdateHelmRepos() error {
 		//TODO handle Git repos
 	}
 	return nil
+}
+
+// filterReleases filters the releases based on the client release list
+// Use this before you interact with the releases
+func (c *Client) filterReleases() {
+	releases := c.CourseFile.Releases
+	if len(c.Releases) > 0 {
+		selectedReleases := make(map[string]course.Release)
+		for _, releaseName := range c.Releases {
+			selectedReleases[releaseName] = c.CourseFile.Releases[releaseName]
+		}
+		releases = selectedReleases
+	}
+	c.CourseFile.Releases = releases
 }

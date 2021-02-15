@@ -76,7 +76,15 @@ var plotCmd = &cobra.Command{
 	Long:    "Runs a helm install on a release or several releases.",
 	PreRunE: validateArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: Call Plot
+		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, true)
+		if err != nil {
+			klog.Fatal(err)
+		}
+		output, err := client.Plot()
+		if err != nil {
+			klog.Fatal(err)
+		}
+		fmt.Println(output)
 	},
 }
 
@@ -86,7 +94,6 @@ var templateCmd = &cobra.Command{
 	Long:    "Templates a helm chart for a release or several releases.",
 	PreRunE: validateArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: This is just a stub
 		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false)
 		if err != nil {
 			klog.Fatal(err)

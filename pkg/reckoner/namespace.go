@@ -63,14 +63,6 @@ func (c *Client) PatchNamespace(namespace string, annotations, labels map[string
 
 // NamespaceManagement manages namespace names, annotations and labels
 func (c *Client) NamespaceManagement() error {
-	releases := c.CourseFile.Releases
-	if len(c.Releases) > 0 {
-		var selectedReleases course.ReleaseList
-		for _, releaseName := range c.Releases {
-			selectedReleases[releaseName] = c.CourseFile.Releases[releaseName]
-		}
-		releases = selectedReleases
-	}
 	namespaces, err := c.KubeClient.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return err
@@ -81,7 +73,7 @@ func (c *Client) NamespaceManagement() error {
 			return err
 		}
 	}
-	for _, release := range releases {
+	for _, release := range c.CourseFile.Releases {
 		err := c.CreateOrPatchNamespace(release.NamespaceMgmt.Settings.Overwrite, release.Namespace, release.NamespaceMgmt, namespaces)
 		if err != nil {
 			return err

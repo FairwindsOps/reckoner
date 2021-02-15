@@ -3,10 +3,21 @@
 set -x
 set -e
 
+# Install Go
+curl -LO https://golang.org/dl/go1.15.8.linux-amd64.tar.gz
+
+tar -C /usr/local -xzf go1.15.8.linux-amd64.tar.gz
+export PATH=$PATH:/usr/local/go/bin
+go version
+
+# build
+cd /reckoner
+make build
+
 mv /reckoner/bin/reckoner /usr/local/bin/reckoner
 reckoner version
 
-curl -LO https://github.com/ovh/venom/releases/download/v0.27.0/venom.linux-amd64
+curl -LO https://github.com/ovh/venom/releases/download/v0.28.0/venom.linux-amd64
 mv venom.linux-amd64 /usr/local/bin/venom
 chmod +x /usr/local/bin/venom
 

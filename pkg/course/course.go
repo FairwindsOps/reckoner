@@ -94,6 +94,8 @@ type Release struct {
 	// Chart is the name of the chart used by this release.
 	// If empty, then the release name is assumed to be the chart.
 	Chart string `yaml:"chart,omitempty"`
+	// Hooks contains pre and post hooks for a specific release
+	Hooks Hooks `yaml:"hooks,omitempty"`
 	// Version is the version of the chart to install.
 	// If empty, reckoner will use the latest version of the chart in the repository.
 	// If this is a git repository, then this should be a git ref.
@@ -121,6 +123,8 @@ type ReleaseV1 struct {
 	NamespaceMgmt NamespaceConfig `yaml:"namespace_management,omitempty"`
 	// Chart is the name of the chart used by this release
 	Chart string `yaml:"chart"`
+	// Hooks are pre and post install hooks
+	Hooks Hooks `yaml:"hooks,omitempty"`
 	// Version is the version of the chart to install
 	Version string `yaml:"version"`
 	// Repository is the repository
@@ -162,7 +166,7 @@ type FileV1 struct {
 	Charts map[string]ReleaseV1
 }
 
-// Repository is a helm reposotory definition
+// RepositoryV1 is a helm reposotory definition
 type RepositoryV1 struct {
 	Name string `yaml:"name,omitempty"`
 	URL  string `yaml:"url,omitempty"`
@@ -170,7 +174,7 @@ type RepositoryV1 struct {
 	Path string `yaml:"path,omitempty"`
 }
 
-// RepositoryList is a set of repositories
+// RepositoryV1List is a set of repositories
 type RepositoryV1List map[string]Repository
 
 // ConvertV1toV2 converts the old python course file to the newer golang v2 schema
@@ -191,6 +195,7 @@ func ConvertV1toV2(fileName string) (*FileV2, error) {
 	newFile.DefaultRepository = oldFile.DefaultRepository
 	newFile.Repositories = oldFile.Repositories
 	newFile.Releases = make(map[string]Release)
+	newFile.Hooks = oldFile.Hooks
 
 	for releaseName, release := range oldFile.Charts {
 		repositoryName, ok := release.Repository.(string)
@@ -227,6 +232,7 @@ func ConvertV1toV2(fileName string) (*FileV2, error) {
 			Chart:         release.Chart,
 			Version:       release.Version,
 			Values:        release.Values,
+			Hooks:         release.Hooks,
 		}
 	}
 	return newFile, nil
@@ -241,11 +247,21 @@ func OpenCourseV2(fileName string) (*FileV2, error) {
 	}
 	err = yaml.Unmarshal(data, courseFile)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to unmarshal file: %s", err.Error())
+	}
+	if courseFile.SchemaVersion != "v2" {
+		klog.V(2).Infof("did not detect v2 course file - trying conversion from v1")
+		fileV2, errConvert := ConvertV1toV2(fileName)
+		if errConvert != nil {
+			return nil, fmt.Errorf("could not unmarshal file from v1 or v2 schema")
+		}
+		klog.Info("WARNING: this course file was automatically converted from v1 to v2 - this functionality may be removed in the future")
+		courseFile = fileV2
 	}
 
 	courseFile.populateDefaultNamespace()
 	courseFile.populateDefaultRepository()
+	courseFile.populateEmptyChartNames()
 
 	if courseFile.SchemaVersion != "v2" {
 		return nil, fmt.Errorf("unsupported schema version: %s", courseFile.SchemaVersion)
@@ -295,6 +311,17 @@ func (f *FileV2) populateDefaultRepository() {
 		if release.Repository == "" {
 			klog.V(5).Infof("setting the default repository of %s on release %s", f.DefaultRepository, releaseName)
 			release.Repository = f.DefaultRepository
+			f.Releases[releaseName] = release
+		}
+	}
+}
+
+// populateEmptyChartNames assumes that the chart name should be the release name if the chart name is empty
+func (f *FileV2) populateEmptyChartNames() {
+	for releaseName, release := range f.Releases {
+		if release.Chart == "" {
+			klog.V(5).Infof("assuming chart name is release name for release: %s", releaseName)
+			release.Chart = releaseName
 			f.Releases[releaseName] = release
 		}
 	}
