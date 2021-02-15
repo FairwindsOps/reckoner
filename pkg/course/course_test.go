@@ -48,26 +48,21 @@ func TestConvertV1toV2(t *testing.T) {
 				DefaultNamespace:  "namespace",
 				DefaultRepository: "stable",
 				Context:           "farglebargle",
-				Repositories: []Repository{
-					{
-						Name: "git-repo-test",
+				Repositories: RepositoryList{
+					"git-repo-test": {
 						Git:  "https://github.com/FairwindsOps/charts",
 						Path: "stable",
 					},
-
-					{
-						Name: "helm-repo",
-						URL:  "https://ahelmrepo.example.com",
+					"helm-repo": {
+						URL: "https://ahelmrepo.example.com",
 					},
-					{
-						Name: "gitrelease-git-repository",
+					"gitrelease-git-repository": {
 						Git:  "giturl",
 						Path: "gitpath",
 					},
 				},
-				Releases: []Release{
-					{
-						Name:       "basic",
+				Releases: ReleaseList{
+					"basic": {
 						Chart:      "somechart",
 						Version:    "2.0.0",
 						Repository: "helm-repo",
@@ -75,15 +70,13 @@ func TestConvertV1toV2(t *testing.T) {
 							"dummyvalue": false,
 						},
 					},
-					{
-						Name:       "gitrelease",
+					"gitrelease": {
 						Chart:      "gitchart",
 						Version:    "main",
 						Repository: "gitrelease-git-repository",
 						Values:     nil,
 					},
-					{
-						Name:       "standard",
+					"standard": {
 						Chart:      "basic",
 						Repository: "helm-repo",
 						Values:     nil,
