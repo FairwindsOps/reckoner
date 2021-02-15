@@ -62,7 +62,3 @@ This includes git repositories. This should prevent confusion in the future, as 
 #### Charts will be renamed Releases
 
 This makes a lot more sense. It's what they are.
-
-#### Most things that were dicts are now lists
-
-Specifically charts (now releases), and repositories are now lists.
