@@ -144,21 +144,10 @@ var convertCmd = &cobra.Command{
 
 // validateArgs ensures that the only argument passed is a course
 // file that exists
-func validateArgs(cmd *cobra.Command, args []string) error {
-	if runAll == true && len(onlyRun) != 0 {
-		return fmt.Errorf("you must either use run-all or only")
-	}
+func validateArgs(cmd *cobra.Command, args []string) (err error) {
+	courseFile, err = reckoner.ValidateArgs(runAll, onlyRun, args)
 
-	if len(args) != 1 {
-		return fmt.Errorf("you must pass a single course file argument")
-	}
-
-	_, err := os.Stat(args[0])
-	if os.IsNotExist(err) {
-		return fmt.Errorf("specified course file %s does not exist", args[0])
-	}
-	courseFile = args[0]
-	return nil
+	return err
 }
 
 // Execute the stuff
