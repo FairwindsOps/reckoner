@@ -244,6 +244,9 @@ func OpenCourseV2(fileName string) (*FileV2, error) {
 		return nil, err
 	}
 
+	courseFile.populateDefaultNamespace()
+	courseFile.populateDefaultRepository()
+
 	if courseFile.SchemaVersion != "v2" {
 		return nil, fmt.Errorf("unsupported schema version: %s", courseFile.SchemaVersion)
 	}
@@ -263,4 +266,36 @@ func OpenCourseV1(fileName string) (*FileV1, error) {
 	}
 
 	return courseFile, nil
+}
+
+// This will populate the default namespaces in each release
+// if the release does not have a namespace
+func (f *FileV2) populateDefaultNamespace() {
+	if f.DefaultNamespace == "" {
+		klog.V(2).Info("no default namespace set - skipping filling out defaults")
+		return
+	}
+	for releaseName, release := range f.Releases {
+		if release.Namespace == "" {
+			klog.V(5).Infof("setting the default namespace of %s on release %s", f.DefaultNamespace, releaseName)
+			release.Namespace = f.DefaultNamespace
+			f.Releases[releaseName] = release
+		}
+	}
+}
+
+// This will populate the default repository in each release
+// if the release does not have a repository specified
+func (f *FileV2) populateDefaultRepository() {
+	if f.DefaultRepository == "" {
+		klog.V(2).Info("no default repository set - skipping filling out defaults")
+		return
+	}
+	for releaseName, release := range f.Releases {
+		if release.Repository == "" {
+			klog.V(5).Infof("setting the default repository of %s on release %s", f.DefaultRepository, releaseName)
+			release.Repository = f.DefaultRepository
+			f.Releases[releaseName] = release
+		}
+	}
 }
