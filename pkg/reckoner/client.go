@@ -148,3 +148,18 @@ func (c Client) ReckonerVersionValid() bool {
 	klog.V(3).Infof("using reckoner version constraint: %s", constraintString)
 	return constraint.Check(currentVersion)
 }
+
+// UpdateHelmRepos updates Helm repos
+// TODO actually return an error if any are encountered
+func (c Client) UpdateHelmRepos() error {
+	for repoName, repo := range c.CourseFile.Repositories {
+		if repo.URL != "" {
+			err := c.Helm.AddRepository(repoName, repo.URL)
+			if err != nil {
+				klog.Error(err)
+			}
+		}
+		//TODO handle Git repos
+	}
+	return nil
+}
