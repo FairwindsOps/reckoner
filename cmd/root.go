@@ -71,9 +71,10 @@ var rootCmd = &cobra.Command{
 }
 
 var plotCmd = &cobra.Command{
-	Use:   "plot",
-	Short: "plot <course file>",
-	Long:  "Runs a helm install on a release or several releases.",
+	Use:     "plot",
+	Short:   "plot <course file>",
+	Long:    "Runs a helm install on a release or several releases.",
+	PreRunE: validateArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO: Call Plot
 	},
@@ -83,7 +84,7 @@ var templateCmd = &cobra.Command{
 	Use:     "template",
 	Short:   "template <course file>",
 	Long:    "Templates a helm chart for a release or several releases.",
-	PreRunE: validateCourseFileArg,
+	PreRunE: validateArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO: This is just a stub
 		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false)
@@ -99,18 +100,20 @@ var templateCmd = &cobra.Command{
 }
 
 var diffCmd = &cobra.Command{
-	Use:   "diff",
-	Short: "diff <course file>",
-	Long:  "Diffs the currently defined release and the one in the cluster",
+	Use:     "diff",
+	Short:   "diff <course file>",
+	Long:    "Diffs the currently defined release and the one in the cluster",
+	PreRunE: validateArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO: Call Diff
 	},
 }
 
 var lintCmd = &cobra.Command{
-	Use:   "lint",
-	Short: "lint <course file>",
-	Long:  "Lints the course file. Checks for structure and valid yaml.",
+	Use:     "lint",
+	Short:   "lint <course file>",
+	Long:    "Lints the course file. Checks for structure and valid yaml.",
+	PreRunE: validateArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO: Call Lint
 	},
@@ -120,7 +123,7 @@ var convertCmd = &cobra.Command{
 	Use:     "convert",
 	Short:   "convert <course file> from v1 to v2 schema",
 	Long:    "Converts a course file from the v1 python schema to v2 go schema",
-	PreRunE: validateCourseFileArg,
+	PreRunE: validateArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		newCourse, err := course.ConvertV1toV2(courseFile)
 		if err != nil {
@@ -139,9 +142,13 @@ var convertCmd = &cobra.Command{
 	},
 }
 
-// validateCourseFileArg ensures that the only argument passed is a course
+// validateArgs ensures that the only argument passed is a course
 // file that exists
-func validateCourseFileArg(cmd *cobra.Command, args []string) error {
+func validateArgs(cmd *cobra.Command, args []string) error {
+	if runAll == true && len(onlyRun) != 0 {
+		return fmt.Errorf("you must either use run-all or only")
+	}
+
 	if len(args) != 1 {
 		return fmt.Errorf("you must pass a single course file argument")
 	}
