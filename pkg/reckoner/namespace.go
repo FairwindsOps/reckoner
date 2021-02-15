@@ -16,9 +16,11 @@ package reckoner
 
 import (
 	"context"
+	"encoding/json"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 // CreateNamespace creates a kubernetes namespace with the given annotations and labels
@@ -34,5 +36,28 @@ func (c *Client) CreateNamespace(namespace string, annotations, labels map[strin
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+// PatchNamespace updates a kubernetes namespace with the given annotations and labels
+func (c *Client) PatchNamespace(namespace string, annotations, labels map[string]string) error {
+
+	ns := &v1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Annotations: annotations,
+			Labels:      labels,
+		},
+	}
+
+	data, err := json.Marshal(ns)
+	if err != nil {
+		return err
+	}
+
+	_, err = c.KubeClient.CoreV1().Namespaces().Patch(context.TODO(), namespace, types.StrategicMergePatchType, data, metav1.PatchOptions{})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
