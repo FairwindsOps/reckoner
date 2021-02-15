@@ -15,52 +15,107 @@
 package reckoner
 
 import (
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-// ValidateArgs validates the reckoner command arguments
+// // ValidateArgs validates the reckoner command arguments
+// func TestValidateArgs(t *testing.T) {
+// 	var runAll bool
+// 	var onlyRun []string
+// 	var args []string
+
+// 	courseFile, err := ValidateArgs(runAll, onlyRun, args)
+// 	assert.Error(t, err)
+// 	assert.Empty(t, courseFile)
+
+// 	args = []string{"course.yaml"}
+// 	courseFile, err = ValidateArgs(runAll, onlyRun, args)
+// 	assert.Error(t, err)
+// 	assert.Empty(t, courseFile)
+
+// 	_, err = os.Create("course.yaml")
+// 	assert.NoError(t, err)
+
+// 	courseFile, err = ValidateArgs(runAll, onlyRun, args)
+// 	assert.NoError(t, err)
+// 	assert.Equal(t, "course.yaml", courseFile)
+
+// 	runAll = true
+// 	onlyRun = []string{"rbac-manager"}
+// 	courseFile, err = ValidateArgs(runAll, onlyRun, args)
+// 	assert.Error(t, err, "Only one of runAll or onlyRun can be set")
+// 	assert.Empty(t, courseFile)
+
+// 	runAll = false
+// 	onlyRun = []string{"rbac-manager"}
+// 	courseFile, err = ValidateArgs(runAll, onlyRun, args)
+// 	assert.NoError(t, err, "Only one of runAll or onlyRun can be set")
+// 	assert.Equal(t, "course.yaml", courseFile)
+
+// 	runAll = true
+// 	onlyRun = []string{}
+// 	courseFile, err = ValidateArgs(runAll, onlyRun, args)
+// 	assert.NoError(t, err, "Only one of runAll or onlyRun can be set")
+// 	assert.Equal(t, "course.yaml", courseFile)
+
+// 	err = os.Remove("course.yaml")
+// 	assert.NoError(t, err)
+// }
+
 func TestValidateArgs(t *testing.T) {
-	var runAll bool
-	var onlyRun []string
-	var args []string
-
-	courseFile, err := ValidateArgs(runAll, onlyRun, args)
-	assert.Error(t, err)
-	assert.Empty(t, courseFile)
-
-	args = []string{"course.yaml"}
-	courseFile, err = ValidateArgs(runAll, onlyRun, args)
-	assert.Error(t, err)
-	assert.Empty(t, courseFile)
-
-	_, err = os.Create("course.yaml")
-	assert.NoError(t, err)
-
-	courseFile, err = ValidateArgs(runAll, onlyRun, args)
-	assert.NoError(t, err)
-	assert.Equal(t, "course.yaml", courseFile)
-
-	runAll = true
-	onlyRun = []string{"rbac-manager"}
-	courseFile, err = ValidateArgs(runAll, onlyRun, args)
-	assert.Error(t, err, "Only one of runAll or onlyRun can be set")
-	assert.Empty(t, courseFile)
-
-	runAll = false
-	onlyRun = []string{"rbac-manager"}
-	courseFile, err = ValidateArgs(runAll, onlyRun, args)
-	assert.NoError(t, err, "Only one of runAll or onlyRun can be set")
-	assert.Equal(t, "course.yaml", courseFile)
-
-	runAll = true
-	onlyRun = []string{}
-	courseFile, err = ValidateArgs(runAll, onlyRun, args)
-	assert.NoError(t, err, "Only one of runAll or onlyRun can be set")
-	assert.Equal(t, "course.yaml", courseFile)
-
-	err = os.Remove("course.yaml")
-	assert.NoError(t, err)
+	type args struct {
+		runAll  bool
+		onlyRun []string
+		args    []string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    string
+		wantErr bool
+	}{
+		{
+			name:    "empty args",
+			args:    args{},
+			want:    "",
+			wantErr: true,
+		},
+		{
+			name: "course.yaml does not exist",
+			args: args{
+				args: []string{"course.yaml"},
+			},
+			want:    "",
+			wantErr: true,
+		},
+		{
+			name: "course.yaml not exist, but no -a or -o passed",
+			args: args{
+				args: []string{"testdata/course.yaml"},
+			},
+			want:    "",
+			wantErr: true,
+		},
+		{
+			name: "course.yaml not exist, but no -a or -o passed",
+			args: args{
+				args: []string{"testdata/course.yaml"},
+			},
+			want:    "",
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ValidateArgs(tt.args.runAll, tt.args.onlyRun, tt.args.args)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.want, got)
+			}
+		})
+	}
 }
