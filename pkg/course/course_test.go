@@ -97,3 +97,115 @@ func TestConvertV1toV2(t *testing.T) {
 		})
 	}
 }
+
+func TestFileV2_populateDefaultNamespace(t *testing.T) {
+	type fields struct {
+		DefaultNamespace string
+		Releases         ReleaseList
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   ReleaseList
+	}{
+		{
+			name: "basic test",
+			fields: fields{
+				DefaultNamespace: "default-ns",
+				Releases: map[string]Release{
+					"first-release": {
+						Chart: "farglebargle",
+					},
+				},
+			},
+			want: map[string]Release{
+				"first-release": {
+					Chart:     "farglebargle",
+					Namespace: "default-ns",
+				},
+			},
+		},
+		{
+			name: "no default namespace",
+			fields: fields{
+				DefaultNamespace: "",
+				Releases: map[string]Release{
+					"first-release": {
+						Chart: "farglebargle",
+					},
+				},
+			},
+			want: map[string]Release{
+				"first-release": {
+					Chart: "farglebargle",
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := &FileV2{
+				DefaultNamespace: tt.fields.DefaultNamespace,
+				Releases:         tt.fields.Releases,
+			}
+			f.populateDefaultNamespace()
+			assert.EqualValues(t, tt.want, f.Releases)
+		})
+	}
+}
+
+func TestFileV2_populateDefaultRepository(t *testing.T) {
+	type fields struct {
+		DefaultRepository string
+		Releases          ReleaseList
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   ReleaseList
+	}{
+		{
+			name: "basic test",
+			fields: fields{
+				DefaultRepository: "default-repo",
+				Releases: map[string]Release{
+					"first-release": {
+						Chart: "farglebargle",
+					},
+				},
+			},
+			want: map[string]Release{
+				"first-release": {
+					Chart:      "farglebargle",
+					Repository: "default-repo",
+				},
+			},
+		},
+		{
+			name: "no default set",
+			fields: fields{
+				DefaultRepository: "",
+				Releases: map[string]Release{
+					"first-release": {
+						Chart: "farglebargle",
+					},
+				},
+			},
+			want: map[string]Release{
+				"first-release": {
+					Chart: "farglebargle",
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := &FileV2{
+				DefaultRepository: tt.fields.DefaultRepository,
+				Releases:          tt.fields.Releases,
+			}
+			f.populateDefaultRepository()
+			assert.EqualValues(t, tt.want, f.Releases)
+		})
+	}
+}
