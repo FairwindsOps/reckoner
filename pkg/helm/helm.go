@@ -73,3 +73,13 @@ func (h Client) Version() (*semver.Version, error) {
 	}
 	return version, nil
 }
+
+// AddRepository adds a Helm repository
+func (h Client) AddRepository(repoName, url string) error {
+	_, _, err := h.Exec("repo", "add", repoName, url)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
