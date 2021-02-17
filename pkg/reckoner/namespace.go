@@ -41,7 +41,7 @@ func (c *Client) CreateNamespace(namespace string, annotations, labels map[strin
 	return nil
 }
 
-// PatchNamespace updates a kubernetes namespace with the given annotations and labels
+// PatchNamespace patches a kubernetes namespace with the given annotations and labels
 func (c *Client) PatchNamespace(namespace string, annotations, labels map[string]string) error {
 
 	ns := &v1.Namespace{
@@ -64,8 +64,8 @@ func (c *Client) PatchNamespace(namespace string, annotations, labels map[string
 	return nil
 }
 
-// NamespaceMangement manages namespace names, annotations and labels
-func (c *Client) NamespaceMangement() error {
+// NamespaceManagement manages namespace names, annotations and labels
+func (c *Client) NamespaceManagement() error {
 	releases := c.CourseFile.Releases
 
 	if len(c.Releases) > 0 {
@@ -100,7 +100,7 @@ func (c *Client) NamespaceMangement() error {
 	return nil
 }
 
-// CreateOrPatchNamespace creates or patch namespace based on the configurations
+// CreateOrPatchNamespace creates or patches namespace based on the configurations
 func (c *Client) CreateOrPatchNamespace(overWrite bool, namespaceName string, namespaceMgmt course.NamespaceConfig, namespaces *v1.NamespaceList) error {
 	ns := checkIfNamespaceExists(namespaces, namespaceName)
 	var err error
