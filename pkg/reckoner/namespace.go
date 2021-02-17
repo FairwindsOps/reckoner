@@ -43,19 +43,16 @@ func (c *Client) CreateNamespace(namespace string, annotations, labels map[strin
 
 // PatchNamespace patches a kubernetes namespace with the given annotations and labels
 func (c *Client) PatchNamespace(namespace string, annotations, labels map[string]string) error {
-
 	ns := &v1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Annotations: annotations,
 			Labels:      labels,
 		},
 	}
-
 	data, err := json.Marshal(ns)
 	if err != nil {
 		return err
 	}
-
 	_, err = c.KubeClient.CoreV1().Namespaces().Patch(context.TODO(), namespace, types.StrategicMergePatchType, data, metav1.PatchOptions{})
 	if err != nil {
 		return err
@@ -67,7 +64,6 @@ func (c *Client) PatchNamespace(namespace string, annotations, labels map[string
 // NamespaceManagement manages namespace names, annotations and labels
 func (c *Client) NamespaceManagement() error {
 	releases := c.CourseFile.Releases
-
 	if len(c.Releases) > 0 {
 		var selectedReleases course.ReleaseList
 		for _, releaseName := range c.Releases {
@@ -75,20 +71,16 @@ func (c *Client) NamespaceManagement() error {
 		}
 		releases = selectedReleases
 	}
-
 	namespaces, err := c.KubeClient.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
-
 	if err != nil {
 		return err
 	}
-
 	if c.CourseFile.DefaultNamespace != "" {
 		err := c.CreateOrPatchNamespace(c.CourseFile.NamespaceMgmt.Default.Settings.Overwrite, c.CourseFile.DefaultNamespace, c.CourseFile.NamespaceMgmt.Default, namespaces)
 		if err != nil {
 			return err
 		}
 	}
-
 	for _, release := range releases {
 		err := c.CreateOrPatchNamespace(release.NamespaceMgmt.Settings.Overwrite, release.Namespace, release.NamespaceMgmt, namespaces)
 		if err != nil {
@@ -96,7 +88,6 @@ func (c *Client) NamespaceManagement() error {
 		}
 
 	}
-
 	return nil
 }
 
@@ -104,7 +95,6 @@ func (c *Client) NamespaceManagement() error {
 func (c *Client) CreateOrPatchNamespace(overWrite bool, namespaceName string, namespaceMgmt course.NamespaceConfig, namespaces *v1.NamespaceList) error {
 	ns := checkIfNamespaceExists(namespaces, namespaceName)
 	var err error
-
 	if ns != nil {
 		annotations, labels := labelsAndAnnotationsToUpdate(overWrite, namespaceMgmt.Metadata.Annotations, namespaceMgmt.Metadata.Labels, ns)
 		err = c.PatchNamespace(namespaceName, annotations, labels)
