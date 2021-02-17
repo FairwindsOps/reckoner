@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 
 	"github.com/fairwindsops/reckoner/pkg/course"
+	"github.com/thoas/go-funk"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -81,15 +82,15 @@ func (c *Client) NamespaceMangement() error {
 		return err
 	}
 
-	for _, release := range releases {
-		namespaceExists := checkIfNamespaceExists(namespaces, release.Namespace)
-		var err error
-		if namespaceExists {
-			err = c.PatchNamespace(release.Namespace, release.NamespaceMgmt.Metadata.Annotations, release.NamespaceMgmt.Metadata.Labels)
-		} else {
-			err = c.CreateNamespace(release.Namespace, release.NamespaceMgmt.Metadata.Annotations, release.NamespaceMgmt.Metadata.Labels)
+	if c.CourseFile.DefaultNamespace != "" {
+		err := c.CreateOrPatchNamespace(c.CourseFile.NamespaceMgmt.Default.Settings.Overwrite, c.CourseFile.DefaultNamespace, c.CourseFile.NamespaceMgmt.Default, namespaces)
+		if err != nil {
+			return err
 		}
+	}
 
+	for _, release := range releases {
+		err := c.CreateOrPatchNamespace(release.NamespaceMgmt.Settings.Overwrite, release.Namespace, release.NamespaceMgmt, namespaces)
 		if err != nil {
 			return err
 		}
@@ -99,6 +100,47 @@ func (c *Client) NamespaceMangement() error {
 	return nil
 }
 
-func checkIfNamespaceExists(nsList *v1.NamespaceList, nsName string) bool {
-	return true
+// CreateOrPatchNamespace creates or patch namespace based on the configurations
+func (c *Client) CreateOrPatchNamespace(overWrite bool, namespaceName string, namespaceMgmt course.NamespaceConfig, namespaces *v1.NamespaceList) error {
+	ns := checkIfNamespaceExists(namespaces, namespaceName)
+	var err error
+
+	if ns != nil {
+		annotations, labels := labelsAndAnnotationsToUpdate(overWrite, namespaceMgmt.Metadata.Annotations, namespaceMgmt.Metadata.Labels, ns)
+		err = c.PatchNamespace(namespaceName, annotations, labels)
+	} else {
+		err = c.CreateNamespace(namespaceName, namespaceMgmt.Metadata.Annotations, namespaceMgmt.Metadata.Labels)
+	}
+	return err
+}
+
+func checkIfNamespaceExists(nsList *v1.NamespaceList, nsName string) *v1.Namespace {
+	nsInterface := funk.Find(nsList.Items, func(ns v1.Namespace) bool {
+		return ns.Name == nsName
+	})
+	if nsInterface != nil {
+		namespace := nsInterface.(v1.Namespace)
+		return &namespace
+	}
+	return nil
+}
+
+func labelsAndAnnotationsToUpdate(overwrite bool, annotations, labels map[string]string, ns *v1.Namespace) (finalAnnotations, finalLabels map[string]string) {
+	if overwrite {
+		return annotations, labels
+	}
+	finalLabels = filterMapString(labels, ns.Labels)
+	finalAnnotations = filterMapString(annotations, ns.Annotations)
+	return finalAnnotations, finalLabels
+}
+
+func filterMapString(newLabelsOrAnnotations, nsLabelOrAnnotations map[string]string) map[string]string {
+	finalLabelsOrAnnotations := map[string]string{}
+	keys := funk.Keys(newLabelsOrAnnotations).([]string)
+	for _, key := range keys {
+		if !funk.Contains(nsLabelOrAnnotations, key) {
+			finalLabelsOrAnnotations[key] = newLabelsOrAnnotations[key]
+		}
+	}
+	return finalLabelsOrAnnotations
 }

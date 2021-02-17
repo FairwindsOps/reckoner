@@ -72,10 +72,78 @@ func TestPatchNamespace(t *testing.T) {
 
 	assert.Equal(t, name, updatedNamespace.Name)
 
-	assert.NoError(t, err)
-
 	assert.Equal(t, updatedLabels, updatedNamespace.Labels)
 
 	assert.Equal(t, updatedAnnotations, updatedNamespace.Annotations)
 
+}
+
+func TestCheckIfNamespaceExist(t *testing.T) {
+	fakeKubeClinet := fake.NewSimpleClientset(&v1.Namespace{})
+
+	fakeClient := Client{
+		KubeClient: fakeKubeClinet,
+	}
+
+	name := "reckoner"
+
+	annotations := map[string]string{"nginx.ingress.kubernetes.io/http2-push-preload": "true"}
+
+	labels := map[string]string{"app.kubernetes.io/name": "ingress-nginx"}
+
+	fakeClient.CreateNamespace(name, annotations, labels)
+
+	nsList, err := fakeClient.KubeClient.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
+
+	assert.NoError(t, err)
+
+	ns := checkIfNamespaceExists(nsList, name)
+
+	assert.NotNil(t, ns)
+
+	assert.Equal(t, name, ns.Name)
+
+	ns = checkIfNamespaceExists(nsList, "emptyns")
+
+	assert.Nil(t, ns)
+}
+
+func TestLabelsAndAnnotationsToUpdate(t *testing.T) {
+	fakeKubeClinet := fake.NewSimpleClientset(&v1.Namespace{})
+
+	fakeClient := Client{
+		KubeClient: fakeKubeClinet,
+	}
+
+	name := "reckoner"
+
+	annotations := map[string]string{"nginx.ingress.kubernetes.io/http2-push-preload": "true"}
+
+	labels := map[string]string{"app.kubernetes.io/name": "ingress-nginx"}
+
+	fakeClient.CreateNamespace(name, annotations, labels)
+
+	ns, err := fakeClient.KubeClient.CoreV1().Namespaces().Get(context.TODO(), name, metav1.GetOptions{})
+
+	newLabels := map[string]string{"app.kubernetes.io/name": "ingress-nginx-new", "label-key-1": "label-value-1"}
+
+	newAnnotations := map[string]string{"nginx.ingress.kubernetes.io/http2-push-preload": "false"}
+
+	assert.NoError(t, err)
+
+	updatedAnnotations, updatedLabels := labelsAndAnnotationsToUpdate(true, newAnnotations, newLabels, ns)
+
+	assert.Equal(t, newAnnotations, updatedAnnotations)
+
+	assert.Equal(t, newLabels, updatedLabels)
+
+	expectedLabels := map[string]string{"label-key-1": "label-value-1"}
+
+	expectedAnnotations := map[string]string{}
+
+	updatedAnnotations, updatedLabels = labelsAndAnnotationsToUpdate(false, newAnnotations, newLabels, ns)
+
+	assert.Equal(t, expectedLabels, updatedLabels)
+
+	assert.Equal(t, expectedAnnotations, updatedAnnotations)
 }
