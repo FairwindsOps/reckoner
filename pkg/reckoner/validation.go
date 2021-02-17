@@ -5,6 +5,7 @@ import (
 	"os"
 )
 
+// ValidateArgs validates incoming arguments
 func ValidateArgs(runAll bool, onlyRun, args []string) (string, error) {
 	if runAll && len(onlyRun) != 0 {
 		return "", fmt.Errorf("you must either use run-all or only")
