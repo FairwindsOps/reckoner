@@ -5,7 +5,9 @@ import (
 
 	"github.com/fairwindsops/reckoner/pkg/course"
 	"github.com/fairwindsops/reckoner/pkg/helm"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/fake"
 )
 
 func TestClient_CreateNamespace(t *testing.T) {
@@ -62,7 +64,7 @@ func TestClient_CreateNamespace(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Client{
-				KubeClient:      tt.fields.KubeClient,
+				KubeClient:      fake.NewSimpleClientset(&v1.Namespace{}),
 				Helm:            tt.fields.Helm,
 				ReckonerVersion: tt.fields.ReckonerVersion,
 				CourseFile:      tt.fields.CourseFile,
@@ -92,7 +94,7 @@ func TestClient_CreateNamespace(t *testing.T) {
 
 // 	fakeClient.CreateNamespace(name, annotations, labels)
 
-// 	namespace, err := fakeKubeClinet.CoreV1().Namespaces().Get(context.TODO(), name, metav1.GetOptions{})
+// 	namespace, err := fakeKubeClient.CoreV1().Namespaces().Get(context.TODO(), name, metav1.GetOptions{})
 
 // 	assert.NoError(t, err)
 
