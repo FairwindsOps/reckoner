@@ -48,7 +48,7 @@ func TestValidateArgs(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "course.yaml not exist, but no -a or -o passed",
+			name: "course.yaml does exist, but no -a or -o passed",
 			args: args{
 				args: []string{"testdata/course.yaml"},
 			},
@@ -56,9 +56,9 @@ func TestValidateArgs(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "course.yaml not exist, but no -a or -o passed",
+			name: "course.yaml does not exist, and no -a or -o passed",
 			args: args{
-				args: []string{"testdata/course.yaml"},
+				args: []string{"course.yaml"},
 			},
 			want:    "",
 			wantErr: true,
