@@ -45,7 +45,9 @@ func (c Client) Plot() (string, error) {
 			klog.Error(err)
 			continue
 		}
-		defer os.Remove(tmpFile.Name())
+		if tmpFile != nil {
+			defer os.Remove(tmpFile.Name())
+		}
 		out, _, err := c.Helm.Exec(args...)
 		if err != nil {
 			klog.Error(err)
