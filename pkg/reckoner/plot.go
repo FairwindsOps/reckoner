@@ -63,6 +63,11 @@ func (c Client) Plot() (string, error) {
 
 // Template runs the same as plot but runs template instead
 func (c Client) Template() (string, error) {
+	err := c.UpdateHelmRepos()
+	if err != nil {
+		return "", nil
+	}
+
 	var fullOutput string
 	for releaseName, release := range c.CourseFile.Releases {
 		args, tmpFile, err := buildHelmArgs(releaseName, "template", release)
