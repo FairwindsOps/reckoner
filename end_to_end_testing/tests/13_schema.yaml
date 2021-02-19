@@ -24,8 +24,8 @@ testcases:
     assertions:
     - result.code ShouldEqual 1
     - result.systemout ShouldContainSubstring 'Course file has schema validation errors'
-    - result.systemout ShouldContainSubString '\'backend\' is a required property'
-    - result.systemout ShouldContainSubString '\'name\' is a required property.'
+    - result.systemout ShouldContainSubstring '\'backend\' is a required property'
+    - result.systemout ShouldContainSubstring '\'name\' is a required property.'
 
 - name: 13 - lint 13_test_lint_good_secret.yml
   steps:
