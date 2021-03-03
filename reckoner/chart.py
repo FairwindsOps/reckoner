@@ -203,13 +203,23 @@ class Chart(object):
         """ Update the course chart dependencies """
         if self.config.dryrun:
             return True
-        logging.debug("Updating chart dependencies: {}".format(self.repository.chart_path))
-        if os.path.exists(self.repository.chart_path):
-            try:
-                response = self.helm.dependency_update(self.repository.chart_path)
-                logging.debug(response.stderr + "\n" + response.stdout)
-            except ReckonerCommandException as error:
-                logging.warn("Unable to update chart dependencies: {}".format(error.stderr))
+
+        chart_path = os.path.abspath(
+            os.path.join(
+                self.config.course_base_directory,
+                self.repository.chart_path
+            )
+        )
+
+        # Is it a chart, is it local
+        if os.path.exists(os.path.join(chart_path,"Chart.yaml")):
+            logging.info(f"Updating chart dependencies: {self.repository.chart_path}")
+            response = self.helm.dependency_update(chart_path)
+            logging.debug(response.command)
+            logging.debug(response.stdout)
+            logging.debug(response.stderr)
+            if response.exit_code != 0:
+                raise Exception(f'Dependency update failed with "{response.stderr}"')
 
     def manage_namespace(self):
         """ Creates the charts specified namespace if it does not already exist
@@ -268,7 +278,6 @@ class Chart(object):
             finally:
                 self.clean_up_temp_files()
             # Log the stdout response in info
-
 
             # Add new chart version to the response
             log_output = self.result.response.stdout
