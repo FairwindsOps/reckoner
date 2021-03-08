@@ -12,7 +12,10 @@ We'll be breaking this documentation down into sections to make reference easier
 - `charts` _(object)_ _**(required)**_
     The charts and chart definitions to install with this course, must be alphanumeric between 1 and 63 characters (also allows underscore and dash)
 - `hooks` _(object)_
-    Allows `pre_install` and `post_install` which can be a string or a list of strings to execute in the shell around your chart installation (execution working directory is relative to your course file)
+    Allows `init`, `pre_install`, and `post_install` which can be a string or a list of strings to execute in the shell around your chart installation (execution working directory is relative to your course file)
+    - `init` after the course file is parsed, but before any other commands are executed
+    - `pre_install` runs before any charts are install/upgraded. Only active for the `plot` subcommand.
+    - `post_install` runs after all charts are install/upgraded successfully (unless `--continue-on-error` is set). Only active for the `plot` subcommand.
 - `repositories` _(object)_
     The definition of remote chart repositories available to this course
 - `minimum_versions` _(object)_
@@ -79,6 +82,8 @@ The `charts` block in your course define all the charts you'd like to install an
     The version of the chart in the remote chart repository (NOTE: When using a git repository, this is translated into the `ref` in the git repository, either commit SHA or tag name)
 - `hooks` _(object)_
     Allows `pre_install` and `post_install` which can be a string or a list of strings to execute in the shell around your chart installation (execution working directory is relative to your course file)
+     - `pre_install` runs before the chart is installed/upgraded. Only active for the `plot` subcommand.
+    - `post_install` runs after the chart is installed/upgraded successfully (unless `--continue-on-error` is set). Only active for the `plot` subcommand.
 - `files` _(list of strings)_
     Translates into `-f filename` for the helm install command line arguments (files are pathed relative to your course file)
 - `values` _(object)_
