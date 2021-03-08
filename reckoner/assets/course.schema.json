@@ -22,6 +22,16 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+                "init": {
+                    "oneOf": [
+                        {
+                            "type": "array"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ]
+                },
                 "post_install": {
                     "oneOf": [
                         {
