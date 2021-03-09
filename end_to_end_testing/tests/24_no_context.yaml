@@ -6,24 +6,24 @@ testcases:
 - name: 24 - get-manifests
   steps:
   - script: |
-      reckoner get-manifests -a {{.course}} -o chart-with-no-context
+      reckoner get-manifests {{.course}} -o chart-with-no-context
     assertions:
     - result.code ShouldEqual 1
 - name: 24 - plot
   steps:
   - script: |
-      reckoner plot -a {{.course}} -o chart-with-no-context
+      reckoner plot {{.course}} -o chart-with-no-context
     assertions:
     - result.code ShouldEqual 1
 - name: 24 - diff
   steps:
   - script: |
-      reckoner diff -a {{.course}} -o chart-with-no-context
+      reckoner diff {{.course}} -o chart-with-no-context
     assertions:
     - result.code ShouldEqual 1
 - name: 24 - template
   steps:
   - script: |
-      reckoner template -a {{.course}} -o chart-with-no-context
+      reckoner template {{.course}} -o chart-with-no-context
     assertions:
     - result.code ShouldEqual 0
