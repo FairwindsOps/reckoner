@@ -224,7 +224,10 @@ class Course(object):
                 logging.error(f'ERROR: {command} Failed on {chart.release_name}')
                 if not self.config.continue_on_error:
                     logging.error(str(e))
-                    raise ReckonerCommandException(f"Stopping '{command}' for chart due to an error! Some of your requested actions may not have been completed!")
+                    raise ReckonerCommandException(
+                        f"Stopping '{command}' for chart due to an error!"
+                        " Some of your requested actions may not have been"
+                        " completed!") from None
             finally:
                 # Always grab any results in the chart results
                 results.append(chart.result)
