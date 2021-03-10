@@ -16,7 +16,7 @@ charts:
       expect-bool-true: true
       expect-string-true: "true"
       expect-string-integer: "1000"
-      expect-integer: 1000
+      expect-number: 1000
       expect-null-from-null: null
       expect-string-from-null: "null"
   chart-env-values:
@@ -26,10 +26,10 @@ charts:
       expect-string-from-env-var-yes: "${yes_var}"
       expect-string-from-env-var-yes-no-quotes: ${yes_var}
       expect-bool-from-env-var-true-no-quotes: ${true_var}
-      expect-bool-from-env-var-true: "${true_var}"
+      expect-string-from-env-var-true: "${true_var}"
       expect-bool-from-env-var-false-no-quotes: ${false_var}
-      expect-bool-from-env-var-false: "${false_var}"
-      expect-integer-from-integer: "${int_var}"
-      expect-integer-from-integer-no-quotes: ${int_var}
+      expect-string-from-env-var-false: "${false_var}"
+      expect-string-from-integer: "${int_var}"
+      expect-number-from-integer-no-quotes: ${int_var}
       expect-string-from-float-no-quotes: ${float_var}
       expect-string-from-float: "${float_var}"

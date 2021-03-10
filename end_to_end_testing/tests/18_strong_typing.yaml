@@ -18,13 +18,13 @@ testcases:
       for _release_install in ${charts}; do
           values="$(helm get values --namespace {{.namespace}} "${_release_install}" --output json | jq -e -r 'keys|.[]')"
           for key in ${values}; do
-              helm -n {{.namespace}} get values ${_release_install} -ojson | jq -e ". | has(\"${key}\")"
+              helm -n {{.namespace}} get values ${_release_install} -ojson | jq -e ". | has(\"${key}\")" > /dev/null
               # Check type of key found in json
               case "${key}" in
                   expect-float*)
                       _expected_type="number"
                       ;;
-                  expect-integer*)
+                  expect-number*)
                       _expected_type="number"
                       ;;
                   expect-string*)
