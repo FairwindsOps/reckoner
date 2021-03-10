@@ -117,9 +117,8 @@ class TestIntegrationWithChart(unittest.TestCase):
         }
 
         course = Course(None)
-        results = course.plot(['first-chart'])
-
-        self.assertEqual(len([result for result in results if result.failed]), 1, "We should have only one failed chart install due to hook failure.")
+        with self.assertRaises(ReckonerCommandException):
+            results = course.plot(['first-chart'])
 
 
 @mock.patch('reckoner.course.yaml_handler', autospec=True)
@@ -229,8 +228,10 @@ class TestCourse(unittest.TestCase):
         chart.install.side_effect = Exception("Second command has an error")
 
         course = Course(None)
-        self.assertEqual(len(course.install_charts([chart, chart])), 1)
+        with self.assertRaises(ReckonerCommandException):
+            course.install_charts([chart, chart])
 
+        # Does not raise because continue or error is True
         course.config.continue_on_error = True
         self.assertEqual(len(course.install_charts([chart, chart])), 2)
 
