@@ -7,24 +7,24 @@ testcases:
 - name: 18 - plot course
   steps:
   - script: |
-      yes_var=yes true_var=true false_var=false int_var=123 float_var=1.234 reckoner plot {{.course}} -a
+      yes_var=yes true_var=true false_var=false int_var=123 float_var=1.234 reckoner plot {{.course}} -a 2> /dev/null
     assertions:
     - result.code ShouldEqual 0
 - name: 18 - check values
   steps:
   - script: |
       set -e
-      charts="$(helm ls --namespace {{.namespace}} --output json | jq -e -r '.[].name')"
+      charts="$(helm ls --namespace {{.namespace}} --output json | jq -r '.[].name')"
       for _release_install in ${charts}; do
           values="$(helm get values --namespace {{.namespace}} "${_release_install}" --output json | jq -e -r 'keys|.[]')"
           for key in ${values}; do
-              helm -n {{.namespace}} get values ${_release_install} -ojson | jq -e ". | has(\"${key}\")"
+              helm -n {{.namespace}} get values ${_release_install} -ojson | jq  ". | has(\"${key}\")" > /dev/null
               # Check type of key found in json
               case "${key}" in
                   expect-float*)
                       _expected_type="number"
                       ;;
-                  expect-integer*)
+                  expect-number*)
                       _expected_type="number"
                       ;;
                   expect-string*)
@@ -40,7 +40,7 @@ testcases:
                       exit 1
                       ;;
               esac
-              helm -n {{.namespace}} get values ${_release_install} -ojson | jq -e ".[\"${key}\"] | type == \"${_expected_type}\""
+              helm -n {{.namespace}} get values ${_release_install} -ojson | jq -e ".[\"${key}\"] | type == \"${_expected_type}\"" > /dev/null
           done
       done
     assertions:
