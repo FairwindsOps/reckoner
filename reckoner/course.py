@@ -101,6 +101,18 @@ class Course(object):
             self.config.course_base_directory
         )
 
+        self._init_hook = Hook(
+            self.hooks.get(
+                'init',
+                []
+            ),
+            'Course Init',
+            self.config.course_base_directory
+        )
+
+        # Run Init hook before we do anything other than parse the course
+        self.init_hook.run()
+
         if self.config.update_repos:
             for repo in self._repositories:
                 # Skip install of repo if it is git based since it will be installed from the chart class
@@ -180,6 +192,10 @@ class Course(object):
     @property
     def post_install_hook(self):
         return self._post_install_hook
+
+    @property
+    def init_hook(self):
+        return self._init_hook
 
     def merge_secrets_into_environment(self) -> None:
         """
