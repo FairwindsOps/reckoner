@@ -61,7 +61,7 @@ reckoner plot course.yaml --run-all
 
 Grafana and Polaris should now be installed on your cluster!
 
-## Adopting Reckoner
+## Importing Existing Releases
 
 Warning: Experimental
 
