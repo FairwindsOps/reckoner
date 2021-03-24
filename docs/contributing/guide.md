@@ -34,6 +34,3 @@ With Coverage Reports
 >> pytest --cov reckoner/ --cov-report=html #shows an html line coverage report in ./htmlcov/
 >> pytest --cov reckoner/ --cov-report=term #shows terminal coverage report of % coverage
 ```
-
-## Releases
-Create a GitHub release off of the master branch when you're ready to cut a final release. Please check the [CHANGELOG.md](./CHANGELOG.md) for relevant changes and how to semver bump your release. Also make sure your version conforms to semver standards (vX.Y.Z).
