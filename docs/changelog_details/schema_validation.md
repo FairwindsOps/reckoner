@@ -6,7 +6,7 @@ This document refers to the changes in v2.1.0 that introduce schema validation o
 2. Duplicate keys in your course yaml are no longer accepted: (example below)
 
 ## What is the valid schema
-You can find the schema, defined as `json-schema`, in [this file](/reckoner/assets/course.schema.json). To learn more about `json-schema`, visit the [JSON Schema Reference Site](https://json-schema.org/understanding-json-schema/reference/index.html).
+You can find the schema, defined as `json-schema`, in [this file](https://github.com/FairwindsOps/reckoner/blob/master/reckoner/assets/course.schema.json). To learn more about `json-schema`, visit the [JSON Schema Reference Site](https://json-schema.org/understanding-json-schema/reference/index.html).
 
 ## Common errors
 ### Duplicate keys

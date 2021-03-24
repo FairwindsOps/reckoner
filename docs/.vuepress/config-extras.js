@@ -6,6 +6,30 @@ module.exports = {
   description: "Documentation for Fairwinds' Reckoner",
   themeConfig: {
     docsRepo: "FairwindsOps/reckoner",
+    sidebar: [
+      {
+        title: "Reckoner",
+        path: "/",
+        sidebarDepth: 0,
+      },
+      {
+        title: "Usage",
+        path: "/usage",
+      },
+      {
+        title: "Contributing",
+        children: [
+          {
+            title: "Guide",
+            path: "contributing/guide"
+          },
+          {
+            title: "Code of Conduct",
+            path: "contributing/code-of-conduct"
+          }
+        ]
+      }
+    ]
   },
 }
 
