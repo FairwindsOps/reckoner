@@ -26,7 +26,7 @@ We'll be breaking this documentation down into sections to make reference easier
     The `kubectl` context to use for this course (found with `kubectl config current-context`)
 - `_references` _(object)_
     An area in which you can put repeat code to be used throughout your course YAML. (See [this article on anchors](https://medium.com/@kinghuang/docker-compose-anchors-aliases-extensions-a1e4105d70bd))
-- `helm_args` _(string)_
+- `helm_args` _(list of strings)_
     The default helm arguments to provide to any helm command run by Reckoner in this course
 - `secrets` _(list of objects)_
     A list of objects that define where and how to get secrets from your secret backend
