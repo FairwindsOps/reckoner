@@ -193,6 +193,14 @@ workflows:
               ignore: /.*/
             branches:
               only: /.*/
+      - snapshot-go:
+          requires:
+            - test-go
+          filters:
+            tags:
+              ignore: /.*/
+            branches:
+              only: /.*/
       - rok8s/kubernetes_e2e_tests:
           name: "End-To-End Kubernetes 1.19 - Python"
           kind_node_image: "kindest/node:v1.19.7@sha256:a70639454e97a4b733f9d9b67e12c01f6b0297449d5b9cbbef87473458e26dca"
