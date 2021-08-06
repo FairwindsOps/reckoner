@@ -43,7 +43,7 @@ setup(name='reckoner',
           "semver>=2.8.1",
           "ruyaml>=0.20.0",
           "jsonschema>=3.0.2",
-          "kubernetes==12.0.1",
+          "kubernetes==17.17.0",
           "boto3==1.18.15"
       ],
       entry_points=''' #for click integration
