@@ -52,8 +52,7 @@ func init() {
 	rootCmd.AddCommand(lintCmd)
 
 	klog.InitFlags(nil)
-	flag.Parse()
-	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
+	pflag.CommandLine.AddGoFlag(flag.CommandLine.Lookup("v"))
 }
 
 var rootCmd = &cobra.Command{
