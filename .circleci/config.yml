@@ -147,9 +147,9 @@ jobs:
           path: dist
           destination: snapshot
       - persist_to_workspace:
-          root: workspace
+          root: /go/src/github.com/fairwindsops/reckoner 
           paths:
-          - /go/src/github.com/fairwindsops/reckoner
+          - dist
   release:
     executor: python-3-9
     environment:
