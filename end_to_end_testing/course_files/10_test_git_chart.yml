@@ -22,3 +22,6 @@ charts:
     repository:
       git: https://github.com/FairwindsOps/charts
       path: stable
+    values:
+      vpa:
+        enabled: false

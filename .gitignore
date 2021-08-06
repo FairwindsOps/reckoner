@@ -13,3 +13,7 @@ reckoner/version.txt
 installer/reckoner.spec
 node_modules
 /dist
+/bin
+
+coverage.txt
+/reckoner-go

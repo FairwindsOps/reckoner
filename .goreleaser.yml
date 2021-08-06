@@ -1,0 +1,21 @@
+builds:
+  - ldflags:
+      - -X main.version={{.Version}} -X main.commit={{.Commit}} -s -w
+    goarch:
+      - amd64
+      - arm
+      - arm64
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarm:
+      - 6
+      - 7
+dockers:
+- image_templates:
+  - "quay.io/fairwinds/reckoner:go-{{ .Tag }}"
+  - "quay.io/fairwinds/reckoner:go-v{{ .Major }}"
+  - "quay.io/fairwinds/reckoner:go-v{{ .Major }}.{{ .Minor }}"
+  dockerfile: Dockerfile-go
