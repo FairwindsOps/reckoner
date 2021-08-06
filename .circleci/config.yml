@@ -54,6 +54,7 @@ references:
     kind_version: 0.10.0
     requires:
       - test-go
+      - snapshot-go
     filters:
       branches:
         only: /.*/
