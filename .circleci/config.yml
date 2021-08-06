@@ -46,7 +46,6 @@ references:
       tags:
         ignore: /.*/
   e2e_configuration_go: &e2e_configuration_go
-    working_directory: /go/src/github.com/fairwindsops/reckoner
     attach-workspace: true
     workspace-location: /go/src/github.com/fairwindsops/reckoner
     pre_script: end_to_end_testing/pre_go.sh
