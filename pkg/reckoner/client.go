@@ -39,6 +39,7 @@ type Client struct {
 	CourseFile      course.FileV2
 	PlotAll         bool
 	Releases        []string
+	BaseDirectory   string
 }
 
 var once sync.Once
@@ -80,6 +81,9 @@ func NewClient(fileName, version string, plotAll bool, releases []string, kubeCl
 	if kubeClient {
 		client.KubeClient = getKubeClient()
 	}
+
+	// TODO: extract from reckoner cmd
+	client.BaseDirectory = "./"
 
 	return client, nil
 }

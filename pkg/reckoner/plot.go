@@ -29,17 +29,26 @@ import (
 func (c Client) Plot() (string, error) {
 	err := c.NamespaceManagement()
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	err = c.UpdateHelmRepos()
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
-	// TODO: Handle course-level pre-hooks
+	err = execHook(c.CourseFile.Hooks.PreInstall)
+	if err != nil {
+		return "", err
+	}
+
 	for releaseName, release := range c.CourseFile.Releases {
-		// TODO: Handle Pre-Hooks
+
+		err = execHook(release.Hooks.PreInstall)
+		if err != nil {
+			return "", err
+		}
+
 		args, tmpFile, err := buildHelmArgs(releaseName, "upgrade", release)
 		if err != nil {
 			klog.Error(err)
@@ -54,9 +63,17 @@ func (c Client) Plot() (string, error) {
 			continue
 		}
 		fmt.Println(out)
+
+		err = execHook(release.Hooks.PostInstall)
+		if err != nil {
+			return "", err
+		}
 	}
 
-	// TODO: Handle course-level post-hooks
+	err = execHook(c.CourseFile.Hooks.PostInstall)
+	if err != nil {
+		return "", err
+	}
 
 	return "", nil
 }
