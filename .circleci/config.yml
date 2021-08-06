@@ -212,6 +212,12 @@ workflows:
               ignore: /.*/
             branches:
               only: /.*/
+      - build-3-9:
+          filters:
+            tags:
+              ignore: /.*/
+            branches:
+              only: /.*/
       - snapshot-go:
           requires:
             - test-go
