@@ -47,7 +47,7 @@ references:
         ignore: /.*/
   e2e_configuration_go: &e2e_configuration_go
     attach-workspace: true
-    workspace-location: /dist
+    workspace-location: /
     pre_script: end_to_end_testing/pre_go.sh
     script: end_to_end_testing/run_go.sh
     command_runner_image: quay.io/reactiveops/ci-images:v11-buster
