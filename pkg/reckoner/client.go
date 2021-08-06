@@ -17,6 +17,7 @@ package reckoner
 import (
 	"fmt"
 	"os"
+	"path"
 	"sync"
 
 	"k8s.io/client-go/kubernetes"
@@ -40,6 +41,7 @@ type Client struct {
 	PlotAll         bool
 	Releases        []string
 	BaseDirectory   string
+	DryRun          bool
 }
 
 var once sync.Once
@@ -47,7 +49,7 @@ var clientset *kubernetes.Clientset
 
 // NewClient returns a client. Attempts to open a v2 schema course file
 // If getClient is true, attempts to get a Kubernetes client from config
-func NewClient(fileName, version string, plotAll bool, releases []string, kubeClient bool) (*Client, error) {
+func NewClient(fileName, version string, plotAll bool, releases []string, kubeClient bool, dryRun bool) (*Client, error) {
 	// Get the course file
 	courseFile, err := course.OpenCourseV2(fileName)
 	if err != nil {
@@ -66,6 +68,8 @@ func NewClient(fileName, version string, plotAll bool, releases []string, kubeCl
 		Releases:        releases,
 		Helm:            *helmClient,
 		ReckonerVersion: version,
+		BaseDirectory:   path.Dir(fileName),
+		DryRun:          dryRun,
 	}
 
 	// Check versions
@@ -81,9 +85,6 @@ func NewClient(fileName, version string, plotAll bool, releases []string, kubeCl
 	if kubeClient {
 		client.KubeClient = getKubeClient()
 	}
-
-	// TODO: extract from reckoner cmd
-	client.BaseDirectory = "./"
 
 	return client, nil
 }

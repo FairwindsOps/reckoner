@@ -7,28 +7,30 @@ import (
 	"k8s.io/klog"
 )
 
-func execHook(hooks []string) error {
+func (c Client) execHook(hooks []string) error {
+	if c.DryRun {
+		klog.Warningf("hook not run due to --dry-run: %v", c.DryRun)
+		return nil
+	}
+
 	if len(hooks) == 0 {
 		return nil
 	}
 
-
-	
 	for _, hook := range hooks {
 		klog.Infof("Running hook %s", hook)
-		cmds := strings.Split(hook, " ")
-		args := cmds[1:]
+		commands := strings.Split(hook, " ")
+		args := commands[1:]
 
 		// TODO: take baseDirectory into consideration
-		cmd := exec.Command(cmds[0], args...)
+		command := exec.Command(commands[0], args...)
+		command.Dir = c.BaseDirectory
 
-
-		data, runError := cmd.CombinedOutput()
-		klog.V(3).Infof("command %s output: %s", cmd.String(), string(data))
+		data, runError := command.CombinedOutput()
+		klog.V(3).Infof("command %s output: %s", command.String(), string(data))
 		if runError != nil {
 			return runError
 		}
-		
 
 	}
 	return nil
