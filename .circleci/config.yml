@@ -132,6 +132,7 @@ jobs:
       - checkout
       - run: make test
   snapshot-go:
+    working_directory: /go/src/github.com/fairwindsops/reckoner
     docker:
       - image: quay.io/reactiveops/ci-images:v11-buster
     steps:
@@ -145,6 +146,10 @@ jobs:
       - store_artifacts:
           path: dist
           destination: snapshot
+      - persist_to_workspace:
+          root: workspace
+          paths:
+          - /go/src/github.com/fairwindsops/reckoner
   release:
     executor: python-3-9
     environment:
