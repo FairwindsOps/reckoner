@@ -24,6 +24,9 @@ executors:
   python-3-8:
     docker:
       - image: circleci/python:3.8
+  python-3-9:
+    docker:
+      - image: circleci/python:3:9
 
 references:
   e2e_configuration_python: &e2e_configuration_python
@@ -36,6 +39,7 @@ references:
     requires:
       - build-3-7
       - build-3-8
+      - build-3-9
     filters:
       branches:
         only: /.*/
@@ -102,6 +106,21 @@ jobs:
             pip install --user -e .
             reckoner --version
             pytest --cov ./
+  build-3-9:
+    executor: python-3-9
+    working_directory: ~/reckoner
+    steps:
+      - run:
+          name: Setup PATH to support pip user installs
+          command: echo 'export PATH=$PATH:/home/circleci/.local/bin' >> $BASH_ENV
+      - checkout
+      - run:
+          name: Unit Tests
+          command: |
+            pip install --user -r development-requirements.txt
+            pip install --user -e .
+            reckoner --version
+            pytest --cov ./
   test-go:
     working_directory: /go/src/github.com/fairwindsops/reckoner
     docker:
@@ -126,7 +145,7 @@ jobs:
           path: dist
           destination: snapshot
   release:
-    executor: python-3-8
+    executor: python-3-9
     environment:
       GITHUB_ORGANIZATION: $CIRCLE_PROJECT_USERNAME
       GITHUB_REPOSITORY: $CIRCLE_PROJECT_REPONAME
@@ -225,21 +244,6 @@ workflows:
               only: /.*/
             branches:
               ignore: /.*/
-      - rok8s/docker_build_and_push:
-          name: build-and-push-container
-          docker-push: true
-          enable_docker_layer_caching: false
-          config_file: .circleci/build.config
-          context: org-global
-          docker-login: true
-          password-variable: "fairwinds_quay_token"
-          registry: quay.io
-          username: fairwinds+circleci
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /.*/
       - publish_docs:
           filters:
             branches:
