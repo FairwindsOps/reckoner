@@ -46,6 +46,9 @@ references:
       tags:
         ignore: /.*/
   e2e_configuration_go: &e2e_configuration_go
+    working_directory: /go/src/github.com/fairwindsops/reckoner
+    attach-workspace: true
+    workspace-location: /go/src/github.com/fairwindsops/reckoner
     pre_script: end_to_end_testing/pre_go.sh
     script: end_to_end_testing/run_go.sh
     command_runner_image: quay.io/reactiveops/ci-images:v11-buster
