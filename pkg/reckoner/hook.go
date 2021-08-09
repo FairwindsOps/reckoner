@@ -22,7 +22,6 @@ func (c Client) execHook(hooks []string) error {
 		commands := strings.Split(hook, " ")
 		args := commands[1:]
 
-		// TODO: take baseDirectory into consideration
 		command := exec.Command(commands[0], args...)
 		command.Dir = c.BaseDirectory
 
