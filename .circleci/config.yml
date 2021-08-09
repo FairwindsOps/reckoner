@@ -149,7 +149,7 @@ jobs:
           path: dist
           destination: snapshot
       - persist_to_workspace:
-          root: /go/src/github.com/fairwindsops/reckoner 
+          root: /go/src/github.com/fairwindsops/reckoner
           paths:
           - dist
   release:
@@ -169,7 +169,7 @@ jobs:
       - run:
           name: package and upload
           command: |
-            sudo pip install twine
+            pip install twine
             python setup.py sdist bdist_wheel
             twine upload dist/*
   publish_docs:
