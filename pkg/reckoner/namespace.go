@@ -23,6 +23,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/klog"
 )
 
 // CreateNamespace creates a kubernetes namespace with the given annotations and labels
@@ -63,6 +64,11 @@ func (c *Client) PatchNamespace(namespace string, annotations, labels map[string
 
 // NamespaceManagement manages namespace names, annotations and labels
 func (c *Client) NamespaceManagement() error {
+	if c.DryRun {
+		klog.Warningf("namespace management not run due to --dry-run: %v", c.DryRun)
+		return nil
+	}
+
 	namespaces, err := c.KubeClient.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return err
