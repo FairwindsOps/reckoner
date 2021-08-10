@@ -236,7 +236,7 @@ class HelmVersionException(Exception):
 
 
 class Helm3Client(HelmClient):
-    version_regex = re.compile(r'v([0-9\.]+)([\-,\+][a-zA-Z]+)(\+g[0-9a-f]+)?')
+    version_regex = re.compile(r'v([0-9\.]+)([\-,\+][a-zA-Z]+)?(\+g[0-9a-f]+)?')
     global_helm_flags = ['debug', 'home', 'host', 'kube-context', 'kubeconfig']
 
     @property
