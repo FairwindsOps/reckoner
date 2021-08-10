@@ -264,3 +264,11 @@ workflows:
               ignore: /.*/
             tags:
               only: /.*/
+      - rok8s/github_release:
+          requires:
+            - release
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /.*/
