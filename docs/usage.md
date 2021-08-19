@@ -1,3 +1,8 @@
+---
+meta:
+  - name: description
+    content: "Fairwinds Reckoner | Usage"
+---
 # Reckoner Documentation
 
 ## Course YAML Definition

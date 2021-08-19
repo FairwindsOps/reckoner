@@ -1,3 +1,8 @@
+---
+meta:
+  - name: description
+    content: "Fairwinds Reckoner | Contribution Guidelines"
+---
 # Contributing
 
 
