@@ -217,6 +217,16 @@ namespace_management:
   Required Arguments:
   * `script`: _(string)_  The script to run
 
+  Example:
+```
+secrets:
+  - name: GRAFANA_ADMIN_PASSWORD
+    backend: ShellExecutor
+    script:
+      - echo
+      - "changemeagain"
+```
+
 # CLI Usage
 
 ```text
