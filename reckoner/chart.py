@@ -520,7 +520,7 @@ class Chart(object):
             return Template(comments_removed).substitute(os.environ)
         except KeyError as e:
             raise ReckonerException(f"Encountered error interpolating environment variables: "
-                                    f"Missing requirement environment variable: {e}") from None
+                                    f"Missing required environment variable: {e}") from None
         except ValueError as e:
             raise ReckonerException(f"Encountered error \"{e}\" interpolating environment variables. "
                                     "This can happens if you use $(THING) instead of $THING or ${THING}. "
