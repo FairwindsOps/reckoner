@@ -22,7 +22,7 @@ from kubernetes import client, config
 
 class NamespaceManager(object):
 
-    def __init__(self, namespace_name, namespace_management) -> None:
+    def __init__(self, namespace_name, namespace_management, kube_context) -> None:
         """ Manages a namespace for the chart
         Accepts:
         - namespace: Which may be a string or a dictionary
@@ -36,6 +36,7 @@ class NamespaceManager(object):
             'overwrite',
             False
         )
+        self._kube_context = kube_context
         self.__load_config()
         self.config = Config()
 
@@ -46,7 +47,7 @@ class NamespaceManager(object):
 
     @property
     def namespace(self) -> str:
-        """ Namespace object we are managing 
+        """ Namespace object we are managing
         https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1Namespace.md"""
         return self._namespace
 
@@ -62,10 +63,16 @@ class NamespaceManager(object):
         from the chart and course """
         return self._overwrite
 
+    @property
+    def kube_context(self) -> str:
+        """ The kubernetes context that should be used
+        to create and manage the namespace """
+        return self._kube_context
+
     def __load_config(self):
         """ Protected method to load kubernetes config"""
         try:
-            config.load_kube_config()
+            config.load_kube_config(context=self.kube_context)
             self.v1client = client.CoreV1Api()
         except Exception as e:
             logging.error('Unable to load kubernetes configuration')
