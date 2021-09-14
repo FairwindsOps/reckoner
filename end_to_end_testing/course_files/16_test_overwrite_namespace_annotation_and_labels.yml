@@ -22,5 +22,5 @@ minimum_versions: #set minimum version requirements here
   reckoner: 0.0.0
 charts:
   namespace-test:
-    repository: stable
+    repository: fairwinds-incubator
     chart: basic-demo
