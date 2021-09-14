@@ -14,12 +14,12 @@ testcases:
   - name: 25 - import release
     steps:
       - script: |
-          reckoner import --namespace {{.namespace}} --release_name {{.release}} --repository ingress-nginx
+          reckoner import --namespace {{.namespace}} --release_name {{.release}} --repository fairwinds-incubator
         assertions:
           - "result.code ShouldEqual 0"
           - 'result.systemout ShouldContainSubstring "namespace: {{.namespace}}"'
-          - 'result.systemout ShouldContainSubstring "version: 3.23.0"'
-          - 'result.systemout ShouldContainSubstring "chart: ingress-nginx"'
+          - 'result.systemout ShouldContainSubstring "version: 0.4.3"'
+          - 'result.systemout ShouldContainSubstring "chart: basic-demo"'
           - 'result.systemout ShouldContainSubstring "{{.release}}:"'
           - 'result.systemout ShouldContainSubstring "expect-value: 1.05"'
           - 'result.systemout ShouldContainSubstring "expect-bool-value: false"'

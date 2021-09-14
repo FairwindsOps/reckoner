@@ -4,12 +4,12 @@ minimum_versions:
   helm: 0.0.0
   reckoner: 0.0.0
 repositories:
-  ingress-nginx:
-    url: https://kubernetes.github.io/ingress-nginx
+  fairwinds-incubator:
+    url: https://charts.fairwinds.com/incubator
 charts:
   chart-values:
-    repository: ingress-nginx
-    chart: ingress-nginx
+    repository: fairwinds-incubator
+    chart: basic-demo
     values:
       expect-number-float: 1.05
       expect-bool-false: false
@@ -20,8 +20,8 @@ charts:
       expect-null-from-null: null
       expect-string-from-null: "null"
   chart-env-values:
-    repository: ingress-nginx
-    chart: ingress-nginx
+    repository: fairwinds-incubator
+    chart: basic-demo
     values:
       expect-string-from-env-var-yes: "${yes_var}"
       expect-bool-yes-from-env-var-yes-no-quotes: ${yes_var}
