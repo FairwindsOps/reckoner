@@ -1,14 +1,14 @@
 namespace: 05-infra
 repositories:
-  ingress-nginx:
-    url: https://kubernetes.github.io/ingress-nginx
+  fairwinds-incubator:
+    url: https://charts.fairwinds.com/incubator
 minimum_versions:
   helm: 0.0.0
   reckoner: 0.0.0
 charts:
-  nginx-ingress:
-    repository: ingress-nginx
-    chart: ingress-nginx
+  basic-demo:
+    repository: fairwinds-incubator
+    chart: basic-demo
     hooks:
       pre_install:
         - whoami
