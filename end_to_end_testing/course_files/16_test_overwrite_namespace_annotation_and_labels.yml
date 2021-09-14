@@ -23,4 +23,4 @@ minimum_versions: #set minimum version requirements here
 charts:
   namespace-test:
     repository: stable
-    chart: nginx-ingress
+    chart: basic-demo

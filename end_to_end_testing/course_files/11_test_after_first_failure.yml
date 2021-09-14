@@ -1,7 +1,7 @@
 namespace: 11-test
 repositories:
-  ingress-nginx:
-    url: https://kubernetes.github.io/ingress-nginx
+  fairwinds-incubator:
+    url: https://charts.fairwinds.com/incubator
   runatlantis:
     url: https://runatlantis.github.io/helm-charts
 minimum_versions:
@@ -9,8 +9,8 @@ minimum_versions:
   reckoner: 0.0.0
 charts:
   good-chart:
-    repository: ingress-nginx
-    chart: ingress-nginx
+    repository: fairwinds-incubator
+    chart: basic-demo
   bad-chart:
     repository: runatlantis
     chart: atlantis
@@ -19,5 +19,5 @@ charts:
       github:
         broken: yep # This value causes an execution error
   expected-skipped-chart: # This chart should never be installed due to bad-chart failing (if applied in order)
-    repository: ingress-nginx
-    chart: ingress-nginx
+    repository: fairwinds-incubator
+    chart: basic-demo
