@@ -3,7 +3,7 @@ name: Exit on Failed Pre Install
 vars:
   course: ../course_files/06_test_exit_on_pre_install_hook.yml
   namespace: 06-infra
-  release: nginx-ingress
+  release: basic-demo
 testcases:
 - name: 06 - plot course
   steps:
