@@ -4,7 +4,7 @@ from kubernetes import client, config
 
 class NamespaceManagerMock(object):
 
-    def __init__(self, namespace_name='', namespace_management={}) -> None:
+    def __init__(self, namespace_name='', namespace_management={}, kube_context=None) -> None:
         """ Manages a namespace for the chart
         Accepts:
         - namespace: Which may be a string or a dictionary
@@ -18,6 +18,7 @@ class NamespaceManagerMock(object):
             'overwrite',
             False
         )
+        self._kube_context = kube_context
         self.__load_config()
 
     @property
@@ -27,7 +28,7 @@ class NamespaceManagerMock(object):
 
     @property
     def namespace(self) -> str:
-        """ Namespace object we are managing 
+        """ Namespace object we are managing
         https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1Namespace.md"""
         return self._namespace
 
@@ -42,6 +43,12 @@ class NamespaceManagerMock(object):
         """ List of metadata settings parsed from the
         from the chart and course """
         return self._overwrite
+
+    @property
+    def kube_context(self) -> str:
+        """ The kubernetes context that should be used
+        to create and manage the namespace """
+        return self._kube_context
 
     def __load_config(self):
         """ Protected method do load kubernetes config"""

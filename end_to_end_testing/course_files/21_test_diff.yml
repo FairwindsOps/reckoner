@@ -1,15 +1,15 @@
 namespace: 21-test-diff
 repositories:
-  ingress-nginx:
-    url: https://kubernetes.github.io/ingress-nginx
+  fairwinds-incubator:
+    url: https://charts.fairwinds.com/incubator
 minimum_versions: #set minimum version requirements here
   helm: 0.0.0
   reckoner: 0.0.0
 charts:
   chart-with-namespace:
     namespace: 21-test-diff
-    repository: ingress-nginx
-    chart: ingress-nginx
+    repository: fairwinds-incubator
+    chart: basic-demo
   chart-without-namespace:
-    repository: ingress-nginx
-    chart: ingress-nginx
+    repository: fairwinds-incubator
+    chart: basic-demo

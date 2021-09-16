@@ -419,7 +419,6 @@ class Course(object):
 
         logging.debug("Reckoner Minimum Version is {}".format(reckoner_minimum_version))
         logging.debug("Reckoner Installed Version is {}".format(reckoner_version))
-
         r1 = semver.compare(reckoner_version, reckoner_minimum_version)
         if r1 < 0:
             raise MinimumVersionException("reckoner Minimum Version {} not met.".format(reckoner_minimum_version))

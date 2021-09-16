@@ -149,7 +149,7 @@ jobs:
           path: dist
           destination: snapshot
       - persist_to_workspace:
-          root: /go/src/github.com/fairwindsops/reckoner 
+          root: /go/src/github.com/fairwindsops/reckoner
           paths:
           - dist
   release:
@@ -169,7 +169,7 @@ jobs:
       - run:
           name: package and upload
           command: |
-            sudo pip install twine
+            pip install twine
             python setup.py sdist bdist_wheel
             twine upload dist/*
   publish_docs:
@@ -242,14 +242,14 @@ workflows:
           name: "End-To-End Kubernetes 1.20 - Python"
           kind_node_image: "kindest/node:v1.20.2@sha256:8f7ea6e7642c0da54f04a7ee10431549c0257315b3a634f6ef2fecaaedb19bab"
           <<: *e2e_configuration_python
-      - rok8s/kubernetes_e2e_tests:
-          name: "End-To-End Kubernetes 1.19 - Go"
-          kind_node_image: "kindest/node:v1.19.7@sha256:a70639454e97a4b733f9d9b67e12c01f6b0297449d5b9cbbef87473458e26dca"
-          <<: *e2e_configuration_go
-      - rok8s/kubernetes_e2e_tests:
-          name: "End-To-End Kubernetes 1.20 - Go"
-          kind_node_image: "kindest/node:v1.20.2@sha256:8f7ea6e7642c0da54f04a7ee10431549c0257315b3a634f6ef2fecaaedb19bab"
-          <<: *e2e_configuration_go
+      # - rok8s/kubernetes_e2e_tests:
+      #     name: "End-To-End Kubernetes 1.19 - Go"
+      #     kind_node_image: "kindest/node:v1.19.7@sha256:a70639454e97a4b733f9d9b67e12c01f6b0297449d5b9cbbef87473458e26dca"
+      #     <<: *e2e_configuration_go
+      # - rok8s/kubernetes_e2e_tests:
+      #     name: "End-To-End Kubernetes 1.20 - Go"
+      #     kind_node_image: "kindest/node:v1.20.2@sha256:8f7ea6e7642c0da54f04a7ee10431549c0257315b3a634f6ef2fecaaedb19bab"
+      #     <<: *e2e_configuration_go
   release:
     jobs:
       - release:
@@ -259,6 +259,14 @@ workflows:
             branches:
               ignore: /.*/
       - publish_docs:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /.*/
+      - rok8s/github_release:
+          requires:
+            - release
           filters:
             branches:
               ignore: /.*/

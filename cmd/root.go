@@ -34,6 +34,8 @@ var (
 
 	// runAll contains the boolean flag to install all the releases
 	runAll bool
+	// dryRun contains the boolean flag to run as dry run
+	dryRun bool
 	// courseFile is the name and path of the course.yml file
 	courseFile string
 	// onlyRun contains the list of releases to install
@@ -43,6 +45,7 @@ var (
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&runAll, "run-all", "a", false, "Install every release in the course file")
 	rootCmd.PersistentFlags().StringSliceVarP(&onlyRun, "only", "o", nil, "Only install this list of releases. Can be passed multiple times.")
+	rootCmd.PersistentFlags().BoolVar(&dryRun, "dry-run", false, "Implies helm --dry-run --debug and skips any hooks")
 
 	// add commands here
 	rootCmd.AddCommand(plotCmd)
@@ -75,7 +78,7 @@ var plotCmd = &cobra.Command{
 	Long:    "Runs a helm install on a release or several releases.",
 	PreRunE: validateArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, true)
+		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, true, dryRun)
 		if err != nil {
 			klog.Fatal(err)
 		}
@@ -93,7 +96,7 @@ var templateCmd = &cobra.Command{
 	Long:    "Templates a helm chart for a release or several releases.",
 	PreRunE: validateArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false)
+		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false, dryRun)
 		if err != nil {
 			klog.Fatal(err)
 		}

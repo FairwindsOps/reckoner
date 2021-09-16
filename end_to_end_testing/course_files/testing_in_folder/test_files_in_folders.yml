@@ -1,13 +1,13 @@
 namespace: 14-infra
 repositories:
-  ingress-nginx:
-    url: https://kubernetes.github.io/ingress-nginx
+  fairwinds-incubator:
+    url: https://charts.fairwinds.com/incubator
 minimum_versions:
   helm: 0.0.0
   reckoner: 0.0.0
 charts:
   chart-one:
-    repository: ingress-nginx
-    chart: ingress-nginx
+    repository: fairwinds-incubator
+    chart: basic-demo
     files:
       - subfolder/yaml_values.yml
