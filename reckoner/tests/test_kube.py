@@ -44,7 +44,7 @@ class TestNamespaceManager(unittest.TestCase):
             "settings": {"overwrite": True}
         }
 
-        _ns_manager = NamespaceManager('test', settings)
+        _ns_manager = NamespaceManager('test', settings, None)
 
         self.assertTrue(_ns_manager.overwrite)
         self.assertEqual(_ns_manager.metadata, {
@@ -68,7 +68,7 @@ class TestNamespaceManager(unittest.TestCase):
             "settings": {"overwrite": False}
         }
 
-        _ns_manager = NamespaceManager('test', settings)
+        _ns_manager = NamespaceManager('test', settings, None)
 
         self.assertFalse(_ns_manager.overwrite)
         self.assertEqual(_ns_manager.metadata, {})
@@ -79,7 +79,7 @@ class TestNamespaceManager(unittest.TestCase):
             "metadata": {}
         }
 
-        _ns_manager = NamespaceManager('test', settings)
+        _ns_manager = NamespaceManager('test', settings, None)
 
         self.assertFalse(_ns_manager.overwrite)
         self.assertEqual(_ns_manager.metadata, {})

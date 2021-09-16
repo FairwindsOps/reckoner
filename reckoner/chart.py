@@ -163,12 +163,12 @@ class Chart(object):
 
     @property
     def namespace_management(self):
-        """ Namespace to install the course chart """
+        """ Parameters for augmenting namespaces we install charts into """
         return self._namespace_management
 
     @property
     def context(self):
-        """ Namespace to install the course chart """
+        """ Context to use to install the course chart """
         return self._context
 
     @property
@@ -227,7 +227,7 @@ class Chart(object):
         in the self.config option to avoid going back to the api for each chart.
         """
         if self.config.create_namespace and not self.dryrun:
-            nsm = NamespaceManager(self.namespace, self.namespace_management)
+            nsm = NamespaceManager(self.namespace, self.namespace_management, self.context)
             nsm.create_and_manage()
 
     def __pre_command(self, default_namespace=None, default_namespace_management={}, context=None) -> None:
