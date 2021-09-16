@@ -1,16 +1,16 @@
 namespace: 08-second
 repositories:
-  ingress-nginx:
-    url: https://kubernetes.github.io/ingress-nginx
+  fairwinds-incubator:
+    url: https://charts.fairwinds.com/incubator
 minimum_versions:
   helm: 0.0.0
   reckoner: 0.0.0
 charts:
   first-chart:
-    repository: ingress-nginx
-    chart: ingress-nginx
+    repository: fairwinds-incubator
+    chart: basic-demo
     namespace: 08-first
   second-chart:
-    repository: ingress-nginx
-    chart: ingress-nginx
+    repository: fairwinds-incubator
+    chart: basic-demo
     namespace: 08-second
