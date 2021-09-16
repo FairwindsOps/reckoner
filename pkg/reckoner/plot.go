@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 	"k8s.io/klog"
@@ -29,17 +30,26 @@ import (
 func (c Client) Plot() (string, error) {
 	err := c.NamespaceManagement()
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	err = c.UpdateHelmRepos()
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
-	// TODO: Handle course-level pre-hooks
+	err = c.execHook(c.CourseFile.Hooks.PreInstall)
+	if err != nil {
+		return "", err
+	}
+
 	for releaseName, release := range c.CourseFile.Releases {
-		// TODO: Handle Pre-Hooks
+
+		err = c.execHook(release.Hooks.PreInstall)
+		if err != nil {
+			return "", err
+		}
+
 		args, tmpFile, err := buildHelmArgs(releaseName, "upgrade", release)
 		if err != nil {
 			klog.Error(err)
@@ -48,15 +58,29 @@ func (c Client) Plot() (string, error) {
 		if tmpFile != nil {
 			defer os.Remove(tmpFile.Name())
 		}
-		out, _, err := c.Helm.Exec(args...)
-		if err != nil {
-			klog.Error(err)
-			continue
+
+		if !c.DryRun {
+			out, _, err := c.Helm.Exec(args...)
+			if err != nil {
+				klog.Error(err)
+				continue
+			}
+			fmt.Println(out)
+		} else {
+			klog.Warningf("plot not run due to --dry-run: %v", c.DryRun)
+			klog.Infof("would have run: helm %s", strings.Join(args, " "))
 		}
-		fmt.Println(out)
+
+		err = c.execHook(release.Hooks.PostInstall)
+		if err != nil {
+			return "", err
+		}
 	}
 
-	// TODO: Handle course-level post-hooks
+	err = c.execHook(c.CourseFile.Hooks.PostInstall)
+	if err != nil {
+		return "", err
+	}
 
 	return "", nil
 }

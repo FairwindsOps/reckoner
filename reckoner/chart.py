@@ -163,12 +163,12 @@ class Chart(object):
 
     @property
     def namespace_management(self):
-        """ Namespace to install the course chart """
+        """ Parameters for augmenting namespaces we install charts into """
         return self._namespace_management
 
     @property
     def context(self):
-        """ Namespace to install the course chart """
+        """ Context to use to install the course chart """
         return self._context
 
     @property
@@ -227,7 +227,7 @@ class Chart(object):
         in the self.config option to avoid going back to the api for each chart.
         """
         if self.config.create_namespace and not self.dryrun:
-            nsm = NamespaceManager(self.namespace, self.namespace_management)
+            nsm = NamespaceManager(self.namespace, self.namespace_management, self.context)
             nsm.create_and_manage()
 
     def __pre_command(self, default_namespace=None, default_namespace_management={}, context=None) -> None:
@@ -520,7 +520,7 @@ class Chart(object):
             return Template(comments_removed).substitute(os.environ)
         except KeyError as e:
             raise ReckonerException(f"Encountered error interpolating environment variables: "
-                                    f"Missing requirement environment variable: {e}") from None
+                                    f"Missing required environment variable: {e}") from None
         except ValueError as e:
             raise ReckonerException(f"Encountered error \"{e}\" interpolating environment variables. "
                                     "This can happens if you use $(THING) instead of $THING or ${THING}. "

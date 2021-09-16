@@ -44,7 +44,7 @@ setup(name='reckoner',
           "ruyaml>=0.20.0",
           "jsonschema>=3.0.2",
           "kubernetes==17.17.0",
-          "boto3==1.18.15"
+          "boto3>=1.18.17"
       ],
       entry_points=''' #for click integration
           [console_scripts]
