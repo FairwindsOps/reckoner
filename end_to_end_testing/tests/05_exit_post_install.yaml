@@ -3,7 +3,7 @@ name: Exit on Failed Post Install
 vars:
   course: ../course_files/05_test_exit_on_post_install_hook.yml
   namespace: 05-infra
-  release: nginx-ingress
+  release: basic-demo
 testcases:
 - name: 05 - plot course
   steps:
