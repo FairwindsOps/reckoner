@@ -73,6 +73,7 @@ We recommend carefully examining the output of a `reckoner diff` before relying 
 The goal of the Fairwinds Community is to exchange ideas, influence the open source roadmap,
 and network with fellow Kubernetes users.
 [Chat with us on Slack](https://join.slack.com/t/fairwindscommunity/shared_invite/zt-e3c6vj4l-3lIH6dvKqzWII5fSSFDi1g)
+or
 [join the user group](https://www.fairwinds.com/open-source-software-user-group) to get involved!
 
 <a href="https://www.fairwinds.com/t-shirt-offer?utm_source=reckoner&utm_medium=reckoner&utm_campaign=reckoner-tshirt">
