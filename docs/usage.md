@@ -118,11 +118,9 @@ charts:
         - echo finished
         - echo ":)"
     values:
-      set: these
-      values:
-        - for
-        - me
-        - please
+      foo: mysuperapp
+      bar:
+        baz: 1.0.0
 ...
 ```
 
