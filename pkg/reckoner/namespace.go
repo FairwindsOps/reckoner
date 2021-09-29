@@ -68,6 +68,10 @@ func (c *Client) NamespaceManagement() error {
 		klog.Warningf("namespace management not run due to --dry-run: %v", c.DryRun)
 		return nil
 	}
+	if !c.CreateNamespaces {
+		klog.Warningf("namespace management not run to do --create-namespaces=%t", c.CreateNamespaces)
+		return nil
+	}
 
 	namespaces, err := c.KubeClient.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {

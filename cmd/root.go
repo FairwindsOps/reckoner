@@ -40,12 +40,15 @@ var (
 	courseFile string
 	// onlyRun contains the list of releases to install
 	onlyRun []string
+	// createNamespaces contains the boolean flag to create namespaces
+	createNamespaces bool
 )
 
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&runAll, "run-all", "a", false, "Install every release in the course file")
 	rootCmd.PersistentFlags().StringSliceVarP(&onlyRun, "only", "o", nil, "Only install this list of releases. Can be passed multiple times.")
 	rootCmd.PersistentFlags().BoolVar(&dryRun, "dry-run", false, "Implies helm --dry-run --debug and skips any hooks")
+	rootCmd.PersistentFlags().BoolVar(&createNamespaces, "create-namespaces", true, "If true, allow reckoner to create namespaces.")
 
 	// add commands here
 	rootCmd.AddCommand(plotCmd)
@@ -78,7 +81,7 @@ var plotCmd = &cobra.Command{
 	Long:    "Runs a helm install on a release or several releases.",
 	PreRunE: validateArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, true, dryRun)
+		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, true, dryRun, createNamespaces)
 		if err != nil {
 			klog.Fatal(err)
 		}
@@ -93,10 +96,10 @@ var plotCmd = &cobra.Command{
 var templateCmd = &cobra.Command{
 	Use:     "template",
 	Short:   "template <course file>",
-	Long:    "Templates a helm chart for a release or several releases.",
+	Long:    "Templates a helm chart for a release or several releases. Automatically sets --create-namespaces=false --dry-run=true",
 	PreRunE: validateArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false, dryRun)
+		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false, true, false)
 		if err != nil {
 			klog.Fatal(err)
 		}

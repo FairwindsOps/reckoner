@@ -34,14 +34,15 @@ import (
 
 // Client is a configuration struct
 type Client struct {
-	KubeClient      kubernetes.Interface
-	Helm            helm.Client
-	ReckonerVersion string
-	CourseFile      course.FileV2
-	PlotAll         bool
-	Releases        []string
-	BaseDirectory   string
-	DryRun          bool
+	KubeClient       kubernetes.Interface
+	Helm             helm.Client
+	ReckonerVersion  string
+	CourseFile       course.FileV2
+	PlotAll          bool
+	Releases         []string
+	BaseDirectory    string
+	DryRun           bool
+	CreateNamespaces bool
 }
 
 var once sync.Once
@@ -49,7 +50,7 @@ var clientset *kubernetes.Clientset
 
 // NewClient returns a client. Attempts to open a v2 schema course file
 // If getClient is true, attempts to get a Kubernetes client from config
-func NewClient(fileName, version string, plotAll bool, releases []string, kubeClient bool, dryRun bool) (*Client, error) {
+func NewClient(fileName, version string, plotAll bool, releases []string, kubeClient bool, dryRun bool, createNamespaces bool) (*Client, error) {
 	// Get the course file
 	courseFile, err := course.OpenCourseV2(fileName)
 	if err != nil {
