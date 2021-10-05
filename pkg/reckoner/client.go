@@ -30,6 +30,7 @@ import (
 	"github.com/Masterminds/semver"
 	"github.com/fairwindsops/reckoner/pkg/course"
 	"github.com/fairwindsops/reckoner/pkg/helm"
+	"github.com/thoas/go-funk"
 )
 
 // Client is a configuration struct
@@ -81,7 +82,9 @@ func NewClient(fileName, version string, plotAll bool, releases []string, kubeCl
 		return nil, fmt.Errorf("reckoner version check failed")
 	}
 
-	client.filterReleases()
+	if err := client.filterReleases(); err != nil {
+		return nil, err
+	}
 
 	if kubeClient {
 		client.KubeClient = getKubeClient()
@@ -174,14 +177,21 @@ func (c Client) UpdateHelmRepos() error {
 
 // filterReleases filters the releases based on the client release list
 // Use this before you interact with the releases
-func (c *Client) filterReleases() {
+func (c *Client) filterReleases() error {
 	releases := c.CourseFile.Releases
 	if len(c.Releases) > 0 {
 		selectedReleases := make(map[string]course.Release)
 		for _, releaseName := range c.Releases {
+			if !funk.Contains(c.CourseFile.Releases, releaseName) {
+				continue
+			}
 			selectedReleases[releaseName] = c.CourseFile.Releases[releaseName]
 		}
 		releases = selectedReleases
 	}
+	if len(releases) < 1 {
+		return fmt.Errorf("no valid releases found in course that match input releases")
+	}
 	c.CourseFile.Releases = releases
+	return nil
 }
