@@ -31,6 +31,7 @@ import (
 var (
 	version       string
 	versionCommit string
+	courseSchema  []byte
 
 	// runAll contains the boolean flag to install all the releases
 	runAll bool
@@ -81,7 +82,7 @@ var plotCmd = &cobra.Command{
 	Long:    "Runs a helm install on a release or several releases.",
 	PreRunE: validateArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, true, dryRun, createNamespaces)
+		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, true, dryRun, createNamespaces, courseSchema)
 		if err != nil {
 			klog.Fatal(err)
 		}
@@ -99,7 +100,7 @@ var templateCmd = &cobra.Command{
 	Long:    "Templates a helm chart for a release or several releases. Automatically sets --create-namespaces=false --dry-run=true",
 	PreRunE: validateArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false, true, false)
+		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false, true, false, courseSchema)
 		if err != nil {
 			klog.Fatal(err)
 		}
@@ -122,12 +123,19 @@ var diffCmd = &cobra.Command{
 }
 
 var lintCmd = &cobra.Command{
-	Use:     "lint",
-	Short:   "lint <course file>",
-	Long:    "Lints the course file. Checks for structure and valid yaml.",
-	PreRunE: validateArgs,
+	Use:   "lint",
+	Short: "lint <course file>",
+	Long:  "Lints the course file. Checks for structure and valid yaml.",
+	PreRunE: func(cmd *cobra.Command, args []string) error {
+		runAll = true
+		return validateArgs(cmd, args)
+	},
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: Call Lint
+		_, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false, true, false, courseSchema)
+		if err != nil {
+			klog.Fatal(err)
+		}
+		klog.Infof("course file %s is good to go!", courseFile)
 	},
 }
 
@@ -163,9 +171,10 @@ func validateArgs(cmd *cobra.Command, args []string) (err error) {
 }
 
 // Execute the stuff
-func Execute(VERSION string, COMMIT string) {
+func Execute(VERSION string, COMMIT string, schema []byte) {
 	version = VERSION
 	versionCommit = COMMIT
+	courseSchema = schema
 	if err := rootCmd.Execute(); err != nil {
 		klog.Error(err)
 		os.Exit(1)

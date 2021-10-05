@@ -51,9 +51,9 @@ var clientset *kubernetes.Clientset
 
 // NewClient returns a client. Attempts to open a v2 schema course file
 // If getClient is true, attempts to get a Kubernetes client from config
-func NewClient(fileName, version string, plotAll bool, releases []string, kubeClient bool, dryRun bool, createNamespaces bool) (*Client, error) {
+func NewClient(fileName, version string, plotAll bool, releases []string, kubeClient bool, dryRun bool, createNamespaces bool, schema []byte) (*Client, error) {
 	// Get the course file
-	courseFile, err := course.OpenCourseV2(fileName)
+	courseFile, err := course.OpenCourseV2(fileName, schema)
 	if err != nil {
 		return nil, err
 	}
@@ -190,6 +190,9 @@ func (c *Client) filterReleases() error {
 		releases = selectedReleases
 	}
 	if len(releases) < 1 {
+		if c.PlotAll {
+			return fmt.Errorf("no valid releases found in course file")
+		}
 		return fmt.Errorf("no valid releases found in course that match input releases")
 	}
 	c.CourseFile.Releases = releases
