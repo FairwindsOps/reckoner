@@ -15,6 +15,8 @@
 package main
 
 import (
+	_ "embed"
+
 	"github.com/fairwindsops/reckoner/cmd"
 )
 
@@ -23,8 +25,10 @@ var (
 	version = "0.0.0"
 	// commit is set during build
 	commit = "n/a"
+	//go:embed pkg/course/coursev2.schema.json
+	courseSchema []byte
 )
 
 func main() {
-	cmd.Execute(version, commit)
+	cmd.Execute(version, commit, courseSchema)
 }
