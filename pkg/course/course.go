@@ -154,9 +154,9 @@ type FileV1 struct {
 	// MinimumVersions is a block that restricts this course file from being used with
 	// outdated versions of helm or reckoner
 	MinimumVersions struct {
-		Helm     string `yaml:"helm" json:"helm"`
-		Reckoner string `yaml:"reckoner" json:"reckoner"`
-	} `yaml:"minimum_versions" json:"minimum_versions"`
+		Helm     string `yaml:"helm,omitempty" json:"helm,omitempty"`
+		Reckoner string `yaml:"reckoner,omitempty" json:"reckoner,omitempty"`
+	} `yaml:"minimum_versions,omitempty" json:"minimum_versions,omitempty"`
 	// Hooks is a set of scripts to be run before or after the release is installed.
 	Hooks Hooks `yaml:"hooks" json:"hooks"`
 	// NamespaceMgmt contains the default namespace config for all namespaces managed by this course.
@@ -198,6 +198,7 @@ func ConvertV1toV2(fileName string) (*FileV2, error) {
 	newFile.Repositories = oldFile.Repositories
 	newFile.Releases = make(map[string]Release)
 	newFile.Hooks = oldFile.Hooks
+	newFile.MinimumVersions = oldFile.MinimumVersions
 
 	for releaseName, release := range oldFile.Charts {
 		repositoryName, ok := release.Repository.(string)
