@@ -113,7 +113,7 @@ class NamespaceManager(object):
             for label_name, label_value in self.metadata.get('labels', {}).items():
                 try:
                     current_label_value = self.namespace.metadata.labels[label_name]
-                    if current_label_value != annotation_value:
+                    if current_label_value != label_value:
                         logging.info("Not Overwriting Metadata Label '{}' in Namespace '{}'".format(annotation_name,self.namespace_name))
                 except (TypeError, KeyError):
                     labels[label_name] = label_value
