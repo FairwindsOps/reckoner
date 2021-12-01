@@ -43,6 +43,8 @@ var (
 	onlyRun []string
 	// createNamespaces contains the boolean flag to create namespaces
 	createNamespaces bool
+	// inPlaceConvert contains the boolean flag to update the course file in place
+	inPlaceConvert bool
 )
 
 func init() {
@@ -50,6 +52,8 @@ func init() {
 	rootCmd.PersistentFlags().StringSliceVarP(&onlyRun, "only", "o", nil, "Only install this list of releases. Can be passed multiple times.")
 	rootCmd.PersistentFlags().BoolVar(&dryRun, "dry-run", false, "Implies helm --dry-run --debug and skips any hooks")
 	rootCmd.PersistentFlags().BoolVar(&createNamespaces, "create-namespaces", true, "If true, allow reckoner to create namespaces.")
+
+	convertCmd.Flags().BoolVarP(&inPlaceConvert, "in-place", "i", false, "If specified, will update the file in place, otherwise outputs to stdout.")
 
 	// add commands here
 	rootCmd.AddCommand(plotCmd)
@@ -140,10 +144,13 @@ var lintCmd = &cobra.Command{
 }
 
 var convertCmd = &cobra.Command{
-	Use:     "convert",
-	Short:   "convert <course file> from v1 to v2 schema",
-	Long:    "Converts a course file from the v1 python schema to v2 go schema",
-	PreRunE: validateArgs,
+	Use:   "convert",
+	Short: "convert <course file> from v1 to v2 schema",
+	Long:  "Converts a course file from the v1 python schema to v2 go schema",
+	PreRunE: func(cmd *cobra.Command, args []string) error {
+		runAll = true
+		return validateArgs(cmd, args)
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		newCourse, err := course.ConvertV1toV2(courseFile)
 		if err != nil {
@@ -151,6 +158,15 @@ var convertCmd = &cobra.Command{
 		}
 		// We prefer 2 spaces in yaml
 		w := os.Stdout
+		if inPlaceConvert {
+			f, err := os.OpenFile(courseFile, os.O_RDWR, 0644)
+			if err != nil {
+				klog.Fatal(err)
+			}
+			defer f.Close()
+			f.Truncate(0)
+			w = f
+		}
 		e := yaml.NewEncoder(w)
 		defer e.Close()
 		e.SetIndent(2)

@@ -17,3 +17,5 @@ node_modules
 
 coverage.txt
 /reckoner-go
+cover-report.html
+govet-report.out

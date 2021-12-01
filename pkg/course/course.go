@@ -54,7 +54,7 @@ type FileV2 struct {
 		Default NamespaceConfig `yaml:"default" json:"default"`
 	} `yaml:"namespace_management,omitempty" json:"namespace_management,omitempty"`
 	// Releases is the list of releases that should be maintained by this course file.
-	Releases ReleaseList `yaml:"releases" json:"releases"`
+	Releases []*Release `yaml:"releases" json:"releases"`
 }
 
 // Repository is a helm reposotory definition
@@ -89,6 +89,8 @@ type NamespaceConfig struct {
 
 // Release represents a helm release and all of its configuration
 type Release struct {
+	// Name is the name of the release
+	Name string `yaml:"name" json:"name"`
 	// Namespace is the namespace that this release should be placed in
 	Namespace string `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 	// NamespaceMgmt is a set of labels and annotations to be added to the namespace for this release
@@ -114,11 +116,10 @@ type Release struct {
 	Values map[string]interface{} `yaml:"values,omitempty" json:"values,omitempty"`
 }
 
-// ReleaseList is a set of releases
-type ReleaseList map[string]Release
-
 // ReleaseV1 represents a helm release and all of its configuration from v1 schema
 type ReleaseV1 struct {
+	// Name is the name of the release
+	Name string `yaml:"name" json:"name"`
 	// Namespace is the namespace that this release should be placed in
 	Namespace string `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 	// NamespaceMgmt is a set of labels and annotations to be added to the namespace for this release
@@ -165,8 +166,11 @@ type FileV1 struct {
 		Default NamespaceConfig `yaml:"default" json:"default"`
 	} `yaml:"namespace_management" json:"namespace_management"`
 	// Charts is the map of releases
-	Charts map[string]ReleaseV1 `yaml:"charts" json:"charts"`
+	Charts ChartsListV1 `yaml:"charts" json:"charts"`
 }
+
+// ChartsListV1 is a list of charts for the v1 schema
+type ChartsListV1 []ReleaseV1
 
 // RepositoryV1 is a helm reposotory definition
 type RepositoryV1 struct {
@@ -196,11 +200,11 @@ func ConvertV1toV2(fileName string) (*FileV2, error) {
 	newFile.NamespaceMgmt = oldFile.NamespaceMgmt
 	newFile.DefaultRepository = oldFile.DefaultRepository
 	newFile.Repositories = oldFile.Repositories
-	newFile.Releases = make(map[string]Release)
+	newFile.Releases = make([]*Release, len(oldFile.Charts))
 	newFile.Hooks = oldFile.Hooks
 	newFile.MinimumVersions = oldFile.MinimumVersions
 
-	for releaseName, release := range oldFile.Charts {
+	for releaseIndex, release := range oldFile.Charts {
 		repositoryName, ok := release.Repository.(string)
 		// The repository is not in the format repository: string. Need to handle that
 		if !ok {
@@ -217,7 +221,7 @@ func ConvertV1toV2(fileName string) (*FileV2, error) {
 			if addRepo.Git != "" {
 				klog.V(3).Infof("detected a git-based inline repository. Attempting to convert to repository in header")
 
-				repositoryName = fmt.Sprintf("%s-git-repository", releaseName)
+				repositoryName = fmt.Sprintf("%s-git-repository", release.Name)
 				newFile.Repositories[repositoryName] = Repository{
 					Git:  addRepo.Git,
 					Path: addRepo.Path,
@@ -228,7 +232,8 @@ func ConvertV1toV2(fileName string) (*FileV2, error) {
 				repositoryName = addRepo.Name
 			}
 		}
-		newFile.Releases[releaseName] = Release{
+		newFile.Releases[releaseIndex] = &Release{
+			Name:          release.Name,
 			Namespace:     release.Namespace,
 			NamespaceMgmt: release.NamespaceMgmt,
 			Repository:    repositoryName,
@@ -293,6 +298,24 @@ func OpenCourseV1(fileName string) (*FileV1, error) {
 	return courseFile, nil
 }
 
+// UnmarshalYAML implements the yaml.Unmarshaler interface to customize how we Unmarshal this particular field of the FileV1 struct
+func (cl *ChartsListV1) UnmarshalYAML(value *yaml.Node) error {
+	if value.Kind != yaml.MappingNode {
+		return fmt.Errorf("ChartsList must contain YAML mapping, has %v", value.Kind)
+	}
+	*cl = make([]ReleaseV1, len(value.Content)/2)
+	for i := 0; i < len(value.Content); i += 2 {
+		var res = &(*cl)[i/2]
+		if err := value.Content[i].Decode(&res.Name); err != nil {
+			return err
+		}
+		if err := value.Content[i+1].Decode(&res); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // populateDefaultNamespace sets the default namespace in each release
 // if the release does not have a namespace. If the DefaultNamespace is blank, simply returns
 func (f *FileV2) populateDefaultNamespace() {
@@ -300,11 +323,11 @@ func (f *FileV2) populateDefaultNamespace() {
 		klog.V(2).Info("no default namespace set - skipping filling out defaults")
 		return
 	}
-	for releaseName, release := range f.Releases {
+	for releaseIndex, release := range f.Releases {
 		if release.Namespace == "" {
-			klog.V(5).Infof("setting the default namespace of %s on release %s", f.DefaultNamespace, releaseName)
+			klog.V(5).Infof("setting the default namespace of %s on release %s", f.DefaultNamespace, release.Name)
 			release.Namespace = f.DefaultNamespace
-			f.Releases[releaseName] = release
+			f.Releases[releaseIndex] = release
 		}
 	}
 }
@@ -316,22 +339,22 @@ func (f *FileV2) populateDefaultRepository() {
 		klog.V(2).Info("no default repository set - skipping filling out defaults")
 		return
 	}
-	for releaseName, release := range f.Releases {
+	for releaseIndex, release := range f.Releases {
 		if release.Repository == "" {
-			klog.V(5).Infof("setting the default repository of %s on release %s", f.DefaultRepository, releaseName)
+			klog.V(5).Infof("setting the default repository of %s on release %s", f.DefaultRepository, release.Name)
 			release.Repository = f.DefaultRepository
-			f.Releases[releaseName] = release
+			f.Releases[releaseIndex] = release
 		}
 	}
 }
 
 // populateEmptyChartNames assumes that the chart name should be the release name if the chart name is empty
 func (f *FileV2) populateEmptyChartNames() {
-	for releaseName, release := range f.Releases {
+	for releaseIndex, release := range f.Releases {
 		if release.Chart == "" {
-			klog.V(5).Infof("assuming chart name is release name for release: %s", releaseName)
-			release.Chart = releaseName
-			f.Releases[releaseName] = release
+			klog.V(5).Infof("assuming chart name is release name for release: %s", release.Name)
+			release.Chart = release.Name
+			f.Releases[releaseIndex] = release
 		}
 	}
 }

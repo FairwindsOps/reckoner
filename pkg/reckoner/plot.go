@@ -43,14 +43,14 @@ func (c Client) Plot() (string, error) {
 		return "", err
 	}
 
-	for releaseName, release := range c.CourseFile.Releases {
+	for _, release := range c.CourseFile.Releases {
 
 		err = c.execHook(release.Hooks.PreInstall)
 		if err != nil {
 			return "", err
 		}
 
-		args, tmpFile, err := buildHelmArgs(releaseName, "upgrade", release)
+		args, tmpFile, err := buildHelmArgs(release.Name, "upgrade", *release)
 		if err != nil {
 			klog.Error(err)
 			continue
@@ -93,8 +93,8 @@ func (c Client) Template() (string, error) {
 	}
 
 	var fullOutput string
-	for releaseName, release := range c.CourseFile.Releases {
-		args, tmpFile, err := buildHelmArgs(releaseName, "template", release)
+	for _, release := range c.CourseFile.Releases {
+		args, tmpFile, err := buildHelmArgs(release.Name, "template", *release)
 		if err != nil {
 			klog.Error(err)
 			continue

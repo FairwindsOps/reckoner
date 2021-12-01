@@ -42,15 +42,16 @@
             }
         },
         "release": {
-            "type": "object",
-            "propertyNames": {
-                "pattern": "^[a-zA-Z0-9_-]{1,63}$",
-                "x-custom-error-message": "Chart release names must be alphanumeric with \"_\" and \"-\" and be between 1 and 63 characters"
-            },
+            "type": "array",
             "additionalProperties": {
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
+                    "name": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z0-9_-]{1,63}$",
+                        "x-custom-error-message": "Chart release names must be alphanumeric with \"_\" and \"-\" and be between 1 and 63 characters"
+                    },
                     "namespace": {
                         "type": "string"
                     },

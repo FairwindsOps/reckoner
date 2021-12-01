@@ -65,13 +65,14 @@ func NewClient(fileName, version string, plotAll bool, releases []string, kubeCl
 	}
 
 	client := &Client{
-		CourseFile:      *courseFile,
-		PlotAll:         plotAll,
-		Releases:        releases,
-		Helm:            *helmClient,
-		ReckonerVersion: version,
-		BaseDirectory:   path.Dir(fileName),
-		DryRun:          dryRun,
+		CourseFile:       *courseFile,
+		PlotAll:          plotAll,
+		Releases:         releases,
+		Helm:             *helmClient,
+		ReckonerVersion:  version,
+		BaseDirectory:    path.Dir(fileName),
+		DryRun:           dryRun,
+		CreateNamespaces: createNamespaces,
 	}
 
 	// Check versions
@@ -180,12 +181,18 @@ func (c Client) UpdateHelmRepos() error {
 func (c *Client) filterReleases() error {
 	releases := c.CourseFile.Releases
 	if len(c.Releases) > 0 {
-		selectedReleases := make(map[string]course.Release)
+		selectedReleases := []*course.Release{}
 		for _, releaseName := range c.Releases {
-			if !funk.Contains(c.CourseFile.Releases, releaseName) {
+			contained := funk.Contains(c.CourseFile.Releases, func(rel *course.Release) bool {
+				return rel.Name == releaseName
+			})
+			if !contained {
 				continue
 			}
-			selectedReleases[releaseName] = c.CourseFile.Releases[releaseName]
+			releaseIndex := funk.IndexOf(c.CourseFile.Releases, func(rel *course.Release) bool {
+				return rel.Name == releaseName
+			})
+			selectedReleases = append(selectedReleases, c.CourseFile.Releases[releaseIndex])
 		}
 		releases = selectedReleases
 	}
