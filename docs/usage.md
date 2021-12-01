@@ -165,6 +165,39 @@ charts:
 ...
 ```
 
+### Local Filesystem Based Charts
+When using a local chart on your filesystem, simply provide the full path on disk to the chart in the `repository` field. The version can be left empty. Example below.
+
+Given the file structure:
+```
+├── charts
+│   └── test-chart
+│       ├── Chart.yaml
+│       ├── charts
+│       ├── templates
+│       │   ├── NOTES.txt
+│       │   ├── _helpers.tpl
+│       │   ├── deployment.yaml
+│       │   ├── hpa.yaml
+│       │   ├── ingress.yaml
+│       │   ├── service.yaml
+│       │   ├── serviceaccount.yaml
+│       │   └── tests
+│       │       └── test-connection.yaml
+│       └── values.yaml
+└── course.yml
+```
+
+This section of the course.yml will deploy that local chart.
+```
+charts:
+  my-release-name:
+    chart: test-chart
+    version: ""
+    namespace: ns
+    repository: ./charts
+```
+
 ## Minimum Versions
 - `reckoner` _(string)_
     The minimum version of reckoner for this course to work properly (in semver notation).
