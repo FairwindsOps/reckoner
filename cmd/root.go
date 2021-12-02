@@ -156,7 +156,6 @@ var convertCmd = &cobra.Command{
 		if err != nil {
 			klog.Fatal(err)
 		}
-		// We prefer 2 spaces in yaml
 		w := os.Stdout
 		if inPlaceConvert {
 			f, err := os.OpenFile(courseFile, os.O_RDWR, 0644)
@@ -169,6 +168,7 @@ var convertCmd = &cobra.Command{
 		}
 		e := yaml.NewEncoder(w)
 		defer e.Close()
+		// We prefer 2 spaces in yaml
 		e.SetIndent(2)
 
 		err = e.Encode(newCourse)
