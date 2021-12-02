@@ -14,7 +14,7 @@ go version
 cd /reckoner
 make build
 
-mv /reckoner/dist/reckoner_linux_amd64/reckoner /usr/local/bin/reckoner
+mv /reckoner/reckoner-go /usr/local/bin/reckoner
 reckoner version
 
 curl -LO https://github.com/ovh/venom/releases/download/v0.28.0/venom.linux-amd64
