@@ -61,8 +61,9 @@ func TestConvertV1toV2(t *testing.T) {
 						Path: "gitpath",
 					},
 				},
-				Releases: ReleaseList{
-					"basic": {
+				Releases: []*Release{
+					{
+						Name:       "basic",
 						Chart:      "somechart",
 						Version:    "2.0.0",
 						Repository: "helm-repo",
@@ -70,13 +71,15 @@ func TestConvertV1toV2(t *testing.T) {
 							"dummyvalue": false,
 						},
 					},
-					"gitrelease": {
+					{
+						Name:       "gitrelease",
 						Chart:      "gitchart",
 						Version:    "main",
 						Repository: "gitrelease-git-repository",
 						Values:     nil,
 					},
-					"standard": {
+					{
+						Name:       "standard",
 						Chart:      "basic",
 						Repository: "helm-repo",
 						Values:     nil,
@@ -101,25 +104,27 @@ func TestConvertV1toV2(t *testing.T) {
 func TestFileV2_populateDefaultNamespace(t *testing.T) {
 	type fields struct {
 		DefaultNamespace string
-		Releases         ReleaseList
+		Releases         []*Release
 	}
 	tests := []struct {
 		name   string
 		fields fields
-		want   ReleaseList
+		want   []*Release
 	}{
 		{
 			name: "basic test",
 			fields: fields{
 				DefaultNamespace: "default-ns",
-				Releases: map[string]Release{
-					"first-release": {
+				Releases: []*Release{
+					{
+						Name:  "first-release",
 						Chart: "farglebargle",
 					},
 				},
 			},
-			want: map[string]Release{
-				"first-release": {
+			want: []*Release{
+				{
+					Name:      "first-release",
 					Chart:     "farglebargle",
 					Namespace: "default-ns",
 				},
@@ -129,14 +134,16 @@ func TestFileV2_populateDefaultNamespace(t *testing.T) {
 			name: "no default namespace",
 			fields: fields{
 				DefaultNamespace: "",
-				Releases: map[string]Release{
-					"first-release": {
+				Releases: []*Release{
+					{
+						Name:  "first-release",
 						Chart: "farglebargle",
 					},
 				},
 			},
-			want: map[string]Release{
-				"first-release": {
+			want: []*Release{
+				{
+					Name:  "first-release",
 					Chart: "farglebargle",
 				},
 			},
@@ -157,25 +164,27 @@ func TestFileV2_populateDefaultNamespace(t *testing.T) {
 func TestFileV2_populateDefaultRepository(t *testing.T) {
 	type fields struct {
 		DefaultRepository string
-		Releases          ReleaseList
+		Releases          []*Release
 	}
 	tests := []struct {
 		name   string
 		fields fields
-		want   ReleaseList
+		want   []*Release
 	}{
 		{
 			name: "basic test",
 			fields: fields{
 				DefaultRepository: "default-repo",
-				Releases: map[string]Release{
-					"first-release": {
+				Releases: []*Release{
+					{
+						Name:  "first-release",
 						Chart: "farglebargle",
 					},
 				},
 			},
-			want: map[string]Release{
-				"first-release": {
+			want: []*Release{
+				{
+					Name:       "first-release",
 					Chart:      "farglebargle",
 					Repository: "default-repo",
 				},
@@ -185,14 +194,16 @@ func TestFileV2_populateDefaultRepository(t *testing.T) {
 			name: "no default set",
 			fields: fields{
 				DefaultRepository: "",
-				Releases: map[string]Release{
-					"first-release": {
+				Releases: []*Release{
+					{
+						Name:  "first-release",
 						Chart: "farglebargle",
 					},
 				},
 			},
-			want: map[string]Release{
-				"first-release": {
+			want: []*Release{
+				{
+					Name:  "first-release",
 					Chart: "farglebargle",
 				},
 			},
