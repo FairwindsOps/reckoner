@@ -77,12 +77,6 @@ func (c *Client) NamespaceManagement() error {
 	if err != nil {
 		return err
 	}
-	if c.CourseFile.DefaultNamespace != "" {
-		err := c.CreateOrPatchNamespace(c.CourseFile.NamespaceMgmt.Default.Settings.Overwrite, c.CourseFile.DefaultNamespace, c.CourseFile.NamespaceMgmt.Default, namespaces)
-		if err != nil {
-			return err
-		}
-	}
 	for _, release := range c.CourseFile.Releases {
 		err := c.CreateOrPatchNamespace(release.NamespaceMgmt.Settings.Overwrite, release.Namespace, release.NamespaceMgmt, namespaces)
 		if err != nil {
