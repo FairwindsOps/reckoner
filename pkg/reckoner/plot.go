@@ -24,6 +24,7 @@ import (
 	"k8s.io/klog"
 
 	"github.com/fairwindsops/reckoner/pkg/course"
+	"github.com/thoas/go-funk"
 )
 
 // Plot actually plots the releases
@@ -85,8 +86,8 @@ func (c Client) Plot() (string, error) {
 	return "", nil
 }
 
-// Template runs the same as plot but runs template instead
-func (c Client) Template() (string, error) {
+// TemplateAll runs the same as plot but runs template instead
+func (c Client) TemplateAll() (string, error) {
 	err := c.UpdateHelmRepos()
 	if err != nil {
 		return "", nil
@@ -94,15 +95,7 @@ func (c Client) Template() (string, error) {
 
 	var fullOutput string
 	for _, release := range c.CourseFile.Releases {
-		args, tmpFile, err := buildHelmArgs(release.Name, "template", *release)
-		if err != nil {
-			klog.Error(err)
-			continue
-		}
-		if tmpFile != nil {
-			defer os.Remove(tmpFile.Name())
-		}
-		out, _, err := c.Helm.Exec(args...)
+		out, err := c.TemplateRelease(release.Name)
 		if err != nil {
 			klog.Error(err)
 			continue
@@ -110,6 +103,25 @@ func (c Client) Template() (string, error) {
 		fullOutput = fullOutput + out
 	}
 	return fullOutput, nil
+}
+
+// TemplateRelease does the same thing as TemplateAll but only for one release
+func (c Client) TemplateRelease(releaseName string) (string, error) {
+	releaseIndex := funk.IndexOf(c.CourseFile.Releases, func(release *course.Release) bool {
+		return release.Name == releaseName
+	})
+	args, tmpFile, err := buildHelmArgs(releaseName, "template", *c.CourseFile.Releases[releaseIndex])
+	if err != nil {
+		return "", err
+	}
+	if tmpFile != nil {
+		defer os.Remove(tmpFile.Name())
+	}
+	out, _, err := c.Helm.Exec(args...)
+	if err != nil {
+		return "", err
+	}
+	return out, nil
 }
 
 // buildHelmArgs creates a helm command from a release

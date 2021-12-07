@@ -55,7 +55,7 @@ func (h Client) Exec(arg ...string) (string, string, error) {
 	if err != nil {
 		klog.V(8).Infof("stdout: %s", outStr)
 		klog.V(7).Infof("stderr: %s", errStr)
-		return "", "", fmt.Errorf("exit code %d running command %s", cmd.ProcessState.ExitCode(), cmd.String())
+		return "", errStr, fmt.Errorf("exit code %d running command %s", cmd.ProcessState.ExitCode(), cmd.String())
 	}
 
 	return outStr, errStr, nil

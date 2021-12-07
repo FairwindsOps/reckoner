@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"gopkg.in/yaml.v3"
@@ -45,6 +46,8 @@ var (
 	createNamespaces bool
 	// inPlaceConvert contains the boolean flag to update the course file in place
 	inPlaceConvert bool
+	// noColor contains the boolean flag to disable color output
+	noColor bool
 )
 
 func init() {
@@ -52,6 +55,7 @@ func init() {
 	rootCmd.PersistentFlags().StringSliceVarP(&onlyRun, "only", "o", nil, "Only install this list of releases. Can be passed multiple times.")
 	rootCmd.PersistentFlags().BoolVar(&dryRun, "dry-run", false, "Implies helm --dry-run --debug and skips any hooks")
 	rootCmd.PersistentFlags().BoolVar(&createNamespaces, "create-namespaces", true, "If true, allow reckoner to create namespaces.")
+	rootCmd.PersistentFlags().BoolVar(&noColor, "no-color", false, "If true, don't colorize output.")
 
 	convertCmd.Flags().BoolVarP(&inPlaceConvert, "in-place", "i", false, "If specified, will update the file in place, otherwise outputs to stdout.")
 
@@ -61,6 +65,7 @@ func init() {
 	rootCmd.AddCommand(templateCmd)
 	rootCmd.AddCommand(diffCmd)
 	rootCmd.AddCommand(lintCmd)
+	rootCmd.AddCommand(getManifestsCmd)
 
 	klog.InitFlags(nil)
 	pflag.CommandLine.AddGoFlag(flag.CommandLine.Lookup("v"))
@@ -108,11 +113,29 @@ var templateCmd = &cobra.Command{
 		if err != nil {
 			klog.Fatal(err)
 		}
-		tmpl, err := client.Template()
+		tmpl, err := client.TemplateAll()
 		if err != nil {
 			klog.Fatal(err)
 		}
 		fmt.Println(tmpl)
+	},
+}
+
+var getManifestsCmd = &cobra.Command{
+	Use:     "get-manifests",
+	Short:   "get-manifests <course file>",
+	Long:    "Gets the manifests currently in the cluster.",
+	PreRunE: validateArgs,
+	Run: func(cmd *cobra.Command, args []string) {
+		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false, true, false, courseSchema)
+		if err != nil {
+			klog.Fatal(err)
+		}
+		manifests, err := client.GetManifests()
+		if err != nil {
+			klog.Fatal(err)
+		}
+		fmt.Println(manifests)
 	},
 }
 
@@ -122,7 +145,18 @@ var diffCmd = &cobra.Command{
 	Long:    "Diffs the currently defined release and the one in the cluster",
 	PreRunE: validateArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: Call Diff
+		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false, true, false, courseSchema)
+		if err != nil {
+			klog.Fatal(err)
+		}
+		if err := client.UpdateHelmRepos(); err != nil {
+			klog.Fatal(err)
+		}
+		diffOut, err := client.Diff()
+		if err != nil {
+			klog.Fatal(err)
+		}
+		fmt.Println(diffOut)
 	},
 }
 
@@ -182,6 +216,8 @@ var convertCmd = &cobra.Command{
 // file that exists
 func validateArgs(cmd *cobra.Command, args []string) (err error) {
 	courseFile, err = reckoner.ValidateArgs(runAll, onlyRun, args)
+	color.NoColor = noColor
+	klog.V(3).Infof("colorize output: %v", !noColor)
 
 	return err
 }
