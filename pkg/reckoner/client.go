@@ -27,7 +27,7 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 
-	"github.com/Masterminds/semver"
+	"github.com/Masterminds/semver/v3"
 	"github.com/fairwindsops/reckoner/pkg/course"
 	"github.com/fairwindsops/reckoner/pkg/helm"
 	"github.com/thoas/go-funk"

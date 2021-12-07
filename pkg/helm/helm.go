@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"os/exec"
 
-	"github.com/Masterminds/semver"
+	"github.com/Masterminds/semver/v3"
 	"k8s.io/klog"
 )
 
