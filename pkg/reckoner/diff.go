@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/fairwindsops/reckoner/pkg/helm"
 	"github.com/fatih/color"
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"github.com/thoas/go-funk"
@@ -27,11 +26,11 @@ func (md ManifestDiff) String() string {
 	if md.Diff == "" {
 		return ""
 	}
-	post := ""
+	preDiff := ""
 	if md.NewFile {
-		post = " does not exist and will be added\n"
+		preDiff = " does not exist and will be added\n"
 	}
-	return fmt.Sprintf("\n%s \"%s\"%s\n%s", md.Kind, md.Name, post, md.Diff)
+	return fmt.Sprintf("\n%s \"%s\"%s\n%s", md.Kind, md.Name, preDiff, md.Diff)
 }
 
 // Diff gathers a given release's manifest and templates and returns the diff string suitable for output.
@@ -48,11 +47,11 @@ func (c *Client) Diff() (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("error getting template for release %s in namespace %s: %s", r.Name, r.Namespace, err)
 		}
-		manifestSlice, err := c.Helm.ManifestUnmarshal(manifests)
+		manifestSlice, err := ManifestUnmarshal(manifests)
 		if err != nil {
 			return "", err
 		}
-		templateSlice, err := c.Helm.ManifestUnmarshal(templateOut)
+		templateSlice, err := ManifestUnmarshal(templateOut)
 		if err != nil {
 			return "", err
 		}
@@ -69,17 +68,17 @@ func (c *Client) Diff() (string, error) {
 
 // poulateDiffs takes a specific release and diffs the manifests and templates. If the given release taken from the coursefile does
 // not exist in the cluster, we return a diff compared to an empty string so that we get the full output of the template.
-func populateDiffs(releaseName string, manifestSlice, templateSlice []helm.Manifest) ([]ManifestDiff, error) {
+func populateDiffs(releaseName string, manifestSlice, templateSlice []Manifest) ([]ManifestDiff, error) {
 	diffs := []ManifestDiff{}
 	for _, template := range templateSlice {
-		found := funk.Contains(manifestSlice, func(manifest helm.Manifest) bool {
+		found := funk.Contains(manifestSlice, func(manifest Manifest) bool {
 			return template.Metadata.Name == manifest.Metadata.Name && template.Kind == manifest.Kind && template.Source == manifest.Source
 		})
 		diffString := ""
 		thisDiff := &ManifestDiff{}
 		switch found {
 		case true:
-			manifestIndex := funk.IndexOf(manifestSlice, func(manifest helm.Manifest) bool {
+			manifestIndex := funk.IndexOf(manifestSlice, func(manifest Manifest) bool {
 				return template.Metadata.Name == manifest.Metadata.Name && template.Kind == manifest.Kind && template.Source == manifest.Source
 			})
 			diffString = diffReleaseManifests(manifestSlice[manifestIndex].Content, template.Content)
