@@ -197,7 +197,10 @@ var convertCmd = &cobra.Command{
 				klog.Fatal(err)
 			}
 			defer f.Close()
-			f.Truncate(0)
+			err = f.Truncate(0)
+			if err != nil {
+				klog.Fatalf("failed to truncate course file \"%s\": %s", courseFile, err)
+			}
 			w = f
 		}
 		e := yaml.NewEncoder(w)
