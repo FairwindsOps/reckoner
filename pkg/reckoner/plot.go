@@ -24,6 +24,7 @@ import (
 	"k8s.io/klog"
 
 	"github.com/fairwindsops/reckoner/pkg/course"
+	"github.com/fatih/color"
 	"github.com/thoas/go-funk"
 )
 
@@ -68,8 +69,8 @@ func (c Client) Plot() (string, error) {
 			}
 			fmt.Println(out)
 		} else {
-			klog.Warningf("plot not run due to --dry-run: %v", c.DryRun)
-			klog.Infof("would have run: helm %s", strings.Join(args, " "))
+			color.Yellow("plot not run due to --dry-run: %v", c.DryRun)
+			color.Yellow("would have run: helm %s", strings.Join(args, " "))
 		}
 
 		err = c.execHook(release.Hooks.PostInstall)

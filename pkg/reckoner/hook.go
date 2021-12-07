@@ -4,12 +4,13 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/fatih/color"
 	"k8s.io/klog"
 )
 
 func (c Client) execHook(hooks []string) error {
 	if c.DryRun {
-		klog.Warningf("hook not run due to --dry-run: %v", c.DryRun)
+		color.Yellow("hook not run due to --dry-run: %v", c.DryRun)
 		return nil
 	}
 
@@ -18,7 +19,7 @@ func (c Client) execHook(hooks []string) error {
 	}
 
 	for _, hook := range hooks {
-		klog.Infof("Running hook %s", hook)
+		color.Green("Running hook %s", hook)
 		commands := strings.Split(hook, " ")
 		args := commands[1:]
 
