@@ -133,9 +133,10 @@ var getManifestsCmd = &cobra.Command{
 		}
 		manifests, err := client.GetManifests()
 		if err != nil {
-			klog.Fatal(err)
+			color.Red(err.Error())
+			os.Exit(1)
 		}
-		fmt.Println(manifests)
+		fmt.Print(manifests)
 	},
 }
 

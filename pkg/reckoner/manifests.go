@@ -21,7 +21,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/fatih/color"
 	"gopkg.in/yaml.v3"
 )
 
@@ -43,7 +42,7 @@ func (c *Client) GetManifests() (string, error) {
 	for _, release := range c.CourseFile.Releases {
 		manifests, err := c.Helm.GetManifestString(release.Namespace, release.Name)
 		if err != nil {
-			color.Yellow("Failed to get manifests for %s: %s", release.Name, err)
+			return "", fmt.Errorf("error getting manifests for release %s - %s", release.Name, err)
 		}
 		fullOutput = fullOutput + manifests
 	}
