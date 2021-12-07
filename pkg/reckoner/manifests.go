@@ -27,7 +27,7 @@ type Metadata struct {
 func (c *Client) GetManifests() (string, error) {
 	var fullOutput string
 	for _, release := range c.CourseFile.Releases {
-		manifests, err := c.Helm.GetManifest(release.Namespace, release.Name)
+		manifests, err := c.Helm.GetManifestString(release.Namespace, release.Name)
 		if err != nil {
 			color.Yellow("Failed to get manifests for %s: %s", release.Name, err)
 		}

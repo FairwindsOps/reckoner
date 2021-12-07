@@ -37,7 +37,7 @@ func (md ManifestDiff) String() string {
 func (c *Client) Diff() (string, error) {
 	diffString := ""
 	for _, r := range c.CourseFile.Releases {
-		manifests, err := c.Helm.GetManifest(r.Namespace, r.Name)
+		manifests, err := c.Helm.GetManifestString(r.Namespace, r.Name)
 		if err != nil && err.Error() == "Error: release: not found\n" {
 			manifests = ""
 		} else if err != nil {
