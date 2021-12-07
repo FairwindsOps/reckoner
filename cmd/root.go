@@ -129,7 +129,8 @@ var getManifestsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false, true, false, courseSchema)
 		if err != nil {
-			klog.Fatal(err)
+			color.Red(err.Error())
+			os.Exit(1)
 		}
 		manifests, err := client.GetManifests()
 		if err != nil {
