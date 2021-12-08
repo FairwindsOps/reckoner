@@ -48,36 +48,42 @@ func (md ManifestDiff) String() string {
 }
 
 // Diff gathers a given release's manifest and templates and returns the diff string suitable for output.
-func (c *Client) Diff() (string, error) {
-	diffString := ""
+func (c *Client) Diff() error {
 	for _, r := range c.CourseFile.Releases {
+		fmt.Printf("Running 'diff' on %s in %s\n", r.Name, r.Namespace)
 		manifests, err := c.Helm.GetManifestString(r.Namespace, r.Name)
 		if err != nil && err.Error() == "Error: release: not found\n" {
 			manifests = ""
 		} else if err != nil {
-			return "", fmt.Errorf("error getting manifests for release %s in namespace %s: %s", r.Name, r.Namespace, err)
+			return fmt.Errorf("error getting manifests for release %s in namespace %s: %s", r.Name, r.Namespace, err)
 		}
 		templateOut, err := c.TemplateRelease(r.Name)
 		if err != nil {
-			return "", fmt.Errorf("error getting template for release %s in namespace %s: %s", r.Name, r.Namespace, err)
+			return fmt.Errorf("error getting template for release %s in namespace %s: %s", r.Name, r.Namespace, err)
 		}
 		manifestSlice, err := ManifestUnmarshal(manifests)
 		if err != nil {
-			return "", err
+			return err
 		}
 		templateSlice, err := ManifestUnmarshal(templateOut)
 		if err != nil {
-			return "", err
+			return err
 		}
 		diffs, err := populateDiffs(r.Name, manifestSlice, templateSlice)
 		if err != nil {
-			return "", err
+			return err
 		}
+		thisReleaseDiff := ""
 		for _, diff := range diffs {
-			diffString += diff.String()
+			thisReleaseDiff += diff.String()
+		}
+		if thisReleaseDiff == "" {
+			fmt.Printf("There are no differences in release %s\n", r.Name)
+		} else {
+			fmt.Print(thisReleaseDiff)
 		}
 	}
-	return diffString, nil
+	return nil
 }
 
 // poulateDiffs takes a specific release and diffs the manifests and templates. If the given release taken from the coursefile does

@@ -154,11 +154,10 @@ var diffCmd = &cobra.Command{
 		if err := client.UpdateHelmRepos(); err != nil {
 			klog.Fatal(err)
 		}
-		diffOut, err := client.Diff()
+		err = client.Diff()
 		if err != nil {
 			klog.Fatal(err)
 		}
-		fmt.Println(diffOut)
 	},
 }
 
