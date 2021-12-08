@@ -117,33 +117,34 @@ func diffReleaseManifests(old, new string) string {
 	wSrc, wDst, warray := dmp.DiffLinesToRunes(old, new)
 	diffs := dmp.DiffMainRunes(wSrc, wDst, true)
 	diffs = dmp.DiffCharsToLines(diffs, warray)
-	actual_diffs := []diffmatchpatch.Diff{}
+	actualDiffs := []diffmatchpatch.Diff{}
 	for i, d := range diffs {
-		if d.Type != diffmatchpatch.DiffEqual {
-			if i > 0 && diffs[i-1].Type == diffmatchpatch.DiffEqual {
-				text := strings.Split(diffs[i-1].Text, "\n")
-				context := 4
-				if len(text)-1 < context {
-					context = len(text) - 1
-				}
-				beforeContext := text[len(text)-context:]
-				beforeContext[0] = "\n" + beforeContext[0]
-				actual_diffs = append(actual_diffs, diffmatchpatch.Diff{Type: diffmatchpatch.DiffEqual, Text: strings.Join(beforeContext, "\n")})
+		if d.Type == diffmatchpatch.DiffEqual {
+			continue
+		}
+		if i > 0 && diffs[i-1].Type == diffmatchpatch.DiffEqual {
+			text := strings.Split(diffs[i-1].Text, "\n")
+			context := 4
+			if len(text)-1 < context {
+				context = len(text) - 1
 			}
-			formatDiffLines(&d)
-			actual_diffs = append(actual_diffs, d)
-			if i < len(diffs)-1 && diffs[i+1].Type == diffmatchpatch.DiffEqual {
-				text := strings.Split(diffs[i+1].Text, "\n")
-				context := 4
-				if len(text)-1 < context {
-					context = len(text) - 1
-				}
-				joinedText := strings.Join(text[:context], "\n") + "\n"
-				actual_diffs = append(actual_diffs, diffmatchpatch.Diff{Type: diffmatchpatch.DiffEqual, Text: joinedText})
+			beforeContext := text[len(text)-context:]
+			beforeContext[0] = "\n" + beforeContext[0]
+			actualDiffs = append(actualDiffs, diffmatchpatch.Diff{Type: diffmatchpatch.DiffEqual, Text: strings.Join(beforeContext, "\n")})
+		}
+		formatDiffLines(&d)
+		actualDiffs = append(actualDiffs, d)
+		if i < len(diffs)-1 && diffs[i+1].Type == diffmatchpatch.DiffEqual {
+			text := strings.Split(diffs[i+1].Text, "\n")
+			context := 4
+			if len(text)-1 < context {
+				context = len(text) - 1
 			}
+			joinedText := strings.Join(text[:context], "\n") + "\n"
+			actualDiffs = append(actualDiffs, diffmatchpatch.Diff{Type: diffmatchpatch.DiffEqual, Text: joinedText})
 		}
 	}
-	return dmp.DiffPrettyText(actual_diffs)
+	return dmp.DiffPrettyText(actualDiffs)
 }
 
 // formatDiffLines adds '+' in front of any DiffInsert diff lines, and '-' in front of any DiffDelete diff lines.
