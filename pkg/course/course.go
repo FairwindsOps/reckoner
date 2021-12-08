@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"github.com/fatih/color"
 	"github.com/xeipuuv/gojsonschema"
 	"gopkg.in/yaml.v3"
 	"k8s.io/klog"
@@ -264,7 +265,7 @@ func OpenCourseV2(fileName string, schema []byte) (*FileV2, error) {
 		if errConvert != nil {
 			return nil, fmt.Errorf("could not unmarshal file from v1 or v2 schema")
 		}
-		klog.Info("WARNING: this course file was automatically converted from v1 to v2 - this functionality may be removed in the future")
+		color.Yellow("WARNING: this course file was automatically converted from v1 to v2 at runtime - to convert the file permanently, run \"reckoner convert -i %s\"", fileName)
 		courseFile = fileV2
 	}
 

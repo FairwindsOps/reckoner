@@ -19,11 +19,11 @@ import (
 	"encoding/json"
 
 	"github.com/fairwindsops/reckoner/pkg/course"
+	"github.com/fatih/color"
 	"github.com/thoas/go-funk"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/klog"
 )
 
 // CreateNamespace creates a kubernetes namespace with the given annotations and labels
@@ -65,11 +65,11 @@ func (c *Client) PatchNamespace(namespace string, annotations, labels map[string
 // NamespaceManagement manages namespace names, annotations and labels
 func (c *Client) NamespaceManagement() error {
 	if c.DryRun {
-		klog.Warningf("namespace management not run due to --dry-run: %v", c.DryRun)
+		color.Yellow("namespace management not run due to --dry-run: %v", c.DryRun)
 		return nil
 	}
 	if !c.CreateNamespaces {
-		klog.Warningf("namespace management not run to do --create-namespaces=%t", c.CreateNamespaces)
+		color.Yellow("namespace management not run to do --create-namespaces=%t", c.CreateNamespaces)
 		return nil
 	}
 

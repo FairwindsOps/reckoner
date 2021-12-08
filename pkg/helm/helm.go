@@ -16,10 +16,12 @@ package helm
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os/exec"
 
-	"github.com/Masterminds/semver"
+	"github.com/Masterminds/semver/v3"
+	"github.com/thoas/go-funk"
 	"k8s.io/klog"
 )
 
@@ -55,7 +57,7 @@ func (h Client) Exec(arg ...string) (string, string, error) {
 	if err != nil {
 		klog.V(8).Infof("stdout: %s", outStr)
 		klog.V(7).Infof("stderr: %s", errStr)
-		return "", "", fmt.Errorf("exit code %d running command %s", cmd.ProcessState.ExitCode(), cmd.String())
+		return "", errStr, fmt.Errorf("exit code %d running command %s", cmd.ProcessState.ExitCode(), cmd.String())
 	}
 
 	return outStr, errStr, nil
@@ -82,4 +84,17 @@ func (h Client) AddRepository(repoName, url string) error {
 	}
 
 	return nil
+}
+
+// get can run any 'helm get' command
+func (h Client) get(kind, namespace, release string) (string, error) {
+	validKinds := []string{"all", "hooks", "manifest", "notes", "values"}
+	if !funk.Contains(validKinds, kind) {
+		return "", errors.New("invalid kind passed to helm: " + kind)
+	}
+	stdOut, stdErr, err := h.Exec("get", kind, "--namespace", namespace, release)
+	if err != nil && stdErr != "" {
+		return "", errors.New(stdErr)
+	}
+	return stdOut, nil
 }
