@@ -224,11 +224,13 @@ var updateCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, true, dryRun, createNamespaces, courseSchema)
 		if err != nil {
-			klog.Fatal(err)
+			color.Red(err.Error())
+			os.Exit(1)
 		}
 		err = client.Update()
 		if err != nil {
-			klog.Fatal(err)
+			color.Red(err.Error())
+			os.Exit(1)
 		}
 	},
 }
