@@ -47,7 +47,7 @@ func (md ManifestDiff) String() string {
 	return fmt.Sprintf("\n%s \"%s\"%s\n%s", md.Kind, md.Name, preDiff, md.Diff)
 }
 
-// Diff gathers a given release's manifest and templates and returns the diff string suitable for output.
+// Diff gathers a given release's manifest and templates and outputs a string of diffs if there are any or reports that there are no diffs.
 func (c *Client) Diff() error {
 	for _, r := range c.CourseFile.Releases {
 		fmt.Printf("Running 'diff' on %s in %s\n", r.Name, r.Namespace)
