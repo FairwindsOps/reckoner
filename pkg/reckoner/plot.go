@@ -29,27 +29,27 @@ import (
 )
 
 // Plot actually plots the releases
-func (c Client) Plot() (string, error) {
+func (c Client) Plot() error {
 	err := c.NamespaceManagement()
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	err = c.UpdateHelmRepos()
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	err = c.execHook(c.CourseFile.Hooks.PreInstall)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	for _, release := range c.CourseFile.Releases {
 
 		err = c.execHook(release.Hooks.PreInstall)
 		if err != nil {
-			return "", err
+			return err
 		}
 
 		args, tmpFile, err := buildHelmArgs(release.Name, "upgrade", *release)
@@ -62,9 +62,9 @@ func (c Client) Plot() (string, error) {
 		}
 
 		if !c.DryRun {
-			out, _, err := c.Helm.Exec(args...)
+			out, stdErr, err := c.Helm.Exec(args...)
 			if err != nil {
-				klog.Error(err)
+				klog.Error(stdErr)
 				continue
 			}
 			fmt.Println(out)
@@ -75,16 +75,16 @@ func (c Client) Plot() (string, error) {
 
 		err = c.execHook(release.Hooks.PostInstall)
 		if err != nil {
-			return "", err
+			return err
 		}
 	}
 
 	err = c.execHook(c.CourseFile.Hooks.PostInstall)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return "", nil
+	return nil
 }
 
 // TemplateAll runs the same as plot but runs template instead
@@ -118,9 +118,9 @@ func (c Client) TemplateRelease(releaseName string) (string, error) {
 	if tmpFile != nil {
 		defer os.Remove(tmpFile.Name())
 	}
-	out, _, err := c.Helm.Exec(args...)
+	out, stdErr, _ := c.Helm.Exec(args...)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("error templating release %s: %s", releaseName, stdErr)
 	}
 	return out, nil
 }
