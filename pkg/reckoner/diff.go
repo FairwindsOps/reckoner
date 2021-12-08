@@ -50,7 +50,7 @@ func (md ManifestDiff) String() string {
 // Diff gathers a given release's manifest and templates and outputs a string of diffs if there are any or reports that there are no diffs.
 func (c *Client) Diff() error {
 	for _, r := range c.CourseFile.Releases {
-		fmt.Printf("Running 'diff' on %s in %s\n", r.Name, r.Namespace)
+		fmt.Printf("\nRunning 'diff' on %s in %s\n", r.Name, r.Namespace)
 		manifests, err := c.Helm.GetManifestString(r.Namespace, r.Name)
 		if err != nil && err.Error() == "Error: release: not found\n" {
 			manifests = ""
@@ -78,7 +78,7 @@ func (c *Client) Diff() error {
 			thisReleaseDiff += diff.String()
 		}
 		if thisReleaseDiff == "" {
-			fmt.Printf("There are no differences in release %s\n", r.Name)
+			color.Green("There are no differences in release %s", r.Name)
 		} else {
 			fmt.Print(thisReleaseDiff)
 		}
