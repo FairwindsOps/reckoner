@@ -265,7 +265,7 @@ func OpenCourseV2(fileName string, schema []byte) (*FileV2, error) {
 		if errConvert != nil {
 			return nil, fmt.Errorf("could not unmarshal file from v1 or v2 schema")
 		}
-		color.Yellow("WARNING: this course file was automatically converted from v1 to v2 at runtime - to convert the file permanently, run \"reckoner convert -i %s\"", courseFile)
+		color.Yellow("WARNING: this course file was automatically converted from v1 to v2 at runtime - to convert the file permanently, run \"reckoner convert -i %s\"", fileName)
 		courseFile = fileV2
 	}
 
