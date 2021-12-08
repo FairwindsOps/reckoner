@@ -66,6 +66,7 @@ func init() {
 	rootCmd.AddCommand(diffCmd)
 	rootCmd.AddCommand(lintCmd)
 	rootCmd.AddCommand(getManifestsCmd)
+	rootCmd.AddCommand(updateCmd)
 
 	klog.InitFlags(nil)
 	pflag.CommandLine.AddGoFlag(flag.CommandLine.Lookup("v"))
@@ -95,11 +96,10 @@ var plotCmd = &cobra.Command{
 		if err != nil {
 			klog.Fatal(err)
 		}
-		output, err := client.Plot()
+		err = client.Plot()
 		if err != nil {
 			klog.Fatal(err)
 		}
-		fmt.Println(output)
 	},
 }
 
@@ -180,7 +180,7 @@ var lintCmd = &cobra.Command{
 
 var convertCmd = &cobra.Command{
 	Use:   "convert",
-	Short: "convert <course file> from v1 to v2 schema",
+	Short: "convert <course file>",
 	Long:  "Converts a course file from the v1 python schema to v2 go schema",
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		runAll = true
@@ -210,6 +210,23 @@ var convertCmd = &cobra.Command{
 		e.SetIndent(2)
 
 		err = e.Encode(newCourse)
+		if err != nil {
+			klog.Fatal(err)
+		}
+	},
+}
+
+var updateCmd = &cobra.Command{
+	Use:     "update",
+	Short:   "update <course file>",
+	Long:    "Only install/upgrade a release if there are changes.",
+	PreRunE: validateArgs,
+	Run: func(cmd *cobra.Command, args []string) {
+		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, true, dryRun, createNamespaces, courseSchema)
+		if err != nil {
+			klog.Fatal(err)
+		}
+		err = client.Update()
 		if err != nil {
 			klog.Fatal(err)
 		}
