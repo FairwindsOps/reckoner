@@ -59,7 +59,7 @@ testcases:
       reckoner update {{.course}} -a
     assertions:
     - result.code ShouldEqual 0
-- name: 01 - update only release
+- name: 01 - template only release
   steps:
   - script: |
       reckoner template {{.course}} -o {{.release}}
