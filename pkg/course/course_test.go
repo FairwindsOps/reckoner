@@ -90,7 +90,7 @@ func TestConvertV1toV2(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ConvertV1toV2(tt.fileName)
+			got, err := convertV1toV2(tt.fileName)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {

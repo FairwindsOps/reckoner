@@ -18,6 +18,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"strings"
 
 	"github.com/fatih/color"
 	"github.com/xeipuuv/gojsonschema"
@@ -184,8 +186,8 @@ type RepositoryV1 struct {
 // RepositoryV1List is a set of repositories
 type RepositoryV1List map[string]Repository
 
-// ConvertV1toV2 converts the old python course file to the newer golang v2 schema
-func ConvertV1toV2(fileName string) (*FileV2, error) {
+// convertV1toV2 converts the old python course file to the newer golang v2 schema
+func convertV1toV2(fileName string) (*FileV2, error) {
 	newFile := &FileV2{
 		SchemaVersion: "v2",
 	}
@@ -261,12 +263,23 @@ func OpenCourseV2(fileName string, schema []byte) (*FileV2, error) {
 	}
 	if courseFile.SchemaVersion != "v2" {
 		klog.V(2).Infof("did not detect v2 course file - trying conversion from v1")
-		fileV2, errConvert := ConvertV1toV2(fileName)
+		fileV2, errConvert := convertV1toV2(fileName)
 		if errConvert != nil {
-			return nil, fmt.Errorf("could not unmarshal file from v1 or v2 schema")
+			return nil, fmt.Errorf("could not unmarshal file from v1 or v2 schema:\n\t%s", errConvert.Error())
 		}
 		color.Yellow("WARNING: this course file was automatically converted from v1 to v2 at runtime - to convert the file permanently, run \"reckoner convert -i %s\"", fileName)
 		courseFile = fileV2
+	}
+
+	// Marshal back here just so we can populate the env vars without any yaml comments present
+	data, _ = yaml.Marshal(courseFile)
+	data, err = parseEnv(data)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse env variables: %v", err)
+	}
+	err = yaml.Unmarshal(data, courseFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal file after parsing env vars: %s", err.Error())
 	}
 
 	courseFile.populateDefaultNamespace()
@@ -295,7 +308,6 @@ func OpenCourseV1(fileName string) (*FileV1, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return courseFile, nil
 }
 
@@ -383,4 +395,21 @@ func (f FileV2) validateJsonSchema(schemaData []byte) error {
 		return fmt.Errorf("jsonSchema validation failed")
 	}
 	return nil
+}
+
+func parseEnv(data []byte) ([]byte, error) {
+	dataWithEnv := os.Expand(string(data), envMapper)
+	if strings.Contains(dataWithEnv, "_ENV_NOT_SET_") {
+		return nil, fmt.Errorf("course has env variables that are not properly set")
+	}
+	return []byte(dataWithEnv), nil
+}
+
+func envMapper(key string) string {
+	v := os.Getenv(key)
+	if v == "" {
+		color.Red("ERROR: environment variable %s is not set", key)
+		return "_ENV_NOT_SET_"
+	}
+	return v
 }

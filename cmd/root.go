@@ -94,11 +94,13 @@ var plotCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, true, dryRun, createNamespaces, courseSchema)
 		if err != nil {
-			klog.Fatal(err)
+			color.Red(err.Error())
+			os.Exit(1)
 		}
 		err = client.Plot()
 		if err != nil {
-			klog.Fatal(err)
+			color.Red(err.Error())
+			os.Exit(1)
 		}
 	},
 }
@@ -111,11 +113,13 @@ var templateCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false, true, false, courseSchema)
 		if err != nil {
-			klog.Fatal(err)
+			color.Red(err.Error())
+			os.Exit(1)
 		}
 		tmpl, err := client.TemplateAll()
 		if err != nil {
-			klog.Fatal(err)
+			color.Red(err.Error())
+			os.Exit(1)
 		}
 		fmt.Println(tmpl)
 	},
@@ -149,14 +153,17 @@ var diffCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false, true, false, courseSchema)
 		if err != nil {
-			klog.Fatal(err)
+			color.Red(err.Error())
+			os.Exit(1)
 		}
 		if err := client.UpdateHelmRepos(); err != nil {
-			klog.Fatal(err)
+			color.Red(err.Error())
+			os.Exit(1)
 		}
 		err = client.Diff()
 		if err != nil {
-			klog.Fatal(err)
+			color.Red(err.Error())
+			os.Exit(1)
 		}
 	},
 }
@@ -172,7 +179,8 @@ var lintCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		_, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false, true, false, courseSchema)
 		if err != nil {
-			klog.Fatal(err)
+			color.Red(err.Error())
+			os.Exit(1)
 		}
 		klog.Infof("course file %s is good to go!", courseFile)
 	},
@@ -187,20 +195,23 @@ var convertCmd = &cobra.Command{
 		return validateArgs(cmd, args)
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		newCourse, err := course.ConvertV1toV2(courseFile)
+		newCourse, err := course.OpenCourseV2(courseFile, courseSchema)
 		if err != nil {
-			klog.Fatal(err)
+			color.Red(err.Error())
+			os.Exit(1)
 		}
 		w := os.Stdout
 		if inPlaceConvert {
 			f, err := os.OpenFile(courseFile, os.O_RDWR, 0644)
 			if err != nil {
-				klog.Fatal(err)
+				color.Red(err.Error())
+				os.Exit(1)
 			}
 			defer f.Close()
 			err = f.Truncate(0)
 			if err != nil {
-				klog.Fatalf("failed to truncate course file \"%s\": %s", courseFile, err)
+				color.Red("failed to truncate course file \"%s\": %s", courseFile, err)
+				os.Exit(1)
 			}
 			w = f
 		}
@@ -211,7 +222,8 @@ var convertCmd = &cobra.Command{
 
 		err = e.Encode(newCourse)
 		if err != nil {
-			klog.Fatal(err)
+			color.Red(err.Error())
+			os.Exit(1)
 		}
 	},
 }

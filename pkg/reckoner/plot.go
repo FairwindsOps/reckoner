@@ -64,8 +64,7 @@ func (c Client) Plot() error {
 		if !c.DryRun {
 			out, stdErr, err := c.Helm.Exec(args...)
 			if err != nil {
-				klog.Error(stdErr)
-				continue
+				return fmt.Errorf("error plotting release %s: %s", release.Name, stdErr)
 			}
 			fmt.Println(out)
 		} else {
