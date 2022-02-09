@@ -171,7 +171,6 @@ func (c Client) UpdateHelmRepos() error {
 				klog.Error(err)
 			}
 		}
-		//TODO handle Git repos
 	}
 	return nil
 }

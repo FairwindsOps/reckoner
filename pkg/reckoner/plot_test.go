@@ -36,9 +36,9 @@ func Test_buildHelmArgs(t *testing.T) {
 		{
 			name: "basic template",
 			args: args{
-				releaseName: "basic-release",
-				command:     "template",
+				command: "template",
 				release: course.Release{
+					Name:       "basic-release",
 					Namespace:  "basic-ns",
 					Chart:      "helmchart",
 					Version:    "v0.0.0",
@@ -61,9 +61,9 @@ func Test_buildHelmArgs(t *testing.T) {
 		{
 			name: "basic upgrade",
 			args: args{
-				releaseName: "basic-release",
-				command:     "upgrade",
+				command: "upgrade",
 				release: course.Release{
+					Name:       "basic-release",
 					Namespace:  "basic-ns",
 					Chart:      "helmchart",
 					Version:    "v0.0.0",
@@ -87,7 +87,7 @@ func Test_buildHelmArgs(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, _, err := buildHelmArgs(tt.args.releaseName, tt.args.command, tt.args.release)
+			got, _, err := buildHelmArgs(tt.args.command, tt.args.release)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
