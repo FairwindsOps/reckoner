@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"regexp"
 	"sync"
 
 	"k8s.io/client-go/kubernetes"
@@ -191,6 +192,21 @@ func (c *Client) filterReleases() error {
 			releaseIndex := funk.IndexOf(c.CourseFile.Releases, func(rel *course.Release) bool {
 				return rel.Name == releaseName
 			})
+			repository := c.CourseFile.Repositories[c.CourseFile.Releases[releaseIndex].Repository]
+			if repository.Git != "" {
+				cacheDir, err := c.Helm.Cache()
+				if err != nil {
+					return err
+				}
+				re := regexp.MustCompile(`\:\/\/|\/|\.`)
+				repoPathName := re.ReplaceAllString(repository.Git, "_")
+				clonePath := fmt.Sprintf("%s/%s_goreckoner", cacheDir, repoPathName)
+
+				err = c.CourseFile.Releases[releaseIndex].SetGitPaths(clonePath, repository.Path)
+				if err != nil {
+					return err
+				}
+			}
 			selectedReleases = append(selectedReleases, c.CourseFile.Releases[releaseIndex])
 		}
 		releases = selectedReleases

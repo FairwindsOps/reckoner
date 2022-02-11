@@ -20,7 +20,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"regexp"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -57,7 +56,7 @@ func (c Client) Plot() error {
 			return err
 		}
 
-		if c.CourseFile.Repositories[release.Repository].Git != "" {
+		if release.GitClonePath != nil {
 			if err := c.cloneGitRepository(release); err != nil {
 				return err
 			}
@@ -138,22 +137,11 @@ func (c Client) TemplateRelease(releaseName string) (string, error) {
 func (c Client) cloneGitRepository(release *course.Release) error {
 	releaseRepository := c.CourseFile.Repositories[release.Repository]
 	if release.Version == "" {
+		color.Yellow("Git repository in use with no version specified. Defaulting to master branch. This default will be removed in the future, please define a version for this release: %s", release.Name)
 		release.Version = "master"
 	}
-	cacheDir, err := c.Helm.Cache()
-	if err != nil {
-		return err
-	}
-	re := regexp.MustCompile(`\:\/\/|\/|\.`)
-	subPath := re.ReplaceAllString(releaseRepository.Git, "_")
-	clonePath := fmt.Sprintf("%s/%s_goreckoner", cacheDir, subPath)
 
-	err = release.SetGitClonePath(fmt.Sprintf("%s/%s", clonePath, releaseRepository.Path))
-	if err != nil {
-		return err
-	}
-
-	repo, worktree, err := setupGitRepoPath(clonePath, releaseRepository.Git)
+	repo, worktree, err := setupGitRepoPath(*release.GitClonePath, releaseRepository.Git)
 	if err != nil {
 		return err
 	}
@@ -162,22 +150,19 @@ func (c Client) cloneGitRepository(release *course.Release) error {
 		Tags: git.AllTags,
 	})
 	if err != nil && !errors.Is(err, git.NoErrAlreadyUpToDate) {
-		return fmt.Errorf("Error fetching git repository %s - %s", clonePath, err)
+		return fmt.Errorf("Error fetching git repository %s - %s", *release.GitClonePath, err)
 	}
 
-	hash, err := repo.ResolveRevision(plumbing.Revision(release.Version))
-	if errors.Is(err, plumbing.ErrReferenceNotFound) {
-		hash, err = repo.ResolveRevision(plumbing.Revision(fmt.Sprintf("origin/%s", release.Version)))
-	}
+	hash, err := determineGitRevisionHash(repo, release.Version)
 	if err != nil {
-		return fmt.Errorf("Error resolving git revision %s - %s", release.Version, err)
+		return err
 	}
 
 	err = worktree.Checkout(&git.CheckoutOptions{
 		Hash: *hash,
 	})
 	if err != nil {
-		return fmt.Errorf("Error checking out git repository %s - %s", clonePath, err)
+		return fmt.Errorf("Error checking out git repository %s - %s", *release.GitClonePath, err)
 	}
 
 	return nil
@@ -198,9 +183,8 @@ func buildHelmArgs(command string, release course.Release) ([]string, *os.File, 
 	}
 
 	args = append(args, release.Name)
-	useGit, gitPath := release.GitClonePath()
-	if useGit {
-		args = append(args, gitPath)
+	if release.GitClonePath != nil {
+		args = append(args, fmt.Sprintf("%s/%s", *release.GitClonePath, *release.GitChartSubPath))
 	} else {
 		args = append(args, fmt.Sprintf("%s/%s", release.Repository, release.Chart))
 	}
@@ -226,7 +210,7 @@ func buildHelmArgs(command string, release course.Release) ([]string, *os.File, 
 
 	args = append(args, fmt.Sprintf("--namespace=%s", release.Namespace))
 
-	if release.Version != "" && !useGit {
+	if release.Version != "" && release.GitClonePath == nil {
 		args = append(args, fmt.Sprintf("--version=%s", release.Version))
 	}
 
@@ -266,7 +250,7 @@ func setupGitRepoPath(clonePath, url string) (*git.Repository, *git.Worktree, er
 		}
 	}
 	if empty, err := dirIsEmpty(clonePath); empty && err == nil {
-		repo, err := git.PlainClone(clonePath, false, &git.CloneOptions{
+		repo, err = git.PlainClone(clonePath, false, &git.CloneOptions{
 			URL: url,
 		})
 		if err != nil {
@@ -305,6 +289,17 @@ func setupGitRepoPath(clonePath, url string) (*git.Repository, *git.Worktree, er
 		}
 	}
 	return repo, worktree, nil
+}
+
+func determineGitRevisionHash(repo *git.Repository, version string) (*plumbing.Hash, error) {
+	hash, err := repo.ResolveRevision(plumbing.Revision(version))
+	if errors.Is(err, plumbing.ErrReferenceNotFound) {
+		hash, err = repo.ResolveRevision(plumbing.Revision(fmt.Sprintf("origin/%s", version)))
+	}
+	if err != nil {
+		return nil, fmt.Errorf("Error resolving git revision %s - %s", version, err)
+	}
+	return hash, nil
 }
 
 func dirIsEmpty(name string) (bool, error) {

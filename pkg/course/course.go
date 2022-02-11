@@ -92,7 +92,8 @@ type NamespaceConfig struct {
 
 // Release represents a helm release and all of its configuration
 type Release struct {
-	gitClonePath *string
+	GitClonePath    *string
+	GitChartSubPath *string
 	// Name is the name of the release
 	Name string `yaml:"name" json:"name"`
 	// Namespace is the namespace that this release should be placed in
@@ -398,21 +399,14 @@ func (f FileV2) validateJsonSchema(schemaData []byte) error {
 	return nil
 }
 
-// SetGitClonePath allows the caller to set the path of a locally stored chart from a git repository already cloned
-func (r *Release) SetGitClonePath(path string) error {
-	if r.gitClonePath != nil {
-		return fmt.Errorf("cannot set GitClonePath on release %s - it is already set to %s", r.Name, *r.gitClonePath)
+// SetGitPaths allows the caller to set both the clone path and the chart subpath for a release.
+func (r *Release) SetGitPaths(clonePath, subPath string) error {
+	if r.GitClonePath != nil {
+		return fmt.Errorf("cannot set GitClonePath on release %s - it is already set to %s", r.Name, *r.GitClonePath)
 	}
-	r.gitClonePath = &path
+	r.GitClonePath = &clonePath
+	r.GitChartSubPath = &subPath
 	return nil
-}
-
-// GitClonePath returns true if a git clone path has been set for this release and also returns said path
-func (r Release) GitClonePath() (bool, string) {
-	if r.gitClonePath != nil {
-		return true, *r.gitClonePath
-	}
-	return false, ""
 }
 
 func parseEnv(data []byte) ([]byte, error) {
