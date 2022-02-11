@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+	"strings"
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/thoas/go-funk"
@@ -84,6 +85,21 @@ func (h Client) AddRepository(repoName, url string) error {
 	}
 
 	return nil
+}
+
+// Cache returns the local helm cache if defined
+func (h Client) Cache() (string, error) {
+	stdOut, stdErr, _ := h.Exec("env")
+	if stdErr != "" {
+		return "", fmt.Errorf("error running helm env: %s", stdErr)
+	}
+	for _, line := range strings.Split(stdOut, "\n") {
+		if strings.Contains(line, "HELM_REPOSITORY_CACHE") {
+			value := strings.Split(line, "=")[1]
+			return strings.Trim(value, "\""), nil
+		}
+	}
+	return "", fmt.Errorf("could not find HELM_REPOSITORY_CACHE in helm env output")
 }
 
 // get can run any 'helm get' command

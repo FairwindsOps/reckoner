@@ -52,7 +52,13 @@ func (c Client) Plot() error {
 			return err
 		}
 
-		args, tmpFile, err := buildHelmArgs(release.Name, "upgrade", *release)
+		if release.GitClonePath != nil {
+			if err := c.cloneGitRepository(release); err != nil {
+				return err
+			}
+		}
+
+		args, tmpFile, err := buildHelmArgs("upgrade", *release)
 		if err != nil {
 			klog.Error(err)
 			continue
@@ -110,7 +116,7 @@ func (c Client) TemplateRelease(releaseName string) (string, error) {
 	releaseIndex := funk.IndexOf(c.CourseFile.Releases, func(release *course.Release) bool {
 		return release.Name == releaseName
 	})
-	args, tmpFile, err := buildHelmArgs(releaseName, "template", *c.CourseFile.Releases[releaseIndex])
+	args, tmpFile, err := buildHelmArgs("template", *c.CourseFile.Releases[releaseIndex])
 	if err != nil {
 		return "", err
 	}
@@ -128,7 +134,7 @@ func (c Client) TemplateRelease(releaseName string) (string, error) {
 // takes a command either "upgrade" or "template"
 // also returns the temp file of the values file to close
 // NOTE: The order is really important here
-func buildHelmArgs(releaseName, command string, release course.Release) ([]string, *os.File, error) {
+func buildHelmArgs(command string, release course.Release) ([]string, *os.File, error) {
 	var valuesFile *os.File
 	var args []string
 	switch command {
@@ -138,8 +144,12 @@ func buildHelmArgs(releaseName, command string, release course.Release) ([]strin
 		args = []string{"template"}
 	}
 
-	args = append(args, releaseName)
-	args = append(args, fmt.Sprintf("%s/%s", release.Repository, release.Chart))
+	args = append(args, release.Name)
+	if release.GitClonePath != nil {
+		args = append(args, fmt.Sprintf("%s/%s", *release.GitClonePath, *release.GitChartSubPath))
+	} else {
+		args = append(args, fmt.Sprintf("%s/%s", release.Repository, release.Chart))
+	}
 
 	if release.Values != nil {
 		tmpValuesFile, err := makeTempValuesFile(release.Values)
@@ -162,7 +172,7 @@ func buildHelmArgs(releaseName, command string, release course.Release) ([]strin
 
 	args = append(args, fmt.Sprintf("--namespace=%s", release.Namespace))
 
-	if release.Version != "" {
+	if release.Version != "" && release.GitClonePath == nil {
 		args = append(args, fmt.Sprintf("--version=%s", release.Version))
 	}
 

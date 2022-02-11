@@ -92,6 +92,8 @@ type NamespaceConfig struct {
 
 // Release represents a helm release and all of its configuration
 type Release struct {
+	GitClonePath    *string
+	GitChartSubPath *string
 	// Name is the name of the release
 	Name string `yaml:"name" json:"name"`
 	// Namespace is the namespace that this release should be placed in
@@ -394,6 +396,16 @@ func (f FileV2) validateJsonSchema(schemaData []byte) error {
 		}
 		return fmt.Errorf("jsonSchema validation failed")
 	}
+	return nil
+}
+
+// SetGitPaths allows the caller to set both the clone path and the chart subpath for a release.
+func (r *Release) SetGitPaths(clonePath, subPath string) error {
+	if r.GitClonePath != nil {
+		return fmt.Errorf("cannot set GitClonePath on release %s - it is already set to %s", r.Name, *r.GitClonePath)
+	}
+	r.GitClonePath = &clonePath
+	r.GitChartSubPath = &subPath
 	return nil
 }
 
