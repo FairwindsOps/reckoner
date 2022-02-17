@@ -23,7 +23,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"gopkg.in/yaml.v3"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 
 	"github.com/fairwindsops/reckoner/pkg/course"
 	"github.com/fairwindsops/reckoner/pkg/reckoner"

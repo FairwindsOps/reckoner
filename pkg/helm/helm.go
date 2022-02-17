@@ -23,7 +23,7 @@ import (
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/thoas/go-funk"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 )
 
 // Client is a local helm client
