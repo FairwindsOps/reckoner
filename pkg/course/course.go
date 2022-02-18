@@ -24,7 +24,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/xeipuuv/gojsonschema"
 	"gopkg.in/yaml.v3"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 )
 
 // FileV2 is the heart of reckoner, it contains the definitions of the releases to be installed

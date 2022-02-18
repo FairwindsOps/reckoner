@@ -21,7 +21,7 @@ import (
 	"strings"
 
 	"gopkg.in/yaml.v3"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 
 	"github.com/fairwindsops/reckoner/pkg/course"
 	"github.com/fatih/color"

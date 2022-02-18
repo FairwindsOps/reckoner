@@ -19,7 +19,7 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 )
 
 func (c Client) execHook(hooks []string) error {

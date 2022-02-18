@@ -22,7 +22,7 @@ import (
 	"sync"
 
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 
 	// This is required to auth to cloud providers (i.e. GKE)
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
