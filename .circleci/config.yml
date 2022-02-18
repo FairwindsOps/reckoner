@@ -74,8 +74,8 @@ references:
     run:
       name: Install Golang
       command: |
-        curl -LO https://golang.org/dl/go1.16.4.linux-amd64.tar.gz
-        tar -C /usr/local -xzf go1.16.4.linux-amd64.tar.gz
+        curl -LO https://golang.org/dl/go1.17.7.linux-amd64.tar.gz
+        tar -C /usr/local -xzf go1.17.7.linux-amd64.tar.gz
         echo "PATH=$PATH:/usr/local/go/bin" >> ${BASH_ENV}
 jobs:
   build-3-7:
@@ -127,7 +127,7 @@ jobs:
   test-go:
     working_directory: /go/src/github.com/fairwindsops/reckoner
     docker:
-      - image: circleci/golang:1.16
+      - image: circleci/golang:1.17
         environment:
           GO111MODULE: "on"
     steps:
