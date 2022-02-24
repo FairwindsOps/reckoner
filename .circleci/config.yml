@@ -136,15 +136,13 @@ jobs:
   snapshot-go:
     working_directory: /go/src/github.com/fairwindsops/reckoner
     docker:
-      - image: quay.io/reactiveops/ci-images:v11-buster
+      - image: goreleaser/goreleaser:v1.5.0
     steps:
       - checkout
-      - *install_go
-      - *install_goreleaser
       - setup_remote_docker
       - run:
           name: Goreleaser Snapshot
-          command: goreleaser --snapshot
+          command: goreleaser --snapshot --skip-sign
       - store_artifacts:
           path: dist
           destination: snapshot
@@ -186,17 +184,34 @@ jobs:
             npm run check-links
             npm run build
       - run:
-          name: Install AWS CLI
+          name: Install Tools
           command: |
+            cd /tmp
+            echo "Installing AWS CLI"
             curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
             unzip awscliv2.zip
             sudo ./aws/install
+
+            echo "Installing Hashicorp Vault"
+            curl -LO https://releases.hashicorp.com/vault/1.9.3/vault_1.9.3_linux_amd64.zip
+            unzip vault_1.9.3_linux_amd64.zip
+            sudo mv vault /usr/bin/vault
+            sudo chmod +x /usr/bin/vault
+            vault --version
+
+            echo "Installing yq"
+            curl -LO https://github.com/mikefarah/yq/releases/download/v4.16.2/yq_linux_amd64.tar.gz
+            tar -zxvf yq_linux_amd64.tar.gz
+            sudo mv yq_linux_amd64 /usr/bin/yq
+            sudo chmod +x /usr/bin/yq
+            yq --version
+      - rok8s/get_vault_env:
+          vault_path: repo/pluto/env
       - run:
           name: Publish Docs Site to S3
           command: |
             cd ./dist
-            aws s3 sync ./ s3://reckoner.docs.fairwinds.com --delete
-
+            aws s3 sync ./ s3://pluto.docs.fairwinds.com --delete
 
 workflows:
   version: 2

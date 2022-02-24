@@ -13,6 +13,20 @@ builds:
     goarm:
       - 6
       - 7
+release:
+  prerelease: auto
+  footer: |
+    You can verify the signatures of the checksums.txt file using [cosign](https://github.com/sigstore/cosign).
+
+    ```
+    cosign verify-blob checksums.txt --signature=checksums.txt.sig  --key https://artifacts.fairwinds.com/cosign.pub
+    ```
+signs:
+- cmd: cosign
+  args: ["sign-blob", "--key=hashivault://cosign", "-output-signature=${signature}", "${artifact}"]
+  artifacts: checksum
+checksum:
+  name_template: "checksums.txt"
 dockers:
 - image_templates:
   - "quay.io/fairwinds/reckoner:go-{{ .Tag }}"
