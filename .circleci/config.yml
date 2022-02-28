@@ -26,7 +26,7 @@ references:
     command_runner_image: quay.io/reactiveops/ci-images:v11-buster
     enable_docker_layer_caching: false
     store-test-results: /tmp/test-results
-    kind_version: 0.10.0
+    kind_version: 0.11.1
     requires:
       - test
       - snapshot
