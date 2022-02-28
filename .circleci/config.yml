@@ -17,35 +17,8 @@ version: 2.1
 orbs:
   rok8s: fairwinds/rok8s-scripts@11
 
-executors:
-  python-3-7:
-    docker:
-      - image: circleci/python:3.7
-  python-3-8:
-    docker:
-      - image: circleci/python:3.8
-  python-3-9:
-    docker:
-      - image: cimg/python:3.9
-
 references:
-  e2e_configuration_python: &e2e_configuration_python
-    pre_script: end_to_end_testing/pre_python.sh
-    script: end_to_end_testing/run_python.sh
-    command_runner_image: quay.io/reactiveops/ci-images:v11-buster
-    enable_docker_layer_caching: false
-    store-test-results: /tmp/test-results
-    kind_version: 0.10.0
-    requires:
-      - build-3-7
-      - build-3-8
-      - build-3-9
-    filters:
-      branches:
-        only: /.*/
-      tags:
-        ignore: /.*/
-  e2e_configuration_go: &e2e_configuration_go
+  e2e_configuration: &e2e_configuration
     attach-workspace: true
     workspace-location: /
     pre_script: end_to_end_testing/pre_go.sh
@@ -55,75 +28,15 @@ references:
     store-test-results: /tmp/test-results
     kind_version: 0.10.0
     requires:
-      - test-go
-      - snapshot-go
+      - test
+      - snapshot
     filters:
       branches:
         only: /.*/
       tags:
         ignore: /.*/
-  install_goreleaser: &install_goreleaser
-    run:
-      name: Install Goreleaser
-      command: |
-        curl -fsSLo goreleaser_amd64.deb https://github.com/goreleaser/goreleaser/releases/download/v0.164.0/goreleaser_amd64.deb
-        echo "577c88019cca787161ee1ff853d45be7f635ad7d8a204bd7a2735ab04abcc255  goreleaser_amd64.deb" | sha256sum -c -
-        sudo dpkg -i goreleaser_amd64.deb
-        rm goreleaser_amd64.deb
-  install_go: &install_go
-    run:
-      name: Install Golang
-      command: |
-        curl -LO https://golang.org/dl/go1.17.7.linux-amd64.tar.gz
-        tar -C /usr/local -xzf go1.17.7.linux-amd64.tar.gz
-        echo "PATH=$PATH:/usr/local/go/bin" >> ${BASH_ENV}
 jobs:
-  build-3-7:
-    executor: python-3-7
-    working_directory: ~/reckoner
-    steps:
-      - run:
-          name: Setup PATH to support pip user installs
-          command: echo 'export PATH=$PATH:/home/circleci/.local/bin' >> $BASH_ENV
-      - checkout
-      - run:
-          name: Unit Tests
-          command: |
-            pip install --user -r development-requirements.txt
-            pip install --user -e .
-            reckoner --version
-            pytest --cov ./
-  build-3-8:
-    executor: python-3-8
-    working_directory: ~/reckoner
-    steps:
-      - run:
-          name: Setup PATH to support pip user installs
-          command: echo 'export PATH=$PATH:/home/circleci/.local/bin' >> $BASH_ENV
-      - checkout
-      - run:
-          name: Unit Tests
-          command: |
-            pip install --user -r development-requirements.txt
-            pip install --user -e .
-            reckoner --version
-            pytest --cov ./
-  build-3-9:
-    executor: python-3-9
-    working_directory: ~/reckoner
-    steps:
-      - run:
-          name: Setup PATH to support pip user installs
-          command: echo 'export PATH=$PATH:/home/circleci/.local/bin' >> $BASH_ENV
-      - checkout
-      - run:
-          name: Unit Tests
-          command: |
-            pip install --user -r development-requirements.txt
-            pip install --user -e .
-            reckoner --version
-            pytest --cov ./
-  test-go:
+  test:
     working_directory: /go/src/github.com/fairwindsops/reckoner
     docker:
       - image: circleci/golang:1.17
@@ -132,7 +45,7 @@ jobs:
     steps:
       - checkout
       - run: make test
-  snapshot-go:
+  snapshot:
     working_directory: /go/src/github.com/fairwindsops/reckoner
     docker:
       - image: goreleaser/goreleaser:v1.5.0
@@ -149,26 +62,6 @@ jobs:
           root: /go/src/github.com/fairwindsops/reckoner
           paths:
           - dist
-  release:
-    executor: python-3-9
-    environment:
-      GITHUB_ORGANIZATION: $CIRCLE_PROJECT_USERNAME
-      GITHUB_REPOSITORY: $CIRCLE_PROJECT_REPONAME
-    working_directory: ~/reckoner
-    steps:
-      - checkout
-      - run:
-          name: init .pypirc
-          command: |
-            echo -e "[pypi]" >> ~/.pypirc
-            echo -e "username = $PYPI_USERNAME" >> ~/.pypirc
-            echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
-      - run:
-          name: package and upload
-          command: |
-            pip install twine
-            python setup.py sdist bdist_wheel
-            twine upload dist/*
   publish_docs:
     docker:
       - image: cimg/node:15.5.1
@@ -213,73 +106,45 @@ workflows:
   version: 2
   build_and_test:
     jobs:
-      - test-go:
+      - test:
           filters:
             tags:
               ignore: /.*/
             branches:
               only: /.*/
-      - build-3-7:
-          filters:
-            tags:
-              ignore: /.*/
-            branches:
-              only: /.*/
-      - build-3-8:
-          filters:
-            tags:
-              ignore: /.*/
-            branches:
-              only: /.*/
-      - build-3-9:
-          filters:
-            tags:
-              ignore: /.*/
-            branches:
-              only: /.*/
-      - snapshot-go:
+      - snapshot:
           requires:
-            - test-go
+            - test
           filters:
             tags:
               ignore: /.*/
             branches:
               only: /.*/
       - rok8s/kubernetes_e2e_tests:
-          name: "End-To-End Kubernetes 1.19 - Python"
+          name: "End-To-End Kubernetes 1.19.7"
           kind_node_image: "kindest/node:v1.19.7@sha256:a70639454e97a4b733f9d9b67e12c01f6b0297449d5b9cbbef87473458e26dca"
-          <<: *e2e_configuration_python
+          <<: *e2e_configuration
       - rok8s/kubernetes_e2e_tests:
-          name: "End-To-End Kubernetes 1.20 - Python"
-          kind_node_image: "kindest/node:v1.20.2@sha256:8f7ea6e7642c0da54f04a7ee10431549c0257315b3a634f6ef2fecaaedb19bab"
-          <<: *e2e_configuration_python
+          name: "End-To-End Kubernetes 1.20.2"
+          kind_node_image: "kindest/node:v1.20.2@sha256:15d3b5c4f521a84896ed1ead1b14e4774d02202d5c65ab68f30eeaf310a3b1a7"
+          <<: *e2e_configuration
       - rok8s/kubernetes_e2e_tests:
-          name: "End-To-End Kubernetes 1.19 - Go"
-          kind_node_image: "kindest/node:v1.19.7@sha256:a70639454e97a4b733f9d9b67e12c01f6b0297449d5b9cbbef87473458e26dca"
-          <<: *e2e_configuration_go
-      - rok8s/kubernetes_e2e_tests:
-          name: "End-To-End Kubernetes 1.20 - Go"
-          kind_node_image: "kindest/node:v1.20.2@sha256:8f7ea6e7642c0da54f04a7ee10431549c0257315b3a634f6ef2fecaaedb19bab"
-          <<: *e2e_configuration_go
-  release:
-    jobs:
-      - release:
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - publish_docs:
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /.*/
-      - rok8s/github_release:
-          requires:
-            - release
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /.*/
+          name: "End-To-End Kubernetes 1.21.1"
+          kind_node_image: "kindest/node:v1.21.2@sha256:9d07ff05e4afefbba983fac311807b3c17a5f36e7061f6cb7e2ba756255b2be4"
+          <<: *e2e_configuration
+  # release:
+  #   jobs:
+  #     - publish_docs:
+  #         filters:
+  #           branches:
+  #             ignore: /.*/
+  #           tags:
+  #             only: /.*/
+  #     - rok8s/github_release:
+  #         requires:
+  #           - release
+  #         filters:
+  #           branches:
+  #             ignore: /.*/
+  #           tags:
+  #             only: /.*/
