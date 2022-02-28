@@ -19,10 +19,9 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
-	"k8s.io/klog/v2"
 )
 
-func (c Client) execHook(hooks []string) error {
+func (c Client) execHook(hooks []string, kind string) error {
 	if c.DryRun {
 		color.Yellow("hook not run due to --dry-run: %v", c.DryRun)
 		return nil
@@ -33,7 +32,7 @@ func (c Client) execHook(hooks []string) error {
 	}
 
 	for _, hook := range hooks {
-		color.Green("Running hook %s", hook)
+		color.Green("Running %s hook: %s", kind, hook)
 		commands := strings.Split(hook, " ")
 		args := commands[1:]
 
@@ -41,7 +40,7 @@ func (c Client) execHook(hooks []string) error {
 		command.Dir = c.BaseDirectory
 
 		data, runError := command.CombinedOutput()
-		klog.V(3).Infof("command %s output: %s", command.String(), string(data))
+		color.Green("Hook '%s' output: %s", command.String(), string(data))
 		if runError != nil {
 			return runError
 		}

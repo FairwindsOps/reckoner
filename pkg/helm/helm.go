@@ -102,6 +102,16 @@ func (h Client) Cache() (string, error) {
 	return "", fmt.Errorf("could not find HELM_REPOSITORY_CACHE in helm env output")
 }
 
+// UpdateDependencies will update dependencies for a given release if it is stored locally (i.e. pulled from git)
+func (h Client) UpdateDependencies(path string) error {
+	klog.V(5).Infof("updating chart dependencies for %s", path)
+	_, stdErr, _ := h.Exec("dependency", "update", path)
+	if stdErr != "" {
+		return fmt.Errorf("error running helm dependency update: %s", stdErr)
+	}
+	return nil
+}
+
 // get can run any 'helm get' command
 func (h Client) get(kind, namespace, release string) (string, error) {
 	validKinds := []string{"all", "hooks", "manifest", "notes", "values"}

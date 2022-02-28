@@ -51,7 +51,8 @@ func (c Client) cloneGitRepository(release *course.Release) error {
 	}
 
 	err = worktree.Checkout(&git.CheckoutOptions{
-		Hash: *hash,
+		Hash:  *hash,
+		Force: true,
 	})
 	if err != nil {
 		return fmt.Errorf("Error checking out git repository %s - %s", *release.GitClonePath, err)

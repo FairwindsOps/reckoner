@@ -16,15 +16,24 @@ package course
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/fatih/color"
+	"github.com/thoas/go-funk"
 	"github.com/xeipuuv/gojsonschema"
+
+	// "gopkg.in/yaml.v2"
 	"gopkg.in/yaml.v3"
 	"k8s.io/klog/v2"
+)
+
+var (
+	SchemaValidationError error = errors.New("Course file has schema validation errors")
 )
 
 // FileV2 is the heart of reckoner, it contains the definitions of the releases to be installed
@@ -34,15 +43,15 @@ type FileV2 struct {
 	SchemaVersion string `yaml:"schema,omitempty" json:"schema,omitempty"`
 	// DefaultNamespace is the namespace that releases will be installed into if
 	// a namespace is not specified on the Release
-	DefaultNamespace string `yaml:"namespace" json:"namespace"`
+	DefaultNamespace string `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 	// DefaultRepository is the default repository that the release will be installed
 	// from if one is not specified on the Release
-	DefaultRepository string `yaml:"repository" json:"repository"`
+	DefaultRepository string `yaml:"repository,omitempty" json:"repository,omitempty"`
 	// Context is the kubeconfig context to use when installing
 	// if that context is not available, then reckoner should fail
 	Context string `yaml:"context,omitempty" json:"context,omitempty"`
 	// Repositories is a list of helm repositories that can be used to look for charts
-	Repositories RepositoryList `yaml:"repositories" json:"repositories"`
+	Repositories RepositoryMap `yaml:"repositories,omitempty" json:"repositories,omitempty"`
 	// MinimumVersions is a block that restricts this course file from being used with
 	// outdated versions of helm or reckoner
 	MinimumVersions struct {
@@ -54,11 +63,14 @@ type FileV2 struct {
 	// NamespaceMgmt contains the default namespace config for all namespaces managed by this course.
 	NamespaceMgmt struct {
 		// Default is the default namespace config for this course
-		Default NamespaceConfig `yaml:"default" json:"default"`
+		Default *NamespaceConfig `yaml:"default" json:"default"`
 	} `yaml:"namespace_management,omitempty" json:"namespace_management,omitempty"`
 	// Releases is the list of releases that should be maintained by this course file.
-	Releases []*Release `yaml:"releases" json:"releases"`
+	Releases []*Release `yaml:"releases,omitempty" json:"releases,omitempty"`
 }
+
+// FileV2Unmarshal is a helper type that allows us to have a custom unmarshal function for the FileV2 struct
+type FileV2Unmarshal FileV2
 
 // Repository is a helm reposotory definition
 type Repository struct {
@@ -67,8 +79,8 @@ type Repository struct {
 	Path string `yaml:"path,omitempty" json:"path,omitempty"`
 }
 
-// RepositoryList is a set of repositories
-type RepositoryList map[string]Repository
+// RepositoryMap is a set of repositories
+type RepositoryMap map[string]Repository
 
 // Hooks are a set of short scripts to run before or after installation
 type Hooks struct {
@@ -92,14 +104,18 @@ type NamespaceConfig struct {
 
 // Release represents a helm release and all of its configuration
 type Release struct {
-	GitClonePath    *string
-	GitChartSubPath *string
+	// GitClonePath is the path where the repository should be cloned into
+	// ignored when parsing to and from yaml or json
+	GitClonePath *string `yaml:"-" json:"-"`
+	// GitChartSubPath is the sub path of the repository where the chart is located after being cloned
+	// ignored when parsing to and from yaml or json
+	GitChartSubPath *string `yaml:"-" json:"-"`
 	// Name is the name of the release
 	Name string `yaml:"name" json:"name"`
 	// Namespace is the namespace that this release should be placed in
 	Namespace string `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 	// NamespaceMgmt is a set of labels and annotations to be added to the namespace for this release
-	NamespaceMgmt NamespaceConfig `yaml:"namespace_management,omitempty" json:"namespace_management,omitempty"`
+	NamespaceMgmt *NamespaceConfig `yaml:"namespace_management,omitempty" json:"namespace_management,omitempty"`
 	// Chart is the name of the chart used by this release.
 	// If empty, then the release name is assumed to be the chart.
 	Chart string `yaml:"chart,omitempty" json:"chart,omitempty"`
@@ -123,12 +139,10 @@ type Release struct {
 
 // ReleaseV1 represents a helm release and all of its configuration from v1 schema
 type ReleaseV1 struct {
-	// Name is the name of the release
-	Name string `yaml:"name" json:"name"`
 	// Namespace is the namespace that this release should be placed in
 	Namespace string `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 	// NamespaceMgmt is a set of labels and annotations to be added to the namespace for this release
-	NamespaceMgmt NamespaceConfig `yaml:"namespace_management,omitempty" json:"namespace_management,omitempty"`
+	NamespaceMgmt *NamespaceConfig `yaml:"namespace_management,omitempty" json:"namespace_management,omitempty"`
 	// Chart is the name of the chart used by this release
 	Chart string `yaml:"chart" json:"chart"`
 	// Hooks are pre and post install hooks
@@ -156,7 +170,7 @@ type FileV1 struct {
 	// if that context is not available, then reckoner should fail
 	Context string `yaml:"context" json:"context"`
 	// Repositories is a list of helm repositories that can be used to look for charts
-	Repositories RepositoryList `yaml:"repositories" json:"repositories"`
+	Repositories RepositoryMap `yaml:"repositories" json:"repositories"`
 	// MinimumVersions is a block that restricts this course file from being used with
 	// outdated versions of helm or reckoner
 	MinimumVersions struct {
@@ -168,14 +182,14 @@ type FileV1 struct {
 	// NamespaceMgmt contains the default namespace config for all namespaces managed by this course.
 	NamespaceMgmt struct {
 		// Default is the default namespace config for this course
-		Default NamespaceConfig `yaml:"default" json:"default"`
+		Default *NamespaceConfig `yaml:"default" json:"default"`
 	} `yaml:"namespace_management" json:"namespace_management"`
 	// Charts is the map of releases
-	Charts ChartsListV1 `yaml:"charts" json:"charts"`
+	Charts map[string]ReleaseV1 `yaml:"charts" json:"charts"`
 }
 
-// ChartsListV1 is a list of charts for the v1 schema
-type ChartsListV1 []ReleaseV1
+// FileV1Unmarshal is a helper type that allows us to have a custom unmarshal function for the FileV2 struct
+type FileV1Unmarshal FileV1
 
 // RepositoryV1 is a helm reposotory definition
 type RepositoryV1 struct {
@@ -205,11 +219,10 @@ func convertV1toV2(fileName string) (*FileV2, error) {
 	newFile.NamespaceMgmt = oldFile.NamespaceMgmt
 	newFile.DefaultRepository = oldFile.DefaultRepository
 	newFile.Repositories = oldFile.Repositories
-	newFile.Releases = make([]*Release, len(oldFile.Charts))
 	newFile.Hooks = oldFile.Hooks
 	newFile.MinimumVersions = oldFile.MinimumVersions
 
-	for releaseIndex, release := range oldFile.Charts {
+	for releaseName, release := range oldFile.Charts {
 		repositoryName, ok := release.Repository.(string)
 		// The repository is not in the format repository: string. Need to handle that
 		if !ok {
@@ -226,7 +239,7 @@ func convertV1toV2(fileName string) (*FileV2, error) {
 			if addRepo.Git != "" {
 				klog.V(3).Infof("detected a git-based inline repository. Attempting to convert to repository in header")
 
-				repositoryName = fmt.Sprintf("%s-git-repository", release.Name)
+				repositoryName = fmt.Sprintf("%s-git-repository", releaseName)
 				newFile.Repositories[repositoryName] = Repository{
 					Git:  addRepo.Git,
 					Path: addRepo.Path,
@@ -237,8 +250,8 @@ func convertV1toV2(fileName string) (*FileV2, error) {
 				repositoryName = addRepo.Name
 			}
 		}
-		newFile.Releases[releaseIndex] = &Release{
-			Name:          release.Name,
+		newFile.Releases = append(newFile.Releases, &Release{
+			Name:          releaseName,
 			Namespace:     release.Namespace,
 			NamespaceMgmt: release.NamespaceMgmt,
 			Repository:    repositoryName,
@@ -246,7 +259,7 @@ func convertV1toV2(fileName string) (*FileV2, error) {
 			Version:       release.Version,
 			Values:        release.Values,
 			Hooks:         release.Hooks,
-		}
+		})
 	}
 	return newFile, nil
 }
@@ -258,10 +271,10 @@ func OpenCourseV2(fileName string, schema []byte) (*FileV2, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	err = yaml.Unmarshal(data, courseFile)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal file: %s", err.Error())
+		klog.V(3).Infof("failed to unmarshal file: %s", err.Error())
+		return nil, SchemaValidationError
 	}
 	if courseFile.SchemaVersion != "v2" {
 		klog.V(2).Infof("did not detect v2 course file - trying conversion from v1")
@@ -273,27 +286,23 @@ func OpenCourseV2(fileName string, schema []byte) (*FileV2, error) {
 		courseFile = fileV2
 	}
 
-	// Marshal back here just so we can populate the env vars without any yaml comments present
-	data, _ = yaml.Marshal(courseFile)
-	data, err = parseEnv(data)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse env variables: %v", err)
-	}
-	err = yaml.Unmarshal(data, courseFile)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal file after parsing env vars: %s", err.Error())
+		klog.V(3).Infof("failed to unmarshal file after parsing env vars: %s", err.Error())
+		return nil, SchemaValidationError
 	}
 
 	courseFile.populateDefaultNamespace()
 	courseFile.populateDefaultRepository()
 	courseFile.populateEmptyChartNames()
+	courseFile.populateNamespaceManagement()
 
 	if courseFile.SchemaVersion != "v2" {
 		return nil, fmt.Errorf("unsupported schema version: %s", courseFile.SchemaVersion)
 	}
 
 	if err := courseFile.validateJsonSchema(schema); err != nil {
-		return nil, fmt.Errorf("failed to validate jsonSchema in course file: %s", fileName)
+		klog.V(3).Infof("failed to validate jsonSchema in course file: %s", fileName)
+		return nil, SchemaValidationError
 	}
 
 	return courseFile, nil
@@ -313,22 +322,76 @@ func OpenCourseV1(fileName string) (*FileV1, error) {
 	return courseFile, nil
 }
 
-// UnmarshalYAML implements the yaml.Unmarshaler interface to customize how we Unmarshal this particular field of the FileV1 struct
-func (cl *ChartsListV1) UnmarshalYAML(value *yaml.Node) error {
-	if value.Kind != yaml.MappingNode {
-		return fmt.Errorf("ChartsList must contain YAML mapping, has %v", value.Kind)
+func (f *FileV1) UnmarshalYAML(value *yaml.Node) error {
+	err := decodeYamlWithEnv(value)
+	if err != nil {
+		return err
 	}
-	*cl = make([]ReleaseV1, len(value.Content)/2)
-	for i := 0; i < len(value.Content); i += 2 {
-		var res = &(*cl)[i/2]
-		if err := value.Content[i].Decode(&res.Name); err != nil {
-			return err
-		}
-		if err := value.Content[i+1].Decode(&res); err != nil {
-			return err
-		}
+	if err := value.Decode((*FileV1Unmarshal)(f)); err != nil {
+		return err
 	}
 	return nil
+}
+
+func decodeYamlWithEnv(value *yaml.Node) error {
+	v := *value
+	for i := 0; i < len(v.Content); i += 2 {
+		if v.Kind == yaml.SequenceNode {
+			for i := range v.Content {
+				var err error
+				v.Content[i].Value, err = parseEnv(v.Content[i].Value)
+				if err != nil {
+					return err
+				}
+				parseYamlTypes(v.Content[i])
+			}
+			continue
+		}
+		if v.Content[i+1].Kind != yaml.ScalarNode {
+			err := decodeYamlWithEnv(v.Content[i+1])
+			if err != nil {
+				return err
+			}
+			continue
+		}
+		if v.Content[i+1].Tag == "!!str" {
+			var err error
+			v.Content[i+1].Value, err = parseEnv(v.Content[i+1].Value)
+			if err != nil {
+				return err
+			}
+			parseYamlTypes(v.Content[i+1])
+			continue
+		}
+	}
+	*value = v
+	return nil
+}
+
+func parseYamlTypes(node *yaml.Node) {
+	quotedVariables := []yaml.Style{yaml.DoubleQuotedStyle, yaml.SingleQuotedStyle}
+	trueVals := []string{"true", "yes", "on"}
+	falseVals := []string{"false", "no", "off"}
+	if !funk.Contains(quotedVariables, node.Style) {
+		if funk.ContainsString(trueVals, node.Value) {
+			node.Tag = "!!bool"
+			node.Value = "true"
+			return
+		}
+		if funk.ContainsString(falseVals, node.Value) {
+			node.Tag = "!!bool"
+			node.Value = "false"
+			return
+		}
+		if _, err := strconv.ParseFloat(node.Value, 64); err == nil {
+			node.Tag = "!!float"
+			return
+		}
+		if _, err := strconv.Atoi(node.Value); err == nil {
+			node.Tag = "!!int"
+			return
+		}
+	}
 }
 
 // populateDefaultNamespace sets the default namespace in each release
@@ -374,7 +437,22 @@ func (f *FileV2) populateEmptyChartNames() {
 	}
 }
 
-func (f FileV2) validateJsonSchema(schemaData []byte) error {
+// populateNamespaceManagement populates each release with the default namespace management settings if they are not set
+func (f *FileV2) populateNamespaceManagement() {
+	var emptyNamespaceMgmt NamespaceConfig
+	if f.NamespaceMgmt.Default == nil {
+		f.NamespaceMgmt.Default = &emptyNamespaceMgmt
+	}
+	for releaseIndex, release := range f.Releases {
+		if release.NamespaceMgmt == nil {
+			klog.V(5).Infof("using default namespace management for release: %s", release.Name)
+			release.NamespaceMgmt = f.NamespaceMgmt.Default
+			f.Releases[releaseIndex] = release
+		}
+	}
+}
+
+func (f *FileV2) validateJsonSchema(schemaData []byte) error {
 	klog.V(10).Infof("validating course file against schema: \n%s", string(schemaData))
 	schema, err := gojsonschema.NewSchema(gojsonschema.NewBytesLoader(schemaData))
 	if err != nil {
@@ -383,18 +461,18 @@ func (f FileV2) validateJsonSchema(schemaData []byte) error {
 
 	jsonData, err := json.Marshal(f)
 	if err != nil {
-		return err
+		return SchemaValidationError
 	}
 
 	result, err := schema.Validate(gojsonschema.NewBytesLoader(jsonData))
 	if err != nil {
-		return err
+		return SchemaValidationError
 	}
 	if len(result.Errors()) > 0 {
 		for _, err := range result.Errors() {
 			klog.Errorf("jsonSchema error: %s", err.String())
 		}
-		return fmt.Errorf("jsonSchema validation failed")
+		return SchemaValidationError
 	}
 	return nil
 }
@@ -409,19 +487,18 @@ func (r *Release) SetGitPaths(clonePath, subPath string) error {
 	return nil
 }
 
-func parseEnv(data []byte) ([]byte, error) {
+func parseEnv(data string) (string, error) {
 	dataWithEnv := os.Expand(string(data), envMapper)
 	if strings.Contains(dataWithEnv, "_ENV_NOT_SET_") {
-		return nil, fmt.Errorf("course has env variables that are not properly set")
+		return data, fmt.Errorf("course has env variables that are not properly set")
 	}
-	return []byte(dataWithEnv), nil
+	return dataWithEnv, nil
 }
 
 func envMapper(key string) string {
-	v := os.Getenv(key)
-	if v == "" {
-		color.Red("ERROR: environment variable %s is not set", key)
-		return "_ENV_NOT_SET_"
+	if value, ok := os.LookupEnv(key); ok {
+		return value
 	}
-	return v
+	color.Red("ERROR: environment variable %s is not set", key)
+	return "_ENV_NOT_SET_"
 }

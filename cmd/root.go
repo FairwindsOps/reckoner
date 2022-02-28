@@ -44,6 +44,8 @@ var (
 	onlyRun []string
 	// createNamespaces contains the boolean flag to create namespaces
 	createNamespaces bool
+	// continueOnError contains the boolean flag to continue processing releases even if one errors
+	continueOnError bool
 	// inPlaceConvert contains the boolean flag to update the course file in place
 	inPlaceConvert bool
 	// noColor contains the boolean flag to disable color output
@@ -56,6 +58,10 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&dryRun, "dry-run", false, "Implies helm --dry-run --debug and skips any hooks")
 	rootCmd.PersistentFlags().BoolVar(&createNamespaces, "create-namespaces", true, "If true, allow reckoner to create namespaces.")
 	rootCmd.PersistentFlags().BoolVar(&noColor, "no-color", false, "If true, don't colorize output.")
+
+	plotCmd.PersistentFlags().BoolVar(&continueOnError, "continue-on-error", false, "If true, continue plotting releases even if one or more has errors.")
+	updateCmd.PersistentFlags().BoolVar(&continueOnError, "continue-on-error", false, "If true, continue plotting releases even if one or more has errors.")
+	diffCmd.PersistentFlags().BoolVar(&continueOnError, "continue-on-error", false, "If true, continue plotting releases even if one or more has errors.")
 
 	convertCmd.Flags().BoolVarP(&inPlaceConvert, "in-place", "i", false, "If specified, will update the file in place, otherwise outputs to stdout.")
 
@@ -92,7 +98,7 @@ var plotCmd = &cobra.Command{
 	Long:    "Runs a helm install on a release or several releases.",
 	PreRunE: validateArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, true, dryRun, createNamespaces, courseSchema)
+		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, true, dryRun, createNamespaces, courseSchema, continueOnError)
 		if err != nil {
 			color.Red(err.Error())
 			os.Exit(1)
@@ -100,6 +106,9 @@ var plotCmd = &cobra.Command{
 		err = client.Plot()
 		if err != nil {
 			color.Red(err.Error())
+			os.Exit(1)
+		}
+		if client.Errors > 0 {
 			os.Exit(1)
 		}
 	},
@@ -111,7 +120,7 @@ var templateCmd = &cobra.Command{
 	Long:    "Templates a helm chart for a release or several releases. Automatically sets --create-namespaces=false --dry-run=true",
 	PreRunE: validateArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false, true, false, courseSchema)
+		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false, true, false, courseSchema, continueOnError)
 		if err != nil {
 			color.Red(err.Error())
 			os.Exit(1)
@@ -131,7 +140,7 @@ var getManifestsCmd = &cobra.Command{
 	Long:    "Gets the manifests currently in the cluster.",
 	PreRunE: validateArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false, true, false, courseSchema)
+		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false, true, false, courseSchema, continueOnError)
 		if err != nil {
 			color.Red(err.Error())
 			os.Exit(1)
@@ -151,7 +160,7 @@ var diffCmd = &cobra.Command{
 	Long:    "Diffs the currently defined release and the one in the cluster",
 	PreRunE: validateArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false, true, false, courseSchema)
+		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false, true, false, courseSchema, continueOnError)
 		if err != nil {
 			color.Red(err.Error())
 			os.Exit(1)
@@ -163,6 +172,9 @@ var diffCmd = &cobra.Command{
 		err = client.Diff()
 		if err != nil {
 			color.Red(err.Error())
+			os.Exit(1)
+		}
+		if client.Errors > 0 {
 			os.Exit(1)
 		}
 	},
@@ -177,12 +189,12 @@ var lintCmd = &cobra.Command{
 		return validateArgs(cmd, args)
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		_, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false, true, false, courseSchema)
+		_, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false, true, false, courseSchema, continueOnError)
 		if err != nil {
 			color.Red(err.Error())
 			os.Exit(1)
 		}
-		klog.Infof("course file %s is good to go!", courseFile)
+		color.Green("No schema validation errors found in course file: %s", courseFile)
 	},
 }
 
@@ -234,7 +246,7 @@ var updateCmd = &cobra.Command{
 	Long:    "Only install/upgrade a release if there are changes.",
 	PreRunE: validateArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, true, dryRun, createNamespaces, courseSchema)
+		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, true, dryRun, createNamespaces, courseSchema, continueOnError)
 		if err != nil {
 			color.Red(err.Error())
 			os.Exit(1)
@@ -242,6 +254,9 @@ var updateCmd = &cobra.Command{
 		err = client.Update()
 		if err != nil {
 			color.Red(err.Error())
+			os.Exit(1)
+		}
+		if client.Errors > 0 {
 			os.Exit(1)
 		}
 	},

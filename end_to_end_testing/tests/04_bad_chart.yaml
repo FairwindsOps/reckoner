@@ -18,5 +18,5 @@ testcases:
 - name: 04 - cleanup
   steps:
     - script: |
-        helm -n {{.namespace}} delete {{.release}}
-        kubectl delete ns {{.namespace}}
+        helm -n {{.namespace}} delete {{.release}} || true
+        kubectl delete ns {{.namespace}} || true

@@ -48,7 +48,7 @@ func TestConvertV1toV2(t *testing.T) {
 				DefaultNamespace:  "namespace",
 				DefaultRepository: "stable",
 				Context:           "farglebargle",
-				Repositories: RepositoryList{
+				Repositories: RepositoryMap{
 					"git-repo-test": {
 						Git:  "https://github.com/FairwindsOps/charts",
 						Path: "stable",
