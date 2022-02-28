@@ -96,12 +96,12 @@ jobs:
             sudo chmod +x /usr/bin/yq
             yq --version
       - rok8s/get_vault_env:
-          vault_path: repo/pluto/env
+          vault_path: repo/reckoner/env
       - run:
           name: Publish Docs Site to S3
           command: |
             cd ./dist
-            aws s3 sync ./ s3://pluto.docs.fairwinds.com --delete
+            aws s3 sync ./ s3://reckoner.docs.fairwinds.com --delete
 workflows:
   version: 2
   build_and_test:
