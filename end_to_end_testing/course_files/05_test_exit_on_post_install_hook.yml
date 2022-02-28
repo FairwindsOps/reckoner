@@ -13,4 +13,4 @@ charts:
       pre_install:
         - whoami
       post_install:
-      - exit 1
+        - exit 1

@@ -121,16 +121,16 @@ workflows:
             branches:
               only: /.*/
       - rok8s/kubernetes_e2e_tests:
-          name: "End-To-End Kubernetes 1.19.7"
-          kind_node_image: "kindest/node:v1.19.7@sha256:a70639454e97a4b733f9d9b67e12c01f6b0297449d5b9cbbef87473458e26dca"
-          <<: *e2e_configuration
-      - rok8s/kubernetes_e2e_tests:
           name: "End-To-End Kubernetes 1.20.2"
           kind_node_image: "kindest/node:v1.20.2@sha256:15d3b5c4f521a84896ed1ead1b14e4774d02202d5c65ab68f30eeaf310a3b1a7"
           <<: *e2e_configuration
       - rok8s/kubernetes_e2e_tests:
           name: "End-To-End Kubernetes 1.21.1"
           kind_node_image: "kindest/node:v1.21.2@sha256:9d07ff05e4afefbba983fac311807b3c17a5f36e7061f6cb7e2ba756255b2be4"
+          <<: *e2e_configuration
+      - rok8s/kubernetes_e2e_tests:
+          name: "End-To-End Kubernetes 1.22.0"
+          kind_node_image: "kindest/node:v1.22.0@sha256:b8bda84bb3a190e6e028b1760d277454a72267a5454b57db34437c34a588d047"
           <<: *e2e_configuration
   # release:
   #   jobs:
