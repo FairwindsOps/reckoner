@@ -21,7 +21,6 @@ import (
 	"strings"
 
 	"gopkg.in/yaml.v3"
-	"k8s.io/klog/v2"
 
 	"github.com/fairwindsops/reckoner/pkg/course"
 	"github.com/fatih/color"
@@ -29,7 +28,7 @@ import (
 )
 
 // Plot actually plots the releases
-func (c Client) Plot() error {
+func (c *Client) Plot() error {
 	err := c.NamespaceManagement()
 	if err != nil {
 		return err
@@ -40,27 +39,27 @@ func (c Client) Plot() error {
 		return err
 	}
 
-	err = c.execHook(c.CourseFile.Hooks.PreInstall)
+	err = c.execHook(c.CourseFile.Hooks.PreInstall, "course pre")
 	if err != nil {
-		return err
+		if !c.Continue() {
+			return err
+		}
 	}
 
 	for _, release := range c.CourseFile.Releases {
 
-		err = c.execHook(release.Hooks.PreInstall)
+		err = c.execHook(release.Hooks.PreInstall, "release pre")
 		if err != nil {
-			return err
-		}
-
-		if release.GitClonePath != nil {
-			if err := c.cloneGitRepository(release); err != nil {
-				return err
+			if c.Continue() {
+				color.Red("error with release %s: %s, continuing.", release.Name, err.Error())
+				continue
 			}
+			return err
 		}
 
 		args, tmpFile, err := buildHelmArgs("upgrade", *release)
 		if err != nil {
-			klog.Error(err)
+			color.Red(err.Error())
 			continue
 		}
 		if tmpFile != nil {
@@ -68,8 +67,28 @@ func (c Client) Plot() error {
 		}
 
 		if !c.DryRun {
+			if release.GitClonePath != nil {
+				if err := c.cloneGitRepository(release); err != nil {
+					if c.Continue() {
+						color.Red("error with release %s: %s, continuing.", release.Name, err.Error())
+						continue
+					}
+					return err
+				}
+				if err := c.Helm.UpdateDependencies(fmt.Sprintf("%s/%s", *release.GitClonePath, *release.GitChartSubPath)); err != nil {
+					if c.Continue() {
+						color.Red("error with release %s: %s, continuing.", release.Name, err.Error())
+						continue
+					}
+					return err
+				}
+			}
 			out, stdErr, err := c.Helm.Exec(args...)
 			if err != nil {
+				if c.Continue() {
+					color.Red("error with release %s: %s, continuing.", release.Name, err.Error())
+					continue
+				}
 				return fmt.Errorf("error plotting release %s: %s", release.Name, stdErr)
 			}
 			fmt.Println(out)
@@ -78,15 +97,21 @@ func (c Client) Plot() error {
 			color.Yellow("would have run: helm %s", strings.Join(args, " "))
 		}
 
-		err = c.execHook(release.Hooks.PostInstall)
+		err = c.execHook(release.Hooks.PostInstall, "release post")
 		if err != nil {
+			if c.Continue() {
+				color.Red("error with release %s: %s, continuing.", release.Name, err.Error())
+				continue
+			}
 			return err
 		}
 	}
 
-	err = c.execHook(c.CourseFile.Hooks.PostInstall)
+	err = c.execHook(c.CourseFile.Hooks.PostInstall, "course post")
 	if err != nil {
-		return err
+		if !c.Continue() {
+			return err
+		}
 	}
 
 	return nil
@@ -103,7 +128,7 @@ func (c Client) TemplateAll() (string, error) {
 	for _, release := range c.CourseFile.Releases {
 		out, err := c.TemplateRelease(release.Name)
 		if err != nil {
-			klog.Error(err)
+			color.Red(err.Error())
 			continue
 		}
 		fullOutput = fullOutput + out

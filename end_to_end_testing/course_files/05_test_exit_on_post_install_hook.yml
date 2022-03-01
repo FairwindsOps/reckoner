@@ -12,4 +12,5 @@ charts:
     hooks:
       pre_install:
         - whoami
-      post_install: exit 1
+      post_install:
+        - exit 1

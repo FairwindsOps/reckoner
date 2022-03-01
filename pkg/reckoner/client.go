@@ -45,6 +45,8 @@ type Client struct {
 	BaseDirectory    string
 	DryRun           bool
 	CreateNamespaces bool
+	ContinueOnError  bool
+	Errors           int
 }
 
 var once sync.Once
@@ -52,7 +54,7 @@ var clientset *kubernetes.Clientset
 
 // NewClient returns a client. Attempts to open a v2 schema course file
 // If getClient is true, attempts to get a Kubernetes client from config
-func NewClient(fileName, version string, plotAll bool, releases []string, kubeClient bool, dryRun bool, createNamespaces bool, schema []byte) (*Client, error) {
+func NewClient(fileName, version string, plotAll bool, releases []string, kubeClient bool, dryRun bool, createNamespaces bool, schema []byte, continueOnError bool) (*Client, error) {
 	// Get the course file
 	courseFile, err := course.OpenCourseV2(fileName, schema)
 	if err != nil {
@@ -74,6 +76,7 @@ func NewClient(fileName, version string, plotAll bool, releases []string, kubeCl
 		BaseDirectory:    path.Dir(fileName),
 		DryRun:           dryRun,
 		CreateNamespaces: createNamespaces,
+		ContinueOnError:  continueOnError,
 	}
 
 	// Check versions
@@ -93,6 +96,14 @@ func NewClient(fileName, version string, plotAll bool, releases []string, kubeCl
 	}
 
 	return client, nil
+}
+
+func (c *Client) Continue() bool {
+	if c.ContinueOnError {
+		c.Errors += 1
+		return true
+	}
+	return false
 }
 
 func getKubeClient() *kubernetes.Clientset {
@@ -192,21 +203,6 @@ func (c *Client) filterReleases() error {
 			releaseIndex := funk.IndexOf(c.CourseFile.Releases, func(rel *course.Release) bool {
 				return rel.Name == releaseName
 			})
-			repository := c.CourseFile.Repositories[c.CourseFile.Releases[releaseIndex].Repository]
-			if repository.Git != "" {
-				cacheDir, err := c.Helm.Cache()
-				if err != nil {
-					return err
-				}
-				re := regexp.MustCompile(`\:\/\/|\/|\.`)
-				repoPathName := re.ReplaceAllString(repository.Git, "_")
-				clonePath := fmt.Sprintf("%s/%s_goreckoner", cacheDir, repoPathName)
-
-				err = c.CourseFile.Releases[releaseIndex].SetGitPaths(clonePath, repository.Path)
-				if err != nil {
-					return err
-				}
-			}
 			selectedReleases = append(selectedReleases, c.CourseFile.Releases[releaseIndex])
 		}
 		releases = selectedReleases
@@ -217,6 +213,32 @@ func (c *Client) filterReleases() error {
 		}
 		return fmt.Errorf("no valid releases found in course that match input releases")
 	}
+	releases, err := c.prepareGitRepositories(releases)
+	if err != nil {
+		return err
+	}
 	c.CourseFile.Releases = releases
 	return nil
+}
+
+// prepareGitRepositories checks each release provided for a git repository and prepares the struct with the proper information needed to clone
+func (c *Client) prepareGitRepositories(releases []*course.Release) ([]*course.Release, error) {
+	for _, release := range releases {
+		repository := c.CourseFile.Repositories[release.Repository]
+		if repository.Git != "" {
+			cacheDir, err := c.Helm.Cache()
+			if err != nil {
+				return releases, err
+			}
+			re := regexp.MustCompile(`\:\/\/|\/|\.`)
+			repoPathName := re.ReplaceAllString(repository.Git, "_")
+			clonePath := fmt.Sprintf("%s/%s_goreckoner", cacheDir, repoPathName)
+
+			err = release.SetGitPaths(clonePath, fmt.Sprintf("%s/%s", repository.Path, release.Chart))
+			if err != nil {
+				return releases, err
+			}
+		}
+	}
+	return releases, nil
 }

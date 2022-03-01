@@ -18,7 +18,7 @@ charts:
       path: stable
   goldilocks-10:
     chart: goldilocks
-    version: e3ff9b07be83cad790365402166574977a47491d
+    version: 125e58c33b29fb28e419732997aff1325578ddfa
     repository:
       git: https://github.com/FairwindsOps/charts
       path: stable

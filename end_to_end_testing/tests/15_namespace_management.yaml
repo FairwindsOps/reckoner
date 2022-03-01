@@ -23,8 +23,23 @@ testcases:
       kubectl get ns {{.namespace}} -ojson | jq -e ".metadata.labels[\"rocks\"] == \"reckoner\""
     assertions:
     - result.code ShouldEqual 0
+  - script: |
+      kubectl get ns {{.namespace}}-2 -ojson | jq -e ".metadata.annotations[\"this\"] == \"exists\""
+    assertions:
+    - result.code ShouldEqual 0
+  - script: |
+      kubectl get ns {{.namespace}}-2 -ojson | jq -e ".metadata.labels[\"this\"] == \"alsoexists\""
+    assertions:
+    - result.code ShouldEqual 0
+  - script: |
+      kubectl get ns {{.namespace}}-2 -ojson | jq -e ".metadata.annotations[\"reckoner\"] == \"rocks\""
+    assertions:
+    - result.code ShouldEqual 0
+  - script: |
+      kubectl get ns {{.namespace}}-2 -ojson | jq -e ".metadata.labels[\"rocks\"] == \"reckoner\""
+    assertions:
+    - result.code ShouldEqual 0
 - name: 15 - cleanup
   steps:
     - script: |
-        helm -n {{.namespace}} delete {{.release}}
-        kubectl delete ns {{.namespace}}
+        kubectl delete ns {{.namespace}} {{.namespace}}-2

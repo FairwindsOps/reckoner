@@ -21,17 +21,21 @@ import (
 
 func (c *Client) Update() error {
 	updatedReleases := []*course.Release{}
-	for i, r := range c.CourseFile.Releases {
-		thisReleaseDiff, err := c.diffRelease(r.Name, r.Namespace)
+	for idx, release := range c.CourseFile.Releases {
+		thisReleaseDiff, err := c.diffRelease(release.Name, release.Namespace)
 		if err != nil {
+			if c.Continue() {
+				color.Red("error with release %s: %s, continuing.", release.Name, err.Error())
+				continue
+			}
 			return err
 		}
 		if thisReleaseDiff != "" {
-			color.Yellow("Update available for %s in namespace %s. Added to plot list.", r.Name, r.Namespace)
-			updatedReleases = append(updatedReleases, c.CourseFile.Releases[i])
+			color.Yellow("Update available for %s in namespace %s. Added to plot list.", release.Name, release.Namespace)
+			updatedReleases = append(updatedReleases, c.CourseFile.Releases[idx])
 			continue
 		}
-		color.Green("No update necessary for %s in namespace %s.", r.Name, r.Namespace)
+		color.Green("No update necessary for %s in namespace %s.", release.Name, release.Namespace)
 	}
 	c.CourseFile.Releases = updatedReleases
 	err := c.Plot()

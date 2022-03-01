@@ -14,16 +14,12 @@ testcases:
       reckoner diff {{.course}} -o chart-with-namespace
     assertions:
     - result.code ShouldEqual 0
-    # Python logs to stderr
-    - result.systemerr ShouldContainSubstring "There are no differences in release"
-    - result.systemout ShouldEqual ""
+    - result.systemout ShouldContainSubstring "There are no differences in release"
   - script: |
       reckoner diff {{.course}} -o chart-without-namespace
     assertions:
     - result.code ShouldEqual 0
-    # Python logs to stderr
-    - result.systemerr ShouldContainSubstring "There are no differences in release"
-    - result.systemout ShouldEqual ""
+    - result.systemout ShouldContainSubstring "There are no differences in release"
 - name: 21 - cleanup
   steps:
     - script: |

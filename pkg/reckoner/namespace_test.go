@@ -33,7 +33,7 @@ func TestCreateNamespace(t *testing.T) {
 	name := "reckoner"
 	annotations := map[string]string{"nginx.ingress.kubernetes.io/http2-push-preload": "true"}
 	labels := map[string]string{"app.kubernetes.io/name": "ingress-nginx"}
-	err := fakeClient.CreateNamespace(name, annotations, labels)
+	err := fakeClient.CreateNamespace(name, annotations, labels, &v1.NamespaceList{})
 	assert.NoError(t, err)
 
 	namespace, err := fakeKubeClinet.CoreV1().Namespaces().Get(context.TODO(), name, metav1.GetOptions{})
@@ -54,7 +54,7 @@ func TestPatchNamespace(t *testing.T) {
 	name := "reckoner"
 	annotations := map[string]string{"nginx.ingress.kubernetes.io/http2-push-preload": "true"}
 	labels := map[string]string{"app.kubernetes.io/name": "ingress-nginx"}
-	err := fakeClient.CreateNamespace(name, annotations, labels)
+	err := fakeClient.CreateNamespace(name, annotations, labels, &v1.NamespaceList{})
 	assert.NoError(t, err)
 
 	newAnnotations := map[string]string{"service.beta.kubernetes.io/aws-load-balancer-internal": "0.0.0.0/0"}
@@ -81,7 +81,7 @@ func TestCheckIfNamespaceExist(t *testing.T) {
 	name := "reckoner"
 	annotations := map[string]string{"nginx.ingress.kubernetes.io/http2-push-preload": "true"}
 	labels := map[string]string{"app.kubernetes.io/name": "ingress-nginx"}
-	err := fakeClient.CreateNamespace(name, annotations, labels)
+	err := fakeClient.CreateNamespace(name, annotations, labels, &v1.NamespaceList{})
 	assert.NoError(t, err)
 
 	nsList, err := fakeClient.KubeClient.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
@@ -104,7 +104,7 @@ func TestLabelsAndAnnotationsToUpdate(t *testing.T) {
 	name := "reckoner"
 	annotations := map[string]string{"nginx.ingress.kubernetes.io/http2-push-preload": "true"}
 	labels := map[string]string{"app.kubernetes.io/name": "ingress-nginx"}
-	err := fakeClient.CreateNamespace(name, annotations, labels)
+	err := fakeClient.CreateNamespace(name, annotations, labels, &v1.NamespaceList{})
 	assert.NoError(t, err)
 
 	newLabels := map[string]string{"app.kubernetes.io/name": "ingress-nginx-new", "label-key-1": "label-value-1"}

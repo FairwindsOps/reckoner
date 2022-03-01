@@ -23,9 +23,8 @@ import (
 
 func Test_buildHelmArgs(t *testing.T) {
 	type args struct {
-		releaseName string
-		command     string
-		release     course.Release
+		command string
+		release course.Release
 	}
 	tests := []struct {
 		name    string

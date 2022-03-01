@@ -23,7 +23,7 @@ testcases:
       reckoner lint ../course_files/13_test_lint_bad_secret.yml
     assertions:
     - result.code ShouldEqual 1
-    - result.systemout ShouldContainSubstring 'Course file has schema validation errors.'
+    - result.systemout ShouldContainSubstring 'Course file has schema validation errors'
 
 - name: 13 - lint 13_test_lint_good_secret.yml
   steps:

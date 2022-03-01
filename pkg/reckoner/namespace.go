@@ -27,7 +27,7 @@ import (
 )
 
 // CreateNamespace creates a kubernetes namespace with the given annotations and labels
-func (c *Client) CreateNamespace(namespace string, annotations, labels map[string]string) error {
+func (c *Client) CreateNamespace(namespace string, annotations, labels map[string]string, runningNamespaceList *v1.NamespaceList) error {
 	ns := &v1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        namespace,
@@ -35,10 +35,11 @@ func (c *Client) CreateNamespace(namespace string, annotations, labels map[strin
 			Labels:      labels,
 		},
 	}
-	_, err := c.KubeClient.CoreV1().Namespaces().Create(context.TODO(), ns, metav1.CreateOptions{})
+	returnedNS, err := c.KubeClient.CoreV1().Namespaces().Create(context.TODO(), ns, metav1.CreateOptions{})
 	if err != nil {
 		return err
 	}
+	runningNamespaceList.Items = append(runningNamespaceList.Items, *returnedNS)
 	return nil
 }
 
@@ -78,7 +79,7 @@ func (c *Client) NamespaceManagement() error {
 		return err
 	}
 	for _, release := range c.CourseFile.Releases {
-		err := c.CreateOrPatchNamespace(release.NamespaceMgmt.Settings.Overwrite, release.Namespace, release.NamespaceMgmt, namespaces)
+		err := c.CreateOrPatchNamespace(*release.NamespaceMgmt.Settings.Overwrite, release.Namespace, *release.NamespaceMgmt, namespaces)
 		if err != nil {
 			return err
 		}
@@ -95,7 +96,7 @@ func (c *Client) CreateOrPatchNamespace(overWrite bool, namespaceName string, na
 		annotations, labels := labelsAndAnnotationsToUpdate(overWrite, namespaceMgmt.Metadata.Annotations, namespaceMgmt.Metadata.Labels, ns)
 		err = c.PatchNamespace(namespaceName, annotations, labels)
 	} else {
-		err = c.CreateNamespace(namespaceName, namespaceMgmt.Metadata.Annotations, namespaceMgmt.Metadata.Labels)
+		err = c.CreateNamespace(namespaceName, namespaceMgmt.Metadata.Annotations, namespaceMgmt.Metadata.Labels, namespaces)
 	}
 	return err
 }

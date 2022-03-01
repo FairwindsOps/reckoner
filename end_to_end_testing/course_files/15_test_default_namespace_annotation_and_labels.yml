@@ -18,3 +18,13 @@ charts:
   namespace-test:
     repository: fairwinds-incubator
     chart: basic-demo
+  namespace-test-merge:
+    namespace: 15-annotatednamespace-2
+    namespace_management:
+      metadata:
+        annotations:
+          this: exists
+        labels:
+          this: alsoexists
+    repository: fairwinds-incubator
+    chart: basic-demo
