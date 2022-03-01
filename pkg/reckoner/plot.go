@@ -20,7 +20,7 @@ import (
 	"os"
 	"strings"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 
 	"github.com/fairwindsops/reckoner/pkg/course"
 	"github.com/fatih/color"

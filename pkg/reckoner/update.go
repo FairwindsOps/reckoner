@@ -21,7 +21,7 @@ import (
 
 func (c *Client) Update() error {
 	updatedReleases := []*course.Release{}
-	for i, release := range c.CourseFile.Releases {
+	for idx, release := range c.CourseFile.Releases {
 		thisReleaseDiff, err := c.diffRelease(release.Name, release.Namespace)
 		if err != nil {
 			if c.Continue() {
@@ -32,7 +32,7 @@ func (c *Client) Update() error {
 		}
 		if thisReleaseDiff != "" {
 			color.Yellow("Update available for %s in namespace %s. Added to plot list.", release.Name, release.Namespace)
-			updatedReleases = append(updatedReleases, c.CourseFile.Releases[i])
+			updatedReleases = append(updatedReleases, c.CourseFile.Releases[idx])
 			continue
 		}
 		color.Green("No update necessary for %s in namespace %s.", release.Name, release.Namespace)

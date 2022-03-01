@@ -120,7 +120,7 @@ var templateCmd = &cobra.Command{
 	Long:    "Templates a helm chart for a release or several releases. Automatically sets --create-namespaces=false --dry-run=true",
 	PreRunE: validateArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false, true, false, courseSchema, continueOnError)
+		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false, true, false, courseSchema, false)
 		if err != nil {
 			color.Red(err.Error())
 			os.Exit(1)
@@ -140,7 +140,7 @@ var getManifestsCmd = &cobra.Command{
 	Long:    "Gets the manifests currently in the cluster.",
 	PreRunE: validateArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false, true, false, courseSchema, continueOnError)
+		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false, true, false, courseSchema, false)
 		if err != nil {
 			color.Red(err.Error())
 			os.Exit(1)
@@ -189,7 +189,7 @@ var lintCmd = &cobra.Command{
 		return validateArgs(cmd, args)
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		_, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false, true, false, courseSchema, continueOnError)
+		_, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false, true, false, courseSchema, false)
 		if err != nil {
 			color.Red(err.Error())
 			os.Exit(1)

@@ -79,7 +79,7 @@ func (c *Client) NamespaceManagement() error {
 		return err
 	}
 	for _, release := range c.CourseFile.Releases {
-		err := c.CreateOrPatchNamespace(release.NamespaceMgmt.Settings.Overwrite, release.Namespace, *release.NamespaceMgmt, namespaces)
+		err := c.CreateOrPatchNamespace(*release.NamespaceMgmt.Settings.Overwrite, release.Namespace, *release.NamespaceMgmt, namespaces)
 		if err != nil {
 			return err
 		}

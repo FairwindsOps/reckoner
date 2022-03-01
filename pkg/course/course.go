@@ -97,7 +97,7 @@ type NamespaceConfig struct {
 	} `yaml:"metadata,omitempty" json:"metadata,omitempty"`
 	Settings struct {
 		// Overwrite specifies if these annotations and labels should be overwritten in the event that they already exist.
-		Overwrite bool `yaml:"overwrite,omitempty" json:"overwrite,omitempty"`
+		Overwrite *bool `yaml:"overwrite,omitempty" json:"overwrite,omitempty"`
 	} `yaml:"settings" json:"settings"`
 }
 
@@ -321,12 +321,31 @@ func OpenCourseV1(fileName string) (*FileV1, error) {
 	return courseFile, nil
 }
 
+// UnmarshalYAML implements the yaml.Unmarshaler interface for FileV1. This allows us to do environment variable parsing
+// and changing behavior for boolean parsing such that non-quoted `yes`, `no`, `on`, `off` become booleans.
 func (f *FileV1) UnmarshalYAML(value *yaml.Node) error {
 	err := decodeYamlWithEnv(value)
 	if err != nil {
 		return err
 	}
+	// This little monster allows us to run Decode on the whole FileV1 struct type without causing an infinite loop
+	// because Decode will call this UnmarshalYAML method again and again if we didn't have the intermediate FileV1Unmarshal struct.
 	if err := value.Decode((*FileV1Unmarshal)(f)); err != nil {
+		return err
+	}
+	return nil
+}
+
+// UnmarshalYAML implements the yaml.Unmarshaler interface for FileV2. This allows us to do environment variable parsing
+// and changing behavior for boolean parsing such that non-quoted `yes`, `no`, `on`, `off` become booleans.
+func (f *FileV2) UnmarshalYAML(value *yaml.Node) error {
+	err := decodeYamlWithEnv(value)
+	if err != nil {
+		return err
+	}
+	// This little monster allows us to run Decode on the whole FileV2 struct type without causing an infinite loop
+	// because Decode will call this UnmarshalYAML method again and again if we didn't have the intermediate FileV2Unmarshal struct.
+	if err := value.Decode((*FileV2Unmarshal)(f)); err != nil {
 		return err
 	}
 	return nil
@@ -441,14 +460,34 @@ func (f *FileV2) populateNamespaceManagement() {
 	var emptyNamespaceMgmt NamespaceConfig
 	if f.NamespaceMgmt.Default == nil {
 		f.NamespaceMgmt.Default = &emptyNamespaceMgmt
+		f.NamespaceMgmt.Default.Settings.Overwrite = boolPtr(false)
+	} else if f.NamespaceMgmt.Default.Settings.Overwrite == nil {
+		f.NamespaceMgmt.Default.Settings.Overwrite = boolPtr(false)
 	}
 	for releaseIndex, release := range f.Releases {
 		if release.NamespaceMgmt == nil {
 			klog.V(5).Infof("using default namespace management for release: %s", release.Name)
 			release.NamespaceMgmt = f.NamespaceMgmt.Default
 			f.Releases[releaseIndex] = release
+		} else {
+			release.NamespaceMgmt = mergeNamespaceManagement(f.NamespaceMgmt.Default, release.NamespaceMgmt)
 		}
 	}
+}
+
+func mergeNamespaceManagement(defaults *NamespaceConfig, mergeInto *NamespaceConfig) *NamespaceConfig {
+	d := defaults
+	for k, v := range mergeInto.Metadata.Annotations {
+		d.Metadata.Annotations[k] = v
+	}
+	for k, v := range mergeInto.Metadata.Labels {
+		d.Metadata.Labels[k] = v
+	}
+	if mergeInto.Settings.Overwrite != nil {
+		d.Settings.Overwrite = mergeInto.Settings.Overwrite
+	}
+	mergeInto = d
+	return mergeInto
 }
 
 func (f *FileV2) validateJsonSchema(schemaData []byte) error {
@@ -487,7 +526,7 @@ func (r *Release) SetGitPaths(clonePath, subPath string) error {
 }
 
 func parseEnv(data string) (string, error) {
-	dataWithEnv := os.Expand(string(data), envMapper)
+	dataWithEnv := os.Expand(data, envMapper)
 	if strings.Contains(dataWithEnv, "_ENV_NOT_SET_") {
 		return data, fmt.Errorf("course has env variables that are not properly set")
 	}
@@ -500,4 +539,8 @@ func envMapper(key string) string {
 	}
 	color.Red("ERROR: environment variable %s is not set", key)
 	return "_ENV_NOT_SET_"
+}
+
+func boolPtr(b bool) *bool {
+	return &b
 }
