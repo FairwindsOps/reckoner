@@ -23,6 +23,8 @@ testcases:
   - script: |
       first_chart_timestamp="$(helm status first-chart -n {{.namespace}} -ojson | jq .info.last_deployed -r | cut -c -19 | jq --raw-input 'strptime("%Y-%m-%dT%H:%M:%S")|mktime')"
       second_chart_timestamp="$(helm status second-chart -n {{.namespace}} -ojson | jq .info.last_deployed -r | cut -c -19 | jq --raw-input 'strptime("%Y-%m-%dT%H:%M:%S")|mktime')"
+      echo "first_chart_timestamp: ${first_chart_timestamp}"
+      echo "second_chart_timestamp: ${second_chart_timestamp}"
       test $((first_chart_timestamp-second_chart_timestamp)) -lt 0
     assertions:
     - result.code ShouldEqual 0
