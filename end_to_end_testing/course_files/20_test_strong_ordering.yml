@@ -12,3 +12,6 @@ charts:
   second-chart:
     repository: fairwinds-incubator
     chart: basic-demo
+    hooks:
+      pre_install:
+        - sleep 5
