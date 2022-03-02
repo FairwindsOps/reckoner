@@ -28,12 +28,14 @@ func Test_buildHelmArgs(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
+		baseDir string
 		args    args
 		want    []string
 		wantErr bool
 	}{
 		{
-			name: "basic template",
+			name:    "basic template",
+			baseDir: "path/to/chart",
 			args: args{
 				command: "template",
 				release: course.Release{
@@ -51,14 +53,15 @@ func Test_buildHelmArgs(t *testing.T) {
 				"template",
 				"basic-release",
 				"helmrepo/helmchart",
-				"--values=a-values-file.yaml",
+				"--values=path/to/chart/a-values-file.yaml",
 				"--namespace=basic-ns",
 				"--version=v0.0.0",
 			},
 			wantErr: false,
 		},
 		{
-			name: "basic upgrade",
+			name:    "basic upgrade",
+			baseDir: "path/to/chart",
 			args: args{
 				command: "upgrade",
 				release: course.Release{
@@ -77,7 +80,7 @@ func Test_buildHelmArgs(t *testing.T) {
 				"--install",
 				"basic-release",
 				"helmrepo/helmchart",
-				"--values=a-values-file.yaml",
+				"--values=path/to/chart/a-values-file.yaml",
 				"--namespace=basic-ns",
 				"--version=v0.0.0",
 			},
@@ -86,7 +89,7 @@ func Test_buildHelmArgs(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, _, err := buildHelmArgs(tt.args.command, tt.args.release)
+			got, _, err := buildHelmArgs(tt.args.command, tt.baseDir, tt.args.release)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {

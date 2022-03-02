@@ -57,7 +57,7 @@ func (c *Client) Plot() error {
 			return err
 		}
 
-		args, tmpFile, err := buildHelmArgs("upgrade", *release)
+		args, tmpFile, err := buildHelmArgs("upgrade", c.BaseDirectory, *release)
 		if err != nil {
 			color.Red(err.Error())
 			continue
@@ -141,7 +141,7 @@ func (c Client) TemplateRelease(releaseName string) (string, error) {
 	releaseIndex := funk.IndexOf(c.CourseFile.Releases, func(release *course.Release) bool {
 		return release.Name == releaseName
 	})
-	args, tmpFile, err := buildHelmArgs("template", *c.CourseFile.Releases[releaseIndex])
+	args, tmpFile, err := buildHelmArgs("template", c.BaseDirectory, *c.CourseFile.Releases[releaseIndex])
 	if err != nil {
 		return "", err
 	}
@@ -159,7 +159,7 @@ func (c Client) TemplateRelease(releaseName string) (string, error) {
 // takes a command either "upgrade" or "template"
 // also returns the temp file of the values file to close
 // NOTE: The order is really important here
-func buildHelmArgs(command string, release course.Release) ([]string, *os.File, error) {
+func buildHelmArgs(command, baseDir string, release course.Release) ([]string, *os.File, error) {
 	var valuesFile *os.File
 	var args []string
 	switch command {
@@ -191,7 +191,11 @@ func buildHelmArgs(command string, release course.Release) ([]string, *os.File, 
 
 	if len(release.Files) > 0 {
 		for _, file := range release.Files {
-			args = append(args, fmt.Sprintf("--values=%s", file))
+			if file[0] == '/' {
+				args = append(args, fmt.Sprintf("--values=%s", file))
+			} else {
+				args = append(args, fmt.Sprintf("--values=%s/%s", baseDir, file))
+			}
 		}
 	}
 

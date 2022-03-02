@@ -260,11 +260,12 @@ func convertV1toV2(fileName string) (*FileV2, error) {
 			Name:          release.Name,
 			Namespace:     release.Namespace,
 			NamespaceMgmt: release.NamespaceMgmt,
-			Repository:    repositoryName,
 			Chart:         release.Chart,
-			Version:       release.Version,
-			Values:        release.Values,
 			Hooks:         release.Hooks,
+			Version:       release.Version,
+			Repository:    repositoryName,
+			Files:         release.Files,
+			Values:        release.Values,
 		}
 	}
 	return newFile, nil
