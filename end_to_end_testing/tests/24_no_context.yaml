@@ -27,3 +27,7 @@ testcases:
       reckoner template {{.course}} -o chart-with-no-context
     assertions:
     - result.code ShouldEqual 0
+  - name: 24 - cleanup
+    steps:
+      - script: |
+          kubectl delete ns {{.namespace}}

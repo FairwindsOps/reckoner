@@ -56,7 +56,7 @@ var clientset *kubernetes.Clientset
 // If getClient is true, attempts to get a Kubernetes client from config
 func NewClient(fileName, version string, plotAll bool, releases []string, kubeClient bool, dryRun bool, createNamespaces bool, schema []byte, continueOnError bool) (*Client, error) {
 	// Get the course file
-	courseFile, err := course.OpenCourseV2(fileName, schema)
+	courseFile, err := course.OpenCourseFile(fileName, schema)
 	if err != nil {
 		return nil, err
 	}

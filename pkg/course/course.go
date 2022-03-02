@@ -138,6 +138,8 @@ type Release struct {
 
 // ReleaseV1 represents a helm release and all of its configuration from v1 schema
 type ReleaseV1 struct {
+	// Name is the name of the release
+	Name string `yaml:"name" json:"name"`
 	// Namespace is the namespace that this release should be placed in
 	Namespace string `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 	// NamespaceMgmt is a set of labels and annotations to be added to the namespace for this release
@@ -183,9 +185,13 @@ type FileV1 struct {
 		// Default is the default namespace config for this course
 		Default *NamespaceConfig `yaml:"default" json:"default"`
 	} `yaml:"namespace_management" json:"namespace_management"`
-	// Charts is the map of releases
-	Charts map[string]ReleaseV1 `yaml:"charts" json:"charts"`
+	// Charts is the list of releases. In the actual file this will be a map, but we must convert to a list to preserve order.
+	// This conversion is done in the ChartsListV1 UnmarshalYAML function.
+	Charts ChartsListV1 `yaml:"charts" json:"charts"`
 }
+
+// ChartsListV1 is a list of releases which we convert from a map of releases to preserve order
+type ChartsListV1 []ReleaseV1
 
 // FileV1Unmarshal is a helper type that allows us to have a custom unmarshal function for the FileV2 struct
 type FileV1Unmarshal FileV1
@@ -218,10 +224,11 @@ func convertV1toV2(fileName string) (*FileV2, error) {
 	newFile.NamespaceMgmt = oldFile.NamespaceMgmt
 	newFile.DefaultRepository = oldFile.DefaultRepository
 	newFile.Repositories = oldFile.Repositories
+	newFile.Releases = make([]*Release, len(oldFile.Charts))
 	newFile.Hooks = oldFile.Hooks
 	newFile.MinimumVersions = oldFile.MinimumVersions
 
-	for releaseName, release := range oldFile.Charts {
+	for releaseIndex, release := range oldFile.Charts {
 		repositoryName, ok := release.Repository.(string)
 		// The repository is not in the format repository: string. Need to handle that
 		if !ok {
@@ -238,7 +245,7 @@ func convertV1toV2(fileName string) (*FileV2, error) {
 			if addRepo.Git != "" {
 				klog.V(3).Infof("detected a git-based inline repository. Attempting to convert to repository in header")
 
-				repositoryName = fmt.Sprintf("%s-git-repository", releaseName)
+				repositoryName = fmt.Sprintf("%s-git-repository", release.Name)
 				newFile.Repositories[repositoryName] = Repository{
 					Git:  addRepo.Git,
 					Path: addRepo.Path,
@@ -249,8 +256,8 @@ func convertV1toV2(fileName string) (*FileV2, error) {
 				repositoryName = addRepo.Name
 			}
 		}
-		newFile.Releases = append(newFile.Releases, &Release{
-			Name:          releaseName,
+		newFile.Releases[releaseIndex] = &Release{
+			Name:          release.Name,
 			Namespace:     release.Namespace,
 			NamespaceMgmt: release.NamespaceMgmt,
 			Repository:    repositoryName,
@@ -258,22 +265,15 @@ func convertV1toV2(fileName string) (*FileV2, error) {
 			Version:       release.Version,
 			Values:        release.Values,
 			Hooks:         release.Hooks,
-		})
+		}
 	}
 	return newFile, nil
 }
 
-// OpenCourseV2 opens a v2 schema course file
-func OpenCourseV2(fileName string, schema []byte) (*FileV2, error) {
-	courseFile := &FileV2{}
-	data, err := ioutil.ReadFile(fileName)
+func OpenCourseFile(fileName string, schema []byte) (*FileV2, error) {
+	courseFile, err := OpenCourseV2(fileName)
 	if err != nil {
 		return nil, err
-	}
-	err = yaml.Unmarshal(data, courseFile)
-	if err != nil {
-		klog.V(3).Infof("failed to unmarshal file: %s", err.Error())
-		return nil, SchemaValidationError
 	}
 	if courseFile.SchemaVersion != "v2" {
 		klog.V(2).Infof("did not detect v2 course file - trying conversion from v1")
@@ -307,6 +307,21 @@ func OpenCourseV2(fileName string, schema []byte) (*FileV2, error) {
 	return courseFile, nil
 }
 
+// OpenCourseV2 opens a v2 schema course file
+func OpenCourseV2(fileName string) (*FileV2, error) {
+	courseFile := &FileV2{}
+	data, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		return nil, err
+	}
+	err = yaml.Unmarshal(data, courseFile)
+	if err != nil {
+		klog.V(3).Infof("failed to unmarshal file: %s", err.Error())
+		return nil, SchemaValidationError
+	}
+	return courseFile, nil
+}
+
 // OpenCourseV1 opens a v1 schema course file
 func OpenCourseV1(fileName string) (*FileV1, error) {
 	courseFile := &FileV1{}
@@ -316,9 +331,20 @@ func OpenCourseV1(fileName string) (*FileV1, error) {
 	}
 	err = yaml.Unmarshal(data, courseFile)
 	if err != nil {
-		return nil, err
+		klog.V(3).Infof("failed to unmarshal file: %s", err.Error())
+		return nil, SchemaValidationError
 	}
 	return courseFile, nil
+}
+
+// SetGitPaths allows the caller to set both the clone path and the chart subpath for a release.
+func (r *Release) SetGitPaths(clonePath, subPath string) error {
+	if r.GitClonePath != nil {
+		return fmt.Errorf("cannot set GitClonePath on release %s - it is already set to %s", r.Name, *r.GitClonePath)
+	}
+	r.GitClonePath = &clonePath
+	r.GitChartSubPath = &subPath
+	return nil
 }
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface for FileV1. This allows us to do environment variable parsing
@@ -347,6 +373,24 @@ func (f *FileV2) UnmarshalYAML(value *yaml.Node) error {
 	// because Decode will call this UnmarshalYAML method again and again if we didn't have the intermediate FileV2Unmarshal struct.
 	if err := value.Decode((*FileV2Unmarshal)(f)); err != nil {
 		return err
+	}
+	return nil
+}
+
+// UnmarshalYAML implements the yaml.Unmarshaler interface to customize how we Unmarshal this particular field of the FileV1 struct
+func (cl *ChartsListV1) UnmarshalYAML(value *yaml.Node) error {
+	if value.Kind != yaml.MappingNode {
+		return fmt.Errorf("ChartsList must contain YAML mapping, has %v", value.Kind)
+	}
+	*cl = make([]ReleaseV1, len(value.Content)/2)
+	for i := 0; i < len(value.Content); i += 2 {
+		var res = &(*cl)[i/2]
+		if err := value.Content[i].Decode(&res.Name); err != nil {
+			return err
+		}
+		if err := value.Content[i+1].Decode(&res); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -512,16 +556,6 @@ func (f *FileV2) validateJsonSchema(schemaData []byte) error {
 		}
 		return SchemaValidationError
 	}
-	return nil
-}
-
-// SetGitPaths allows the caller to set both the clone path and the chart subpath for a release.
-func (r *Release) SetGitPaths(clonePath, subPath string) error {
-	if r.GitClonePath != nil {
-		return fmt.Errorf("cannot set GitClonePath on release %s - it is already set to %s", r.Name, *r.GitClonePath)
-	}
-	r.GitClonePath = &clonePath
-	r.GitChartSubPath = &subPath
 	return nil
 }
 

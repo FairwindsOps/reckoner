@@ -10,7 +10,7 @@ repositories:
 charts:
   basic:
     chart: somechart
-    repository: 
+    repository:
       name: helm-repo
     version: "2.0.0"
     values:

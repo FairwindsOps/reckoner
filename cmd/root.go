@@ -207,7 +207,7 @@ var convertCmd = &cobra.Command{
 		return validateArgs(cmd, args)
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		newCourse, err := course.OpenCourseV2(courseFile, courseSchema)
+		newCourse, err := course.OpenCourseFile(courseFile, courseSchema)
 		if err != nil {
 			color.Red(err.Error())
 			os.Exit(1)
