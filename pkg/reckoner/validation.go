@@ -20,22 +20,26 @@ import (
 )
 
 // ValidateArgs validates that the correct arguments were passed and returns the name of the course file
-func ValidateArgs(runAll bool, onlyRun, args []string) (string, error) {
+func ValidateArgs(runAll bool, onlyRun []string, args []string) error {
 	if runAll && len(onlyRun) != 0 {
-		return "", fmt.Errorf("you must either use run-all or only")
+		return fmt.Errorf("you must either use run-all or only")
 	}
 
 	if !runAll && len(onlyRun) == 0 {
-		return "", fmt.Errorf("you must use at least one of run-all or only")
+		return fmt.Errorf("you must use at least one of run-all or only")
 	}
 
-	if len(args) != 1 {
-		return "", fmt.Errorf("you must pass a single course file argument")
+	if len(args) > 1 {
+		return fmt.Errorf("you may only pass one course YAML file at the same time")
 	}
 
-	_, err := os.Stat(args[0])
+	return nil
+}
+
+func ValidateCourseFilePath(courseFile string) error {
+	_, err := os.Stat(courseFile)
 	if os.IsNotExist(err) {
-		return "", fmt.Errorf("specified course file %s does not exist", args[0])
+		return fmt.Errorf("course file %s does not exist", courseFile)
 	}
-	return args[0], err
+	return err
 }

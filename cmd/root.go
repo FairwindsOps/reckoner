@@ -265,7 +265,33 @@ var updateCmd = &cobra.Command{
 // validateArgs ensures that the only argument passed is a course
 // file that exists
 func validateArgs(cmd *cobra.Command, args []string) (err error) {
-	courseFile, err = reckoner.ValidateArgs(runAll, onlyRun, args)
+	// attempt to get the course file from environment variable
+	courseFile = os.Getenv("reckoner_course_file") // environment variable override
+
+	// if the environment variable was unset or zero-length,
+	// try default value of 'course.yml'
+	if len(courseFile) == 0 {
+		courseFile = "course.yml" // default course file
+	}
+
+	// allow cli argument to override everything else
+	if len(args) > 0 { // an argument was passed
+		courseFile = args[0] // use it
+	}
+
+	// at this point we should have a courseFile value. the following
+	// makes sure the course file is accessible...
+	err = reckoner.ValidateCourseFilePath(courseFile)
+	if err != nil {
+		return err
+	}
+
+	// ...and checks that we passed the appropriate set of arguments
+	err = reckoner.ValidateArgs(runAll, onlyRun, args)
+	if err != nil {
+		return err
+	}
+
 	color.NoColor = noColor
 	klog.V(3).Infof("colorize output: %v", !noColor)
 
