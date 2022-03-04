@@ -140,7 +140,7 @@ var getManifestsCmd = &cobra.Command{
 	Long:    "Gets the manifests currently in the cluster.",
 	PreRunE: validateArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false, true, false, courseSchema, false)
+		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, true, true, false, courseSchema, false)
 		if err != nil {
 			color.Red(err.Error())
 			os.Exit(1)
@@ -160,7 +160,7 @@ var diffCmd = &cobra.Command{
 	Long:    "Diffs the currently defined release and the one in the cluster",
 	PreRunE: validateArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false, true, false, courseSchema, continueOnError)
+		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, true, true, false, courseSchema, continueOnError)
 		if err != nil {
 			color.Red(err.Error())
 			os.Exit(1)
