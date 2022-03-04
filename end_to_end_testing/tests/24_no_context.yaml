@@ -2,6 +2,7 @@ version: "2"
 name: No Context
 vars:
   course: ../course_files/24_test_no_context.yml
+  namespace: 24-test-no-context
 testcases:
 - name: 24 - get-manifests
   steps:
@@ -27,7 +28,8 @@ testcases:
       reckoner template {{.course}} -o chart-with-no-context
     assertions:
     - result.code ShouldEqual 0
-  - name: 24 - cleanup
-    steps:
-      - script: |
-          kubectl delete ns {{.namespace}}
+- name: 24 - cleanup
+  steps:
+    - script: |
+        # We shouldn't need this, but if for some reason the tests above don't pass, the NS may get created. Mainly needed for local tests.
+        kubectl delete ns {{.namespace}} || true
