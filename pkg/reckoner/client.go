@@ -92,7 +92,7 @@ func NewClient(fileName, version string, plotAll bool, releases []string, kubeCl
 	}
 
 	if kubeClient {
-		client.KubeClient = getKubeClient()
+		client.KubeClient = getKubeClient(courseFile.Context)
 	}
 
 	return client, nil
@@ -106,9 +106,9 @@ func (c *Client) Continue() bool {
 	return false
 }
 
-func getKubeClient() *kubernetes.Clientset {
+func getKubeClient(context string) *kubernetes.Clientset {
 	once.Do(func() {
-		kubeConf, err := config.GetConfig()
+		kubeConf, err := config.GetConfigWithContext(context)
 		if err != nil {
 			fmt.Println("Error getting kubeconfig:", err)
 			os.Exit(1)
