@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 
-package reckoner
+package cmd
 
 import (
 	"testing"
@@ -54,7 +54,7 @@ func TestValidateArgs(t *testing.T) {
 				runAll:  false,
 				onlyRun: []string{"rbac-manager"},
 			},
-			want:    "testdata/course.yaml",
+			want:    "testdata/course.yml",
 			wantErr: false,
 		},
 		{
@@ -63,13 +63,13 @@ func TestValidateArgs(t *testing.T) {
 				args:   []string{},
 				runAll: true,
 			},
-			want:    "testdata/course.yaml",
+			want:    "testdata/course.yml",
 			wantErr: false,
 		},
 		{
 			name: "length of args = 2",
 			args: args{
-				args:    []string{"testdata/course.yaml", "course.yml"},
+				args:    []string{"testdata/course.yml", "course.yml"},
 				runAll:  false,
 				onlyRun: []string{"rbac-manager"},
 			},
@@ -78,7 +78,7 @@ func TestValidateArgs(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := ValidateArgs(tt.args.runAll, tt.args.onlyRun, tt.args.args)
+			err := validateArgs(tt.args.runAll, tt.args.onlyRun, tt.args.args)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
@@ -107,52 +107,37 @@ func TestValidateCourseFilePath(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "course.yaml does not exist",
+			name: "course.yml does not exist",
 			args: args{
-				args:   []string{"course.yaml"},
+				args:   []string{"course.yml"},
 				runAll: true,
 			},
 			want:    "",
 			wantErr: true,
 		},
 		{
-			name: "course.yaml exists, pass onlyrun with success",
+			name: "course.yml exists, pass onlyrun with success",
 			args: args{
-				args:    []string{"testdata/course.yaml"},
+				args:    []string{"testdata/course.yml"},
 				runAll:  false,
 				onlyRun: []string{"rbac-manager"},
 			},
-			want:    "testdata/course.yaml",
+			want:    "testdata/course.yml",
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// note: I do not like repeating logic from cmd/root.go in
-			// this test. instead, or additionally, perhaps we should
-			// test root.go directly to gain its effects
+			courseFilePath := getCourseFilePath(tt.args.args)
 
-			// setup input
-			var courseFileInput string
-
-			if len(courseFileInput) == 0 {
-				courseFileInput = "course.yml" // default course file
-			}
-
-			if len(tt.args.args) > 0 { // we're testing CLI arg passing
-				courseFileInput = tt.args.args[0]
-			} else { // we're testing default value
-				courseFileInput = ""
-			}
-
-			// by now we have a path to a course YAML file to test,
+			// we now have a path to a course YAML file to test,
 			// whether from command-line argument or from default value.
 			// getting a value from environment variable is not directly tested,
 			// but should always fall under the same tests as from any other
 			// input source.
 
 			// validate course file existence scenarios
-			err := ValidateCourseFilePath(courseFileInput)
+			err := validateCourseFilePath(courseFilePath)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {

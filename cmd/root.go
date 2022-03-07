@@ -96,7 +96,7 @@ var plotCmd = &cobra.Command{
 	Use:     "plot",
 	Short:   "plot <course file>",
 	Long:    "Runs a helm install on a release or several releases.",
-	PreRunE: validateArgs,
+	PreRunE: validateCobraArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, true, dryRun, createNamespaces, courseSchema, continueOnError)
 		if err != nil {
@@ -118,7 +118,7 @@ var templateCmd = &cobra.Command{
 	Use:     "template",
 	Short:   "template <course file>",
 	Long:    "Templates a helm chart for a release or several releases. Automatically sets --create-namespaces=false --dry-run=true",
-	PreRunE: validateArgs,
+	PreRunE: validateCobraArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false, true, false, courseSchema, false)
 		if err != nil {
@@ -138,7 +138,7 @@ var getManifestsCmd = &cobra.Command{
 	Use:     "get-manifests",
 	Short:   "get-manifests <course file>",
 	Long:    "Gets the manifests currently in the cluster.",
-	PreRunE: validateArgs,
+	PreRunE: validateCobraArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false, true, false, courseSchema, false)
 		if err != nil {
@@ -158,7 +158,7 @@ var diffCmd = &cobra.Command{
 	Use:     "diff",
 	Short:   "diff <course file>",
 	Long:    "Diffs the currently defined release and the one in the cluster",
-	PreRunE: validateArgs,
+	PreRunE: validateCobraArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false, true, false, courseSchema, continueOnError)
 		if err != nil {
@@ -186,7 +186,7 @@ var lintCmd = &cobra.Command{
 	Long:  "Lints the course file. Checks for structure and valid yaml.",
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		runAll = true
-		return validateArgs(cmd, args)
+		return validateCobraArgs(cmd, args)
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		_, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false, true, false, courseSchema, false)
@@ -204,7 +204,7 @@ var convertCmd = &cobra.Command{
 	Long:  "Converts a course file from the v1 python schema to v2 go schema",
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		runAll = true
-		return validateArgs(cmd, args)
+		return validateCobraArgs(cmd, args)
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		newCourse, err := course.OpenCourseFile(courseFile, courseSchema)
@@ -244,7 +244,7 @@ var updateCmd = &cobra.Command{
 	Use:     "update",
 	Short:   "update <course file>",
 	Long:    "Only install/upgrade a release if there are changes.",
-	PreRunE: validateArgs,
+	PreRunE: validateCobraArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, true, dryRun, createNamespaces, courseSchema, continueOnError)
 		if err != nil {
@@ -262,9 +262,12 @@ var updateCmd = &cobra.Command{
 	},
 }
 
-// validateArgs ensures that the only argument passed is a course
-// file that exists
-func validateArgs(cmd *cobra.Command, args []string) (err error) {
+// getCourseFilePath returns the path to a course YAML file. This does not guarantee the file exists.
+// The order of precedence is as follows (higher overrides lower)
+// - command-line argument
+// - environment variable
+// - default value (nothing above was specified)
+func getCourseFilePath(args []string) string {
 	// attempt to get the course file from environment variable
 	courseFile = os.Getenv("reckoner_course_file") // environment variable override
 
@@ -279,23 +282,7 @@ func validateArgs(cmd *cobra.Command, args []string) (err error) {
 		courseFile = args[0] // use it
 	}
 
-	// at this point we should have a courseFile value. the following
-	// makes sure the course file is accessible...
-	err = reckoner.ValidateCourseFilePath(courseFile)
-	if err != nil {
-		return err
-	}
-
-	// ...and checks that we passed the appropriate set of arguments
-	err = reckoner.ValidateArgs(runAll, onlyRun, args)
-	if err != nil {
-		return err
-	}
-
-	color.NoColor = noColor
-	klog.V(3).Infof("colorize output: %v", !noColor)
-
-	return err
+	return courseFile
 }
 
 // Execute the stuff

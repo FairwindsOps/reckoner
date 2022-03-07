@@ -12,15 +12,43 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 
-package reckoner
+package cmd
 
 import (
 	"fmt"
 	"os"
+
+	"github.com/fatih/color"
+	"github.com/spf13/cobra"
+	"k8s.io/klog"
 )
 
-// ValidateArgs validates that the correct arguments were passed and returns the name of the course file
-func ValidateArgs(runAll bool, onlyRun []string, args []string) error {
+// validateCobraArgs ensures that the only argument passed is a course
+// file that exists
+func validateCobraArgs(cmd *cobra.Command, args []string) (err error) {
+	courseFile = getCourseFilePath(args) // guaranteed to return a path
+
+	// at this point we should have a courseFile value. the following
+	// makes sure the course file is accessible...
+	err = validateCourseFilePath(courseFile)
+	if err != nil {
+		return err
+	}
+
+	// ...and checks that we passed the appropriate set of arguments
+	err = validateArgs(runAll, onlyRun, args)
+	if err != nil {
+		return err
+	}
+
+	color.NoColor = noColor
+	klog.V(3).Infof("colorize output: %v", !noColor)
+
+	return err
+}
+
+// validateArgs validates that the correct arguments were passed and returns the name of the course file
+func validateArgs(runAll bool, onlyRun []string, args []string) error {
 	if runAll && len(onlyRun) != 0 {
 		return fmt.Errorf("you must either use run-all or only")
 	}
@@ -36,7 +64,7 @@ func ValidateArgs(runAll bool, onlyRun []string, args []string) error {
 	return nil
 }
 
-func ValidateCourseFilePath(courseFile string) error {
+func validateCourseFilePath(courseFile string) error {
 	_, err := os.Stat(courseFile)
 	if os.IsNotExist(err) {
 		return fmt.Errorf("course file %s does not exist", courseFile)

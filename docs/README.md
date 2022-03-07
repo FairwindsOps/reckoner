@@ -33,7 +33,7 @@ This utility adds to the functionality of [Helm](https://github.com/kubernetes/h
 
 ## Quickstart
 
-In course.yaml, write:
+In course.yml, write:
 
 ```yaml
 namespace: default
@@ -54,7 +54,7 @@ charts:
 Then run:
 
 ```shell
-reckoner plot course.yaml --run-all
+reckoner plot course.yml --run-all
 ```
 
 Grafana and Polaris should now be installed on your cluster!
