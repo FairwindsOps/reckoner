@@ -269,7 +269,7 @@ var updateCmd = &cobra.Command{
 // - default value (nothing above was specified)
 func getCourseFilePath(args []string) string {
 	// attempt to get the course file from environment variable
-	courseFile = os.Getenv("reckoner_course_file") // environment variable override
+	courseFile = os.Getenv("RECKONER_COURSE_FILE") // environment variable override
 
 	// if the environment variable was unset or zero-length,
 	// try default value of 'course.yml'
