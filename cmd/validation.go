@@ -48,7 +48,7 @@ func validateCobraArgs(cmd *cobra.Command, args []string) (err error) {
 }
 
 // validateArgs validates that the correct arguments were passed and returns the name of the course file
-func validateArgs(runAll bool, onlyRun []string, args []string) error {
+func validateArgs(runAll bool, onlyRun, args []string) error {
 	if runAll && len(onlyRun) != 0 {
 		return fmt.Errorf("you must either use run-all or only")
 	}
