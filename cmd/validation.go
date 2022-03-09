@@ -20,7 +20,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 )
 
 // validateCobraArgs ensures that the only argument passed is a course
