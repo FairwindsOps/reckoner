@@ -263,7 +263,7 @@ secrets:
       - "changemeagain"
 ```
 
-# CLI Usage
+## CLI Usage
 
 ```text
 Usage: reckoner [OPTIONS] COMMAND [ARGS]...
