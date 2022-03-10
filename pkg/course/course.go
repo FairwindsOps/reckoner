@@ -23,6 +23,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/fairwindsops/reckoner/pkg/secrets"
+	"github.com/fairwindsops/reckoner/pkg/secrets/backends/shell"
 	"github.com/fatih/color"
 	"github.com/thoas/go-funk"
 	"github.com/xeipuuv/gojsonschema"
@@ -64,6 +66,7 @@ type FileV2 struct {
 		// Default is the default namespace config for this course
 		Default *NamespaceConfig `yaml:"default" json:"default"`
 	} `yaml:"namespace_management,omitempty" json:"namespace_management,omitempty"`
+	Secrets SecretsList `yaml:"secrets,omitempty" json:"secrets,omitempty"`
 	// Releases is the list of releases that should be maintained by this course file.
 	Releases []*Release `yaml:"releases,omitempty" json:"releases,omitempty"`
 }
@@ -185,6 +188,7 @@ type FileV1 struct {
 		// Default is the default namespace config for this course
 		Default *NamespaceConfig `yaml:"default" json:"default"`
 	} `yaml:"namespace_management" json:"namespace_management"`
+	Secrets SecretsList `yaml:"secrets,omitempty" json:"secrets,omitempty"`
 	// Charts is the list of releases. In the actual file this will be a map, but we must convert to a list to preserve order.
 	// This conversion is done in the ChartsListV1 UnmarshalYAML function.
 	Charts ChartsListV1 `yaml:"charts" json:"charts"`
@@ -206,6 +210,21 @@ type RepositoryV1 struct {
 
 // RepositoryV1List is a set of repositories
 type RepositoryV1List map[string]Repository
+
+// Secret is a single instance of a secret including what backend should be hit to retrieve the secret
+type Secret struct {
+	Name    string `yaml:"name" json:"name"`
+	Backend string `yaml:"backend" json:"backend"`
+	// Script is only used for Backend ShellExecutor
+	Script []string `yaml:"script" json:"script"`
+	// ParameterName is only used for Backend type AWSParameterStore
+	ParameterName string `yaml:"parameter_name" json:"parameter_name"`
+	// Region is only used for Backend type AWSParameterStore
+	Region string `yaml:"region" json:"region"`
+}
+
+// SecretsList is, you guessed it, a list of Secret structs
+type SecretsList []Secret
 
 // convertV1toV2 converts the old python course file to the newer golang v2 schema
 func convertV1toV2(fileName string) (*FileV2, error) {
@@ -271,6 +290,7 @@ func convertV1toV2(fileName string) (*FileV2, error) {
 	return newFile, nil
 }
 
+// OpenCourseFile will attempt to open a V2 Course and if the SchemaVersion is not v2, attempt to open the course file as V1
 func OpenCourseFile(fileName string, schema []byte) (*FileV2, error) {
 	courseFile, err := OpenCourseV2(fileName)
 	if err != nil {
@@ -315,6 +335,10 @@ func OpenCourseV2(fileName string) (*FileV2, error) {
 	if err != nil {
 		return nil, err
 	}
+	err = parseSecrets(data)
+	if err != nil {
+		return nil, err
+	}
 	err = yaml.Unmarshal(data, courseFile)
 	if err != nil {
 		klog.V(3).Infof("failed to unmarshal file: %s", err.Error())
@@ -327,6 +351,10 @@ func OpenCourseV2(fileName string) (*FileV2, error) {
 func OpenCourseV1(fileName string) (*FileV1, error) {
 	courseFile := &FileV1{}
 	data, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		return nil, err
+	}
+	err = parseSecrets(data)
 	if err != nil {
 		return nil, err
 	}
@@ -556,6 +584,36 @@ func (f *FileV2) validateJsonSchema(schemaData []byte) error {
 			klog.Errorf("jsonSchema error: %s", err.String())
 		}
 		return SchemaValidationError
+	}
+	return nil
+}
+
+func parseSecrets(courseData []byte) error {
+	var course struct {
+		Secrets SecretsList
+	}
+	if err := yaml.Unmarshal(courseData, &course); err != nil {
+		return fmt.Errorf("unable to parse secrets: %w", err)
+	}
+	for _, secret := range course.Secrets {
+		switch secret.Backend {
+		case "ShellExecutor":
+			if secret.Script == nil || len(secret.Script) == 0 {
+				return fmt.Errorf("ShellExecutor secret %s has no script, or is not in an array format in the course file", secret.Name)
+			}
+			executor, err := shell.NewExecutor(secret.Script)
+			if err != nil {
+				return fmt.Errorf("error creating secret ShellExecutor: %w", err)
+			}
+			backend := secrets.NewSecretBackend(executor)
+			if err = backend.SetEnv(secret.Name); err != nil {
+				return fmt.Errorf("error setting secret env: %w", err)
+			}
+		case "AWSParameterStore":
+			return fmt.Errorf("AWSParameterStore secret backend not yet implemented")
+		default:
+			return fmt.Errorf("invalid secret backend: %s", secret.Backend)
+		}
 	}
 	return nil
 }

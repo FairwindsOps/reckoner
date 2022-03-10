@@ -6,18 +6,25 @@ type Getter interface {
 	Get(key string) (string, error)
 }
 
-type SecretEngine struct {
+type SecretBackend struct {
 	getter Getter
 }
 
-func NewSecretEngine(getter Getter) *SecretEngine {
-	return &SecretEngine{getter: getter}
+// NewSecretBackend creates a new SecretBackend based on a concrete secrets.Getter implementation.
+func NewSecretBackend(getter Getter) *SecretBackend {
+	return &SecretBackend{getter: getter}
 }
 
-func (s SecretEngine) Get(key string) (string, error) {
+// Get fetches a secret from the implemented SecretBackend.
+func (s SecretBackend) Get(key string) (string, error) {
 	return s.getter.Get(key)
 }
 
-func (s SecretEngine) SetEnv(key, value string) error {
+// SetEnv populates the current ENV with the given secret key by fetching it from the SecretBackend and calling os.Setenv.
+func (s SecretBackend) SetEnv(key string) error {
+	value, err := s.Get(key)
+	if err != nil {
+		return err
+	}
 	return os.Setenv(key, value)
 }
