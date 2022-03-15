@@ -596,6 +596,7 @@ func parseSecrets(courseData []byte) error {
 		return fmt.Errorf("unable to parse secrets: %w", err)
 	}
 	for _, secret := range course.Secrets {
+		var backend *secrets.Backend
 		switch secret.Backend {
 		case "ShellExecutor":
 			if secret.Script == nil || len(secret.Script) == 0 {
@@ -605,14 +606,15 @@ func parseSecrets(courseData []byte) error {
 			if err != nil {
 				return fmt.Errorf("error creating secret ShellExecutor: %w", err)
 			}
-			backend := secrets.NewSecretBackend(executor)
-			if err = backend.SetEnv(secret.Name); err != nil {
-				return fmt.Errorf("error setting secret env: %w", err)
-			}
+			backend = secrets.NewSecretBackend(executor)
+
 		case "AWSParameterStore":
 			return fmt.Errorf("AWSParameterStore secret backend not yet implemented")
 		default:
 			return fmt.Errorf("invalid secret backend: %s", secret.Backend)
+		}
+		if err := backend.SetEnv(secret.Name); err != nil {
+			return fmt.Errorf("error setting secret env: %w", err)
 		}
 	}
 	return nil
