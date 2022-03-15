@@ -58,7 +58,7 @@ func NewClient(fileName, version string, plotAll bool, releases []string, kubeCl
 	// Get the course file
 	courseFile, err := course.OpenCourseFile(fileName, schema)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w - error opening course file %s: %s", course.SchemaValidationError, fileName, err)
 	}
 
 	// Get a helm client
