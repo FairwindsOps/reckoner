@@ -24,7 +24,6 @@ import (
 	"strings"
 
 	"github.com/fairwindsops/reckoner/pkg/secrets"
-	"github.com/fairwindsops/reckoner/pkg/secrets/backends/shell"
 	"github.com/fatih/color"
 	"github.com/thoas/go-funk"
 	"github.com/xeipuuv/gojsonschema"
@@ -602,7 +601,7 @@ func parseSecrets(courseData []byte) error {
 			if secret.Script == nil || len(secret.Script) == 0 {
 				return fmt.Errorf("ShellExecutor secret %s has no script, or is not in an array format in the course file", secret.Name)
 			}
-			executor, err := shell.NewExecutor(secret.Script)
+			executor, err := newShellExecutor(secret.Script)
 			if err != nil {
 				return fmt.Errorf("error creating secret ShellExecutor: %w", err)
 			}

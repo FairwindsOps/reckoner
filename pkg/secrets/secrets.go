@@ -15,16 +15,16 @@ func NewSecretBackend(getter Getter) *Backend {
 	return &Backend{getter: getter}
 }
 
-// Get fetches a secret from the implemented SecretBackend.
-func (b Backend) Get(key string) (string, error) {
-	return b.getter.Get(key)
-}
-
 // SetEnv populates the current ENV with the given secret key by fetching it from the SecretBackend and calling os.Setenv.
 func (b Backend) SetEnv(key string) error {
-	value, err := b.Get(key)
+	value, err := b.get(key)
 	if err != nil {
 		return err
 	}
 	return os.Setenv(key, value)
+}
+
+// get fetches a secret from the implemented SecretBackend.
+func (b Backend) get(key string) (string, error) {
+	return b.getter.Get(key)
 }
