@@ -20,6 +20,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const (
+	testReleaseName = "helm-chart"
+	testNamespace   = "helm-ns"
+)
+
 func TestParseChartVersion(t *testing.T) {
 	type test struct {
 		name       string
@@ -33,14 +38,14 @@ func TestParseChartVersion(t *testing.T) {
 			importInfo: &ImportInfo{
 				Chart:     "helm-chart-0.1.2",
 				Version:   "",
-				Name:      "helm-chart",
-				Namespace: "helm-ns",
+				Name:      testReleaseName,
+				Namespace: testNamespace,
 			},
 			want: &ImportInfo{
 				Chart:     "helm-chart",
 				Version:   "0.1.2",
-				Name:      "helm-chart",
-				Namespace: "helm-ns",
+				Name:      testReleaseName,
+				Namespace: testNamespace,
 			},
 			wantErr: false,
 		},
@@ -49,8 +54,8 @@ func TestParseChartVersion(t *testing.T) {
 			importInfo: &ImportInfo{
 				Chart:     "helmchart",
 				Version:   "",
-				Name:      "helm-chart",
-				Namespace: "helm-ns",
+				Name:      testReleaseName,
+				Namespace: testNamespace,
 			},
 			want:    &ImportInfo{},
 			wantErr: true,
@@ -60,8 +65,8 @@ func TestParseChartVersion(t *testing.T) {
 			importInfo: &ImportInfo{
 				Chart:     "helm-chart",
 				Version:   "",
-				Name:      "helm-chart",
-				Namespace: "helm-ns",
+				Name:      testReleaseName,
+				Namespace: testNamespace,
 			},
 			want:    &ImportInfo{},
 			wantErr: true,
