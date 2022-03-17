@@ -50,6 +50,12 @@ var (
 	inPlaceConvert bool
 	// noColor contains the boolean flag to disable color output
 	noColor bool
+	// importNamespace is the namespace that contains the release to be imported
+	importNamespace string
+	// importRelease is the name of the release to be imported
+	importRelease string
+	// importRepository is the helm repository for the imported release
+	importRepository string
 )
 
 func init() {
@@ -65,6 +71,10 @@ func init() {
 
 	convertCmd.Flags().BoolVarP(&inPlaceConvert, "in-place", "i", false, "If specified, will update the file in place, otherwise outputs to stdout.")
 
+	importCmd.Flags().StringVar(&importNamespace, "namespace", "", "Namespace that contains the release to be imported.")
+	importCmd.Flags().StringVar(&importRelease, "release_name", "", "The name of the release to import.")
+	importCmd.Flags().StringVar(&importRepository, "repository", "", "The helm repository for the imported release.")
+
 	// add commands here
 	rootCmd.AddCommand(plotCmd)
 	rootCmd.AddCommand(convertCmd)
@@ -73,6 +83,7 @@ func init() {
 	rootCmd.AddCommand(lintCmd)
 	rootCmd.AddCommand(getManifestsCmd)
 	rootCmd.AddCommand(updateCmd)
+	rootCmd.AddCommand(importCmd)
 
 	klog.InitFlags(nil)
 	pflag.CommandLine.AddGoFlag(flag.CommandLine.Lookup("v"))
@@ -259,6 +270,27 @@ var updateCmd = &cobra.Command{
 		if client.Errors > 0 {
 			os.Exit(1)
 		}
+	},
+}
+
+var importCmd = &cobra.Command{
+	Use:   "import",
+	Short: "import",
+	Long:  "Outputs a release block that can be used to import the specified release.",
+	PreRunE: func(cmd *cobra.Command, args []string) error {
+		if importNamespace == "" || importRelease == "" || importRepository == "" {
+			return fmt.Errorf("import requires --namespace, --release, and --repository")
+		}
+		return nil
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		color.Yellow("Import is experimental and may be unreliable. Double check all output. Output assumes course schema v2.")
+		out, err := reckoner.ImportOutput(importRelease, importNamespace, importRepository)
+		if err != nil {
+			color.Red(err.Error())
+			os.Exit(1)
+		}
+		fmt.Println(out)
 	},
 }
 
