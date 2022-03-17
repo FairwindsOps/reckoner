@@ -20,7 +20,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_parseChartVersion(t *testing.T) {
+func TestParseChartVersion(t *testing.T) {
 	type test struct {
 		name       string
 		importInfo *ImportInfo
