@@ -278,8 +278,8 @@ var importCmd = &cobra.Command{
 	Short: "import",
 	Long:  "Outputs a release block that can be used to import the specified release.",
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		if importNamespace == "" || importRelease == "" {
-			return fmt.Errorf("import requires both a --namespace and --release")
+		if importNamespace == "" || importRelease == "" || importRepository == "" {
+			return fmt.Errorf("import requires --namespace, --release, and --repository")
 		}
 		return nil
 	},
