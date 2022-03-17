@@ -112,13 +112,53 @@ func (h Client) UpdateDependencies(path string) error {
 	return nil
 }
 
+// GetManifestString will run 'helm get manifest' on a given namespace and release and return string output.
+func (h Client) GetManifestString(namespace, release string) (string, error) {
+	out, err := h.get("manifest", namespace, release)
+	if err != nil {
+		return "", err
+	}
+	return out, err
+}
+
+// GetUserSuppliedValues will run 'helm get values' on a given namespace and release and return []byte output suitable for yaml Marshaling.
+func (h Client) GetUserSuppliedValuesYAML(namespace, release string) ([]byte, error) {
+	out, err := h.get("values", namespace, release, "--output", "yaml")
+	if err != nil {
+		return nil, err
+	}
+	return []byte(out), err
+}
+
+// ListNamespaceReleasesYAML will run 'helm list' on a given namespace and return []byte output suitable for yaml Marshaling.
+func (h Client) ListNamespaceReleasesYAML(namespace string) ([]byte, error) {
+	out, err := h.list(namespace, "--output", "yaml")
+	if err != nil {
+		return nil, err
+	}
+	return []byte(out), nil
+}
+
 // get can run any 'helm get' command
-func (h Client) get(kind, namespace, release string) (string, error) {
+func (h Client) get(kind, namespace, release string, extraArgs ...string) (string, error) {
 	validKinds := []string{"all", "hooks", "manifest", "notes", "values"}
 	if !funk.Contains(validKinds, kind) {
 		return "", errors.New("invalid kind passed to helm: " + kind)
 	}
-	stdOut, stdErr, err := h.Exec("get", kind, "--namespace", namespace, release)
+	args := []string{"get", kind, "--namespace", namespace, release}
+	args = append(args, extraArgs...)
+	stdOut, stdErr, err := h.Exec(args...)
+	if err != nil && stdErr != "" {
+		return "", errors.New(stdErr)
+	}
+	return stdOut, nil
+}
+
+// list can run any 'helm list' command
+func (h Client) list(namespace string, extraArgs ...string) (string, error) {
+	args := []string{"list", "--namespace", namespace}
+	args = append(args, extraArgs...)
+	stdOut, stdErr, err := h.Exec(args...)
 	if err != nil && stdErr != "" {
 		return "", errors.New(stdErr)
 	}

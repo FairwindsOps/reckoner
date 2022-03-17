@@ -20,7 +20,7 @@ testcases:
           - 'result.systemout ShouldContainSubstring "namespace: {{.namespace}}"'
           - 'result.systemout ShouldContainSubstring "version: 0.4.3"'
           - 'result.systemout ShouldContainSubstring "chart: basic-demo"'
-          - 'result.systemout ShouldContainSubstring "{{.release}}:"'
+          - 'result.systemout ShouldContainSubstring "name: {{.release}}"'
           - 'result.systemout ShouldContainSubstring "expect-value: 1.05"'
           - 'result.systemout ShouldContainSubstring "expect-bool-value: false"'
   - name: 25 - cleanup
