@@ -58,8 +58,6 @@ jobs:
     working_directory: /go/src/github.com/fairwindsops/reckoner
     docker:
       - image: circleci/golang:1.17
-        environment:
-          GO111MODULE: "on"
     steps:
       - checkout
       - run: make test
@@ -86,8 +84,6 @@ jobs:
     shell: /bin/bash
     docker:
       - image: goreleaser/goreleaser:v1.5.0
-        environment:
-          GO111MODULE: "on"
     steps:
       - checkout
       - setup_remote_docker:
@@ -103,7 +99,7 @@ jobs:
           command: |
             docker login -u _json_key -p "$(echo $GCP_ARTIFACTREADWRITE_JSON_KEY | base64 -d)" us-docker.pkg.dev
       - run: echo 'export GORELEASER_CURRENT_TAG="${CIRCLE_TAG}"' >> $BASH_ENV
-      - run: goreleaser
+      - run: goreleaser -p 1
   publish_docs:
     docker:
       - image: cimg/node:15.5.1
