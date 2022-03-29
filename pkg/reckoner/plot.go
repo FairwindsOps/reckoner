@@ -193,15 +193,7 @@ func buildHelmArgs(command, baseDir string, release course.Release, additionalAr
 		valuesFile = tmpValuesFile
 	}
 
-	if len(release.Files) > 0 {
-		for _, file := range release.Files {
-			if file[0] == '/' {
-				args = append(args, fmt.Sprintf("--values=%s", file))
-			} else {
-				args = append(args, fmt.Sprintf("--values=%s/%s", baseDir, file))
-			}
-		}
-	}
+	args = append(args, filesArgs(release.Files, baseDir)...)
 
 	args = append(args, fmt.Sprintf("--namespace=%s", release.Namespace))
 
@@ -210,6 +202,18 @@ func buildHelmArgs(command, baseDir string, release course.Release, additionalAr
 	}
 
 	return args, valuesFile, nil
+}
+
+func filesArgs(files []string, baseDir string) []string {
+	var args []string
+	for _, file := range files {
+		if file[0] == '/' {
+			args = append(args, fmt.Sprintf("--values=%s", file))
+		} else {
+			args = append(args, fmt.Sprintf("--values=%s/%s", baseDir, file))
+		}
+	}
+	return args
 }
 
 // makeTempValuesFile puts the values section into a temporary values file
