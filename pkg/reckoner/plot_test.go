@@ -22,6 +22,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const baseDirPlaceholder = "path/to/chart"
+
 func Test_buildHelmArgs(t *testing.T) {
 	type args struct {
 		command        string
@@ -37,7 +39,7 @@ func Test_buildHelmArgs(t *testing.T) {
 	}{
 		{
 			name:    "basic template",
-			baseDir: "path/to/chart",
+			baseDir: baseDirPlaceholder,
 			args: args{
 				command: "template",
 				release: course.Release{
@@ -63,7 +65,7 @@ func Test_buildHelmArgs(t *testing.T) {
 		},
 		{
 			name:    "basic upgrade",
-			baseDir: "path/to/chart",
+			baseDir: baseDirPlaceholder,
 			args: args{
 				command: "upgrade",
 				release: course.Release{
@@ -90,7 +92,7 @@ func Test_buildHelmArgs(t *testing.T) {
 		},
 		{
 			name:    "additional args",
-			baseDir: "path/to/chart",
+			baseDir: baseDirPlaceholder,
 			args: args{
 				command: "upgrade",
 				release: course.Release{
