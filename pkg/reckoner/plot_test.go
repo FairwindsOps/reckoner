@@ -22,7 +22,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const baseDirPlaceholder = "path/to/chart"
+const (
+	baseDirPlaceholder   = "path/to/chart"
+	namespacePlaceholder = "basic-ns"
+)
 
 func Test_buildHelmArgs(t *testing.T) {
 	type args struct {
@@ -44,7 +47,7 @@ func Test_buildHelmArgs(t *testing.T) {
 				command: "template",
 				release: course.Release{
 					Name:       "basic-release",
-					Namespace:  "basic-ns",
+					Namespace:  namespacePlaceholder,
 					Chart:      "helmchart",
 					Version:    "v0.0.0",
 					Repository: "helmrepo",
@@ -70,7 +73,7 @@ func Test_buildHelmArgs(t *testing.T) {
 				command: "upgrade",
 				release: course.Release{
 					Name:       "basic-release",
-					Namespace:  "basic-ns",
+					Namespace:  namespacePlaceholder,
 					Chart:      "helmchart",
 					Version:    "v0.0.0",
 					Repository: "helmrepo",
@@ -97,7 +100,7 @@ func Test_buildHelmArgs(t *testing.T) {
 				command: "upgrade",
 				release: course.Release{
 					Name:       "basic-release",
-					Namespace:  "basic-ns",
+					Namespace:  namespacePlaceholder,
 					Chart:      "helmchart",
 					Version:    "v0.0.0",
 					Repository: "helmrepo",
