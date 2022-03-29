@@ -34,13 +34,30 @@ references:
         only: /.*/
       tags:
         ignore: /.*/
+  enable_experimental_features: &enable_experimental_docker_features
+    run:
+      name: enable experimental features
+      command: |
+        set -ex
+        apk --update add openssh
+        ssh remote-docker \<<EOF
+          sudo bash -c 'echo "{\"experimental\": true}" > /etc/docker/daemon.json'
+          sudo systemctl restart docker
+        EOF
+  install_vault_alpine: &install_vault_alpine
+    run:
+      name: install hashicorp vault
+      command: |
+        apk --update add curl yq
+        cd /tmp
+        curl -LO https://releases.hashicorp.com/vault/1.9.4/vault_1.9.4_linux_amd64.zip
+        unzip vault_1.9.4_linux_amd64.zip
+        mv vault /usr/bin/vault
 jobs:
   test:
     working_directory: /go/src/github.com/fairwindsops/reckoner
     docker:
       - image: circleci/golang:1.17
-        environment:
-          GO111MODULE: "on"
     steps:
       - checkout
       - run: make test
@@ -53,7 +70,7 @@ jobs:
       - setup_remote_docker
       - run:
           name: Goreleaser Snapshot
-          command: goreleaser --snapshot --skip-sign
+          command: goreleaser --snapshot --skip-sign -p 1
       - store_artifacts:
           path: dist
           destination: snapshot
@@ -61,6 +78,28 @@ jobs:
           root: /go/src/github.com/fairwindsops/reckoner
           paths:
           - dist
+  release:
+    working_directory: /home/circleci/go/src/github.com/fairwindsops/reckoner
+    resource_class: large
+    shell: /bin/bash
+    docker:
+      - image: goreleaser/goreleaser:v1.5.0
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 20.10.6
+      - *enable_experimental_docker_features
+      - *install_vault_alpine
+      - rok8s/get_vault_env:
+          vault_path: repo/global/env
+      - rok8s/get_vault_env:
+          vault_path: repo/reckoner/env
+      - run:
+          name: docker login
+          command: |
+            docker login -u _json_key -p "$(echo $GCP_ARTIFACTREADWRITE_JSON_KEY | base64 -d)" us-docker.pkg.dev
+      - run: echo 'export GORELEASER_CURRENT_TAG="${CIRCLE_TAG}"' >> $BASH_ENV
+      - run: goreleaser -p 1
   publish_docs:
     docker:
       - image: cimg/node:15.5.1
@@ -131,19 +170,17 @@ workflows:
           name: "End-To-End Kubernetes 1.22.0"
           kind_node_image: "kindest/node:v1.22.0@sha256:b8bda84bb3a190e6e028b1760d277454a72267a5454b57db34437c34a588d047"
           <<: *e2e_configuration
-  # release:
-  #   jobs:
-  #     - publish_docs:
-  #         filters:
-  #           branches:
-  #             ignore: /.*/
-  #           tags:
-  #             only: /.*/
-  #     - rok8s/github_release:
-  #         requires:
-  #           - release
-  #         filters:
-  #           branches:
-  #             ignore: /.*/
-  #           tags:
-  #             only: /.*/
+  release:
+    jobs:
+      - publish_docs:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v[0-9]+\.[0-9]+\.[0-9]+$/
+      - release:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$/
