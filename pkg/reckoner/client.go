@@ -54,7 +54,7 @@ var clientset *kubernetes.Clientset
 
 // NewClient returns a client. Attempts to open a v2 schema course file
 // If getClient is true, attempts to get a Kubernetes client from config
-func NewClient(fileName, version string, plotAll bool, releases []string, kubeClient bool, dryRun bool, createNamespaces bool, schema []byte, continueOnError bool) (*Client, error) {
+func NewClient(fileName, version string, plotAll bool, releases []string, kubeClient bool, dryRun bool, createNamespaces bool, schema []byte, continueOnError bool, cliHelmArgs []string) (*Client, error) {
 	// Get the course file
 	courseFile, err := course.OpenCourseFile(fileName, schema)
 	if err != nil {
@@ -93,6 +93,12 @@ func NewClient(fileName, version string, plotAll bool, releases []string, kubeCl
 
 	if kubeClient {
 		client.KubeClient = getKubeClient(courseFile.Context)
+	}
+
+	// if the user has specified helm args, override helm args in course file
+	// this is consistent with the original python version of reckoner
+	if len(cliHelmArgs) > 0 {
+		client.CourseFile.HelmArgs = cliHelmArgs
 	}
 
 	return client, nil

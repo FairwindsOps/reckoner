@@ -15,6 +15,7 @@
 package reckoner
 
 import (
+	"os"
 	"testing"
 
 	"github.com/fairwindsops/reckoner/pkg/course"
@@ -23,8 +24,9 @@ import (
 
 func Test_buildHelmArgs(t *testing.T) {
 	type args struct {
-		command string
-		release course.Release
+		command        string
+		release        course.Release
+		additionalArgs []string
 	}
 	tests := []struct {
 		name    string
@@ -86,16 +88,79 @@ func Test_buildHelmArgs(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name:    "additional args",
+			baseDir: "path/to/chart",
+			args: args{
+				command: "upgrade",
+				release: course.Release{
+					Name:       "basic-release",
+					Namespace:  "basic-ns",
+					Chart:      "helmchart",
+					Version:    "v0.0.0",
+					Repository: "helmrepo",
+					Files: []string{
+						"a-values-file.yaml",
+					},
+				},
+				additionalArgs: []string{
+					"--atomic",
+				},
+			},
+			want: []string{
+				"upgrade",
+				"--install",
+				"--atomic",
+				"basic-release",
+				"helmrepo/helmchart",
+				"--values=path/to/chart/a-values-file.yaml",
+				"--namespace=basic-ns",
+				"--version=v0.0.0",
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, _, err := buildHelmArgs(tt.args.command, tt.baseDir, tt.args.release)
+			got, _, err := buildHelmArgs(tt.args.command, tt.baseDir, tt.args.release, tt.args.additionalArgs)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
 				assert.EqualValues(t, tt.want, got)
 			}
+		})
+	}
+}
+
+func Test_makeTempValuesFile(t *testing.T) {
+	tests := []struct {
+		name    string
+		values  map[string]interface{}
+		want    string
+		wantErr bool
+	}{
+		{
+			name: "basic",
+			values: map[string]interface{}{
+				"foo": "bar",
+			},
+			want:    "foo: bar\n",
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := makeTempValuesFile(tt.values)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				valuesFile, err := os.ReadFile(got.Name())
+				assert.NoError(t, err)
+				assert.EqualValues(t, tt.want, string(valuesFile))
+			}
+			os.Remove(got.Name())
 		})
 	}
 }

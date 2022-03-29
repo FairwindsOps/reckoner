@@ -1,6 +1,8 @@
 namespace: namespace
 context: farglebargle
 repository: stable
+helm_args:
+- --atomic
 repositories:
   git-repo-test:
     git: https://github.com/FairwindsOps/charts

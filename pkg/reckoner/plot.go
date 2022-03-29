@@ -57,7 +57,7 @@ func (c *Client) Plot() error {
 			return err
 		}
 
-		args, tmpFile, err := buildHelmArgs("upgrade", c.BaseDirectory, *release)
+		args, tmpFile, err := buildHelmArgs("upgrade", c.BaseDirectory, *release, c.CourseFile.HelmArgs)
 		if err != nil {
 			color.Red(err.Error())
 			continue
@@ -141,7 +141,7 @@ func (c Client) TemplateRelease(releaseName string) (string, error) {
 	releaseIndex := funk.IndexOf(c.CourseFile.Releases, func(release *course.Release) bool {
 		return release.Name == releaseName
 	})
-	args, tmpFile, err := buildHelmArgs("template", c.BaseDirectory, *c.CourseFile.Releases[releaseIndex])
+	args, tmpFile, err := buildHelmArgs("template", c.BaseDirectory, *c.CourseFile.Releases[releaseIndex], c.CourseFile.HelmArgs)
 	if err != nil {
 		return "", err
 	}
@@ -159,7 +159,7 @@ func (c Client) TemplateRelease(releaseName string) (string, error) {
 // takes a command either "upgrade" or "template"
 // also returns the temp file of the values file to close
 // NOTE: The order is really important here
-func buildHelmArgs(command, baseDir string, release course.Release) ([]string, *os.File, error) {
+func buildHelmArgs(command, baseDir string, release course.Release, additionalArgs []string) ([]string, *os.File, error) {
 	var valuesFile *os.File
 	var args []string
 	switch command {
@@ -167,6 +167,10 @@ func buildHelmArgs(command, baseDir string, release course.Release) ([]string, *
 		args = []string{"upgrade", "--install"}
 	case "template":
 		args = []string{"template"}
+	}
+
+	if len(additionalArgs) > 0 {
+		args = append(args, additionalArgs...)
 	}
 
 	args = append(args, release.Name)
