@@ -1,7 +1,6 @@
-FROM python:3.8
+FROM scratch
 
-ADD . /bin/reckoner
-RUN pip install ./reckoner
-
-ENTRYPOINT ["reckoner"]
-CMD ["--help"]
+USER nobody
+COPY reckoner /
+WORKDIR /
+ENTRYPOINT ["/reckoner"]
