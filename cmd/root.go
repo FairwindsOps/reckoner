@@ -78,7 +78,8 @@ func init() {
 	importCmd.Flags().StringVar(&importRelease, "release_name", "", "The name of the release to import.")
 	importCmd.Flags().StringVar(&importRepository, "repository", "", "The helm repository for the imported release.")
 
-	rootCmd.AddCommand(plotCmd,
+	rootCmd.AddCommand(
+		plotCmd,
 		convertCmd,
 		templateCmd,
 		diffCmd,
