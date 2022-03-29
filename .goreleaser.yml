@@ -26,7 +26,7 @@ release:
     ```
 
     ```
-    cosign verify us-docker.pkg.dev/fairwinds-ops/oss/reckoner:v5 --key https://artifacts.fairwinds.com/cosign.pub
+    cosign verify us-docker.pkg.dev/fairwinds-ops/oss/reckoner:v6 --key https://artifacts.fairwinds.com/cosign.pub
     ```
 signs:
 - cmd: cosign
