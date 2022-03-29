@@ -10,9 +10,12 @@ builds:
     goos:
       - linux
       - darwin
+      - windows
     goarm:
       - 6
       - 7
+checksum:
+  name_template: "checksums.txt"
 release:
   prerelease: auto
   footer: |
