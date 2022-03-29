@@ -13,11 +13,6 @@ builds:
     goarm:
       - 6
       - 7
-dockers:
-- image_templates:
-  - "quay.io/fairwinds/reckoner:go-{{ .Tag }}"
-  - "quay.io/fairwinds/reckoner:go-v{{ .Major }}"
-  - "quay.io/fairwinds/reckoner:go-v{{ .Major }}.{{ .Minor }}"
 release:
   prerelease: auto
   footer: |
@@ -28,7 +23,7 @@ release:
     ```
 
     ```
-    cosign verify us-docker.pkg.dev/fairwinds-ops/oss/reckoner:go-v5 --key https://artifacts.fairwinds.com/cosign.pub
+    cosign verify us-docker.pkg.dev/fairwinds-ops/oss/reckoner:v5 --key https://artifacts.fairwinds.com/cosign.pub
     ```
 signs:
 - cmd: cosign
@@ -42,16 +37,16 @@ docker_signs:
 dockers:
 - image_templates:
   - "us-docker.pkg.dev/fairwinds-ops/oss/reckoner:{{ .Tag }}-amd64"
-  - "us-docker.pkg.dev/fairwinds-ops/oss/reckoner:go-v{{ .Major }}-amd64"
-  - "us-docker.pkg.dev/fairwinds-ops/oss/reckoner:go-v{{ .Major }}.{{ .Minor }}-amd64"
+  - "us-docker.pkg.dev/fairwinds-ops/oss/reckoner:v{{ .Major }}-amd64"
+  - "us-docker.pkg.dev/fairwinds-ops/oss/reckoner:v{{ .Major }}.{{ .Minor }}-amd64"
   use: buildx
   dockerfile: Dockerfile-go
   build_flag_templates:
   - "--platform=linux/amd64"
 - image_templates:
   - "us-docker.pkg.dev/fairwinds-ops/oss/reckoner:{{ .Tag }}-arm64v8"
-  - "us-docker.pkg.dev/fairwinds-ops/oss/reckoner:go-v{{ .Major }}-arm64v8"
-  - "us-docker.pkg.dev/fairwinds-ops/oss/reckoner:go-v{{ .Major }}.{{ .Minor }}-arm64v8"
+  - "us-docker.pkg.dev/fairwinds-ops/oss/reckoner:v{{ .Major }}-arm64v8"
+  - "us-docker.pkg.dev/fairwinds-ops/oss/reckoner:v{{ .Major }}.{{ .Minor }}-arm64v8"
   use: buildx
   goarch: arm64
   dockerfile: Dockerfile
@@ -59,8 +54,8 @@ dockers:
   - "--platform=linux/arm64/v8"
 - image_templates:
   - "us-docker.pkg.dev/fairwinds-ops/oss/reckoner:{{ .Tag }}-armv7"
-  - "us-docker.pkg.dev/fairwinds-ops/oss/reckoner:go-v{{ .Major }}-armv7"
-  - "us-docker.pkg.dev/fairwinds-ops/oss/reckoner:go-v{{ .Major }}.{{ .Minor }}-armv7"
+  - "us-docker.pkg.dev/fairwinds-ops/oss/reckoner:v{{ .Major }}-armv7"
+  - "us-docker.pkg.dev/fairwinds-ops/oss/reckoner:v{{ .Major }}.{{ .Minor }}-armv7"
   use: buildx
   goarch: arm64
   dockerfile: Dockerfile
@@ -72,13 +67,13 @@ docker_manifests:
   - "us-docker.pkg.dev/fairwinds-ops/oss/reckoner:{{ .Tag }}-amd64"
   - "us-docker.pkg.dev/fairwinds-ops/oss/reckoner:{{ .Tag }}-arm64v8"
   - "us-docker.pkg.dev/fairwinds-ops/oss/reckoner:{{ .Tag }}-armv7"
-- name_template: us-docker.pkg.dev/fairwinds-ops/oss/reckoner:go-v{{ .Major }}
+- name_template: us-docker.pkg.dev/fairwinds-ops/oss/reckoner:v{{ .Major }}
   image_templates:
-  - "us-docker.pkg.dev/fairwinds-ops/oss/reckoner:go-v{{ .Major }}-amd64"
-  - "us-docker.pkg.dev/fairwinds-ops/oss/reckoner:go-v{{ .Major }}-arm64v8"
-  - "us-docker.pkg.dev/fairwinds-ops/oss/reckoner:go-v{{ .Major }}-armv7"
-- name_template: us-docker.pkg.dev/fairwinds-ops/oss/reckoner:go-v{{ .Major }}.{{ .Minor }}
+  - "us-docker.pkg.dev/fairwinds-ops/oss/reckoner:v{{ .Major }}-amd64"
+  - "us-docker.pkg.dev/fairwinds-ops/oss/reckoner:v{{ .Major }}-arm64v8"
+  - "us-docker.pkg.dev/fairwinds-ops/oss/reckoner:v{{ .Major }}-armv7"
+- name_template: us-docker.pkg.dev/fairwinds-ops/oss/reckoner:v{{ .Major }}.{{ .Minor }}
   image_templates:
-  - "us-docker.pkg.dev/fairwinds-ops/oss/reckoner:go-v{{ .Major }}.{{ .Minor }}-amd64"
-  - "us-docker.pkg.dev/fairwinds-ops/oss/reckoner:go-v{{ .Major }}.{{ .Minor }}-arm64v8"
-  - "us-docker.pkg.dev/fairwinds-ops/oss/reckoner:go-v{{ .Major }}.{{ .Minor }}-armv7"
+  - "us-docker.pkg.dev/fairwinds-ops/oss/reckoner:v{{ .Major }}.{{ .Minor }}-amd64"
+  - "us-docker.pkg.dev/fairwinds-ops/oss/reckoner:v{{ .Major }}.{{ .Minor }}-arm64v8"
+  - "us-docker.pkg.dev/fairwinds-ops/oss/reckoner:v{{ .Major }}.{{ .Minor }}-armv7"
