@@ -47,61 +47,49 @@ type Client struct {
 	CreateNamespaces bool
 	ContinueOnError  bool
 	Errors           int
+	HelmArgs         []string
+	Schema           []byte
+	Version          string
 }
 
 var once sync.Once
 var clientset *kubernetes.Clientset
 
-// NewClient returns a client. Attempts to open a v2 schema course file
+// Init initializes a client. Attempts to open a v2 schema course file
 // If getClient is true, attempts to get a Kubernetes client from config
-func NewClient(fileName, version string, plotAll bool, releases []string, kubeClient bool, dryRun bool, createNamespaces bool, schema []byte, continueOnError bool, cliHelmArgs []string) (*Client, error) {
+func (c *Client) Init(fileName string, initKubeClient bool) error {
 	// Get the course file
-	courseFile, err := course.OpenCourseFile(fileName, schema)
+	courseFile, err := course.OpenCourseFile(fileName, c.Schema)
 	if err != nil {
-		return nil, fmt.Errorf("%w - error opening course file %s: %s", course.SchemaValidationError, fileName, err)
+		return fmt.Errorf("%w - error opening course file %s: %s", course.SchemaValidationError, fileName, err)
 	}
 
 	// Get a helm client
 	helmClient, err := helm.NewClient()
 	if err != nil {
-		return nil, err
+		return err
 	}
+	c.Helm = *helmClient
 
-	client := &Client{
-		CourseFile:       *courseFile,
-		PlotAll:          plotAll,
-		Releases:         releases,
-		Helm:             *helmClient,
-		ReckonerVersion:  version,
-		BaseDirectory:    path.Dir(fileName),
-		DryRun:           dryRun,
-		CreateNamespaces: createNamespaces,
-		ContinueOnError:  continueOnError,
-	}
+	c.BaseDirectory = path.Dir(fileName)
 
 	// Check versions
-	if !client.helmVersionValid() {
-		return nil, fmt.Errorf("helm version check failed")
+	if !c.helmVersionValid() {
+		return fmt.Errorf("helm version check failed")
 	}
-	if !client.reckonerVersionValid() {
-		return nil, fmt.Errorf("reckoner version check failed")
-	}
-
-	if err := client.filterReleases(); err != nil {
-		return nil, err
+	if !c.reckonerVersionValid() {
+		return fmt.Errorf("reckoner version check failed")
 	}
 
-	if kubeClient {
-		client.KubeClient = getKubeClient(courseFile.Context)
+	if err := c.filterReleases(); err != nil {
+		return err
 	}
 
-	// if the user has specified helm args, override helm args in course file
-	// this is consistent with the original python version of reckoner
-	if len(cliHelmArgs) > 0 {
-		client.CourseFile.HelmArgs = cliHelmArgs
+	if initKubeClient {
+		c.KubeClient = getKubeClient(courseFile.Context)
 	}
 
-	return client, nil
+	return nil
 }
 
 func (c *Client) Continue() bool {

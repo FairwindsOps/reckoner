@@ -113,7 +113,16 @@ var plotCmd = &cobra.Command{
 	Long:    "Runs a helm install on a release or several releases.",
 	PreRunE: validateCobraArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, true, dryRun, createNamespaces, courseSchema, continueOnError, additionalHelmArgs)
+		client := reckoner.Client{
+			Version:          version,
+			Schema:           courseSchema,
+			HelmArgs:         additionalHelmArgs,
+			DryRun:           dryRun,
+			CreateNamespaces: createNamespaces,
+			ContinueOnError:  continueOnError,
+			Releases:         onlyRun,
+		}
+		err := client.Init(courseFile, true)
 		if err != nil {
 			color.Red(err.Error())
 			os.Exit(1)
@@ -135,7 +144,17 @@ var templateCmd = &cobra.Command{
 	Long:    "Templates a helm chart for a release or several releases. Automatically sets --create-namespaces=false --dry-run=true",
 	PreRunE: validateCobraArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false, true, false, courseSchema, false, additionalHelmArgs)
+		client := reckoner.Client{
+			Version:          version,
+			Schema:           courseSchema,
+			HelmArgs:         additionalHelmArgs,
+			DryRun:           true,
+			CreateNamespaces: false,
+			ContinueOnError:  continueOnError,
+			Releases:         onlyRun,
+		}
+
+		err := client.Init(courseFile, false)
 		if err != nil {
 			color.Red(err.Error())
 			os.Exit(1)
@@ -155,11 +174,21 @@ var getManifestsCmd = &cobra.Command{
 	Long:    "Gets the manifests currently in the cluster.",
 	PreRunE: validateCobraArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, true, true, false, courseSchema, false, additionalHelmArgs)
+		client := reckoner.Client{
+			Version:          version,
+			Schema:           courseSchema,
+			HelmArgs:         additionalHelmArgs,
+			DryRun:           true,
+			CreateNamespaces: false,
+			ContinueOnError:  false,
+			Releases:         onlyRun,
+		}
+		err := client.Init(courseFile, true)
 		if err != nil {
 			color.Red(err.Error())
 			os.Exit(1)
 		}
+
 		manifests, err := client.GetManifests()
 		if err != nil {
 			color.Red(err.Error())
@@ -175,11 +204,21 @@ var diffCmd = &cobra.Command{
 	Long:    "Diffs the currently defined release and the one in the cluster",
 	PreRunE: validateCobraArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, true, true, false, courseSchema, continueOnError, additionalHelmArgs)
+		client := reckoner.Client{
+			Version:          version,
+			Schema:           courseSchema,
+			HelmArgs:         additionalHelmArgs,
+			DryRun:           true,
+			CreateNamespaces: false,
+			ContinueOnError:  continueOnError,
+			Releases:         onlyRun,
+		}
+		err := client.Init(courseFile, true)
 		if err != nil {
 			color.Red(err.Error())
 			os.Exit(1)
 		}
+
 		if err := client.UpdateHelmRepos(); err != nil {
 			color.Red(err.Error())
 			os.Exit(1)
@@ -204,11 +243,21 @@ var lintCmd = &cobra.Command{
 		return validateCobraArgs(cmd, args)
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		_, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, false, true, false, courseSchema, false, additionalHelmArgs)
+		client := reckoner.Client{
+			Version:          version,
+			Schema:           courseSchema,
+			HelmArgs:         additionalHelmArgs,
+			DryRun:           true,
+			CreateNamespaces: false,
+			ContinueOnError:  false,
+			Releases:         onlyRun,
+		}
+		err := client.Init(courseFile, false)
 		if err != nil {
 			color.Red(err.Error())
 			os.Exit(1)
 		}
+
 		color.Green("No schema validation errors found in course file: %s", courseFile)
 	},
 }
@@ -261,7 +310,16 @@ var updateCmd = &cobra.Command{
 	Long:    "Only install/upgrade a release if there are changes.",
 	PreRunE: validateCobraArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		client, err := reckoner.NewClient(courseFile, version, runAll, onlyRun, true, dryRun, createNamespaces, courseSchema, continueOnError, additionalHelmArgs)
+		client := reckoner.Client{
+			Version:          version,
+			Schema:           courseSchema,
+			HelmArgs:         additionalHelmArgs,
+			DryRun:           dryRun,
+			CreateNamespaces: createNamespaces,
+			ContinueOnError:  continueOnError,
+			Releases:         onlyRun,
+		}
+		err := client.Init(courseFile, true)
 		if err != nil {
 			color.Red(err.Error())
 			os.Exit(1)
