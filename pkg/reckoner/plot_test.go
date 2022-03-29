@@ -23,8 +23,13 @@ import (
 )
 
 const (
-	baseDirPlaceholder   = "path/to/chart"
-	namespacePlaceholder = "basic-ns"
+	baseDir        = "path/to/chart"
+	namespace      = "basic-ns"
+	version        = "v0.0.0"
+	valuesFile     = "a-values-file.yaml"
+	helmChart      = "helmchart"
+	helmRelease    = "basic-release"
+	helmRepository = "helmrepo"
 )
 
 func Test_buildHelmArgs(t *testing.T) {
@@ -42,70 +47,70 @@ func Test_buildHelmArgs(t *testing.T) {
 	}{
 		{
 			name:    "basic template",
-			baseDir: baseDirPlaceholder,
+			baseDir: baseDir,
 			args: args{
 				command: "template",
 				release: course.Release{
-					Name:       "basic-release",
-					Namespace:  namespacePlaceholder,
-					Chart:      "helmchart",
-					Version:    "v0.0.0",
-					Repository: "helmrepo",
+					Name:       helmRelease,
+					Namespace:  namespace,
+					Chart:      helmChart,
+					Version:    version,
+					Repository: helmRepository,
 					Files: []string{
-						"a-values-file.yaml",
+						valuesFile,
 					},
 				},
 			},
 			want: []string{
 				"template",
-				"basic-release",
-				"helmrepo/helmchart",
-				"--values=path/to/chart/a-values-file.yaml",
-				"--namespace=basic-ns",
-				"--version=v0.0.0",
+				helmRelease,
+				helmRepository + "/" + helmChart,
+				"--values=" + baseDir + "/" + valuesFile,
+				"--namespace=" + namespace,
+				"--version=" + version,
 			},
 			wantErr: false,
 		},
 		{
 			name:    "basic upgrade",
-			baseDir: baseDirPlaceholder,
+			baseDir: baseDir,
 			args: args{
 				command: "upgrade",
 				release: course.Release{
-					Name:       "basic-release",
-					Namespace:  namespacePlaceholder,
-					Chart:      "helmchart",
-					Version:    "v0.0.0",
-					Repository: "helmrepo",
+					Name:       helmRelease,
+					Namespace:  namespace,
+					Chart:      helmChart,
+					Version:    version,
+					Repository: helmRepository,
 					Files: []string{
-						"a-values-file.yaml",
+						valuesFile,
 					},
 				},
 			},
 			want: []string{
 				"upgrade",
 				"--install",
-				"basic-release",
-				"helmrepo/helmchart",
-				"--values=path/to/chart/a-values-file.yaml",
-				"--namespace=basic-ns",
-				"--version=v0.0.0",
+				helmRelease,
+				helmRepository + "/" + helmChart,
+				"--values=" + baseDir + "/" + valuesFile,
+				"--namespace=" + namespace,
+				"--version=" + version,
 			},
 			wantErr: false,
 		},
 		{
 			name:    "additional args",
-			baseDir: baseDirPlaceholder,
+			baseDir: baseDir,
 			args: args{
 				command: "upgrade",
 				release: course.Release{
-					Name:       "basic-release",
-					Namespace:  namespacePlaceholder,
-					Chart:      "helmchart",
-					Version:    "v0.0.0",
-					Repository: "helmrepo",
+					Name:       helmRelease,
+					Namespace:  namespace,
+					Chart:      helmChart,
+					Version:    version,
+					Repository: helmRepository,
 					Files: []string{
-						"a-values-file.yaml",
+						valuesFile,
 					},
 				},
 				additionalArgs: []string{
@@ -116,11 +121,11 @@ func Test_buildHelmArgs(t *testing.T) {
 				"upgrade",
 				"--install",
 				"--atomic",
-				"basic-release",
-				"helmrepo/helmchart",
-				"--values=path/to/chart/a-values-file.yaml",
-				"--namespace=basic-ns",
-				"--version=v0.0.0",
+				helmRelease,
+				helmRepository + "/" + helmChart,
+				"--values=" + baseDir + "/" + valuesFile,
+				"--namespace=" + namespace,
+				"--version=" + version,
 			},
 			wantErr: false,
 		},
