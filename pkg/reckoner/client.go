@@ -29,6 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 
 	"github.com/Masterminds/semver/v3"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/fairwindsops/reckoner/pkg/course"
 	"github.com/fairwindsops/reckoner/pkg/helm"
 	"github.com/thoas/go-funk"
@@ -36,20 +37,34 @@ import (
 
 // Client is a configuration struct
 type Client struct {
-	KubeClient       kubernetes.Interface
-	Helm             helm.Client
-	ReckonerVersion  string
-	CourseFile       course.FileV2
-	PlotAll          bool
-	Releases         []string
-	BaseDirectory    string
-	DryRun           bool
+	// KubClient is kubernetes client interface. Will be populated in the cilent.Init() function
+	KubeClient kubernetes.Interface
+	// Helm is a reckoner helm client. Will be populated in the client.Init() function
+	Helm helm.Client
+	// The version of Reckoner that is being used
+	ReckonerVersion string
+	// CourseFile will be populated in the client.Init() function
+	CourseFile course.FileV2
+	// PlotAll should be set to true if operating on all releases in the course
+	PlotAll bool
+	// Releases is a list of releases to operate on if PlotAll is false
+	Releases []string
+	// BaseDirectory is the directory where the course file is located
+	BaseDirectory string
+	// DryRun is a flag to indicate if the client should be run in dry run mode
+	DryRun bool
+	// CreateNamespaces is a flag to indicate if the client should create namespaces
 	CreateNamespaces bool
-	ContinueOnError  bool
-	Errors           int
-	HelmArgs         []string
-	Schema           []byte
-	Version          string
+	// ContinueOnError is a flag to indicate if the client should continue if one release fails
+	ContinueOnError bool
+	// Errors is a counter of errors encountered during the use of this cilent
+	Errors int
+	// HelmArgs is a list of helm args to pass to helm when running commands
+	HelmArgs []string
+	// Schema is a byte slice representation of the coursev2 json schema
+	Schema []byte
+	// Version - ???? TODO
+	Version string
 }
 
 var once sync.Once
@@ -88,6 +103,11 @@ func (c *Client) Init(fileName string, initKubeClient bool) error {
 
 	if initKubeClient {
 		c.KubeClient = getKubeClient(courseFile.Context)
+	}
+
+	klog.V(5).Infof("successfully initialized client:")
+	if klog.V(5).Enabled() {
+		spew.Dump(c)
 	}
 
 	return nil
@@ -142,7 +162,8 @@ func (c Client) helmVersionValid() bool {
 }
 
 // reckonerVersionValid determines if the current helm version high enough
-func (c Client) reckonerVersionValid() bool {
+func (c *Client) reckonerVersionValid() bool {
+	klog.V(5).Infof("checking current reckoner version: %s", c.ReckonerVersion)
 	if c.CourseFile.MinimumVersions.Reckoner == "" {
 		klog.V(2).Infof("no minimum reckoner version found, assuming okay")
 		return true

@@ -114,7 +114,7 @@ var plotCmd = &cobra.Command{
 	PreRunE: validateCobraArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		client := reckoner.Client{
-			Version:          version,
+			ReckonerVersion:  version,
 			Schema:           courseSchema,
 			HelmArgs:         additionalHelmArgs,
 			DryRun:           dryRun,
@@ -145,7 +145,7 @@ var templateCmd = &cobra.Command{
 	PreRunE: validateCobraArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		client := reckoner.Client{
-			Version:          version,
+			ReckonerVersion:  version,
 			Schema:           courseSchema,
 			HelmArgs:         additionalHelmArgs,
 			DryRun:           true,
@@ -175,7 +175,7 @@ var getManifestsCmd = &cobra.Command{
 	PreRunE: validateCobraArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		client := reckoner.Client{
-			Version:          version,
+			ReckonerVersion:  version,
 			Schema:           courseSchema,
 			HelmArgs:         additionalHelmArgs,
 			DryRun:           true,
@@ -205,7 +205,7 @@ var diffCmd = &cobra.Command{
 	PreRunE: validateCobraArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		client := reckoner.Client{
-			Version:          version,
+			ReckonerVersion:  version,
 			Schema:           courseSchema,
 			HelmArgs:         additionalHelmArgs,
 			DryRun:           true,
@@ -244,7 +244,7 @@ var lintCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		client := reckoner.Client{
-			Version:          version,
+			ReckonerVersion:  version,
 			Schema:           courseSchema,
 			HelmArgs:         additionalHelmArgs,
 			DryRun:           true,
@@ -311,7 +311,7 @@ var updateCmd = &cobra.Command{
 	PreRunE: validateCobraArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		client := reckoner.Client{
-			Version:          version,
+			ReckonerVersion:  version,
 			Schema:           courseSchema,
 			HelmArgs:         additionalHelmArgs,
 			DryRun:           dryRun,
