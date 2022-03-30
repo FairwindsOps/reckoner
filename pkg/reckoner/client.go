@@ -63,8 +63,6 @@ type Client struct {
 	HelmArgs []string
 	// Schema is a byte slice representation of the coursev2 json schema
 	Schema []byte
-	// Version - ???? TODO
-	Version string
 }
 
 var once sync.Once
