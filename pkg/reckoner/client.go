@@ -63,6 +63,7 @@ func (c *Client) Init(fileName string, initKubeClient bool) error {
 	if err != nil {
 		return fmt.Errorf("%w - error opening course file %s: %s", course.SchemaValidationError, fileName, err)
 	}
+	c.CourseFile = *courseFile
 
 	// Get a helm client
 	helmClient, err := helm.NewClient()
