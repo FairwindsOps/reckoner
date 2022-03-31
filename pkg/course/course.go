@@ -68,6 +68,8 @@ type FileV2 struct {
 	Secrets SecretsList `yaml:"secrets,omitempty" json:"secrets,omitempty"`
 	// Releases is the list of releases that should be maintained by this course file.
 	Releases []*Release `yaml:"releases,omitempty" json:"releases,omitempty"`
+	// HelmArgs is a list of arguments to pass to helm commands
+	HelmArgs []string `yaml:"helm_args,omitempty" json:"helm_args,omitempty"`
 }
 
 // FileV2Unmarshal is a helper type that allows us to have a custom unmarshal function for the FileV2 struct
@@ -191,6 +193,8 @@ type FileV1 struct {
 	// Charts is the list of releases. In the actual file this will be a map, but we must convert to a list to preserve order.
 	// This conversion is done in the ChartsListV1 UnmarshalYAML function.
 	Charts ChartsListV1 `yaml:"charts" json:"charts"`
+	// HelmArgs is a list of arguments to pass to helm
+	HelmArgs []string `yaml:"helm_args,omitempty" json:"helm_args,omitempty"`
 }
 
 // ChartsListV1 is a list of releases which we convert from a map of releases to preserve order
@@ -245,6 +249,7 @@ func convertV1toV2(fileName string) (*FileV2, error) {
 	newFile.Releases = make([]*Release, len(oldFile.Charts))
 	newFile.Hooks = oldFile.Hooks
 	newFile.MinimumVersions = oldFile.MinimumVersions
+	newFile.HelmArgs = oldFile.HelmArgs
 
 	for releaseIndex, release := range oldFile.Charts {
 		repositoryName, ok := release.Repository.(string)
