@@ -18,6 +18,15 @@ testcases:
     - result.systemout ShouldContainSubstring 'another-polaris'
     - result.systemout ShouldContainSubstring '10-test'
     - result.systemout ShouldContainSubstring 'polaris-release'
+- name: 10 - template course
+  steps:
+  - script: |
+      reckoner template -a {{.course}}
+    assertions:
+    - result.code ShouldEqual 0
+    - result.systemout ShouldContainSubstring 'goldilocks'
+    - result.systemout ShouldContainSubstring 'polaris'
+    - result.systemout ShouldContainSubstring 'another-polaris'
 - name: 10 - cleanup namespace creation
   steps:
     - script: |
