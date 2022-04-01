@@ -20,6 +20,7 @@ import (
 	"os"
 
 	"github.com/fatih/color"
+	"github.com/mattn/go-colorable"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"gopkg.in/yaml.v3"
@@ -93,6 +94,8 @@ func init() {
 
 	klog.InitFlags(nil)
 	pflag.CommandLine.AddGoFlag(flag.CommandLine.Lookup("v"))
+
+	color.Output = colorable.NewColorableStderr()
 }
 
 var rootCmd = &cobra.Command{
