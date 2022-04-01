@@ -11,8 +11,8 @@ testcases:
       reckoner plot -a {{.course}}
     assertions:
     - result.code ShouldEqual 0
-    - result.systemout ShouldContainSubstring "Running release pre hook"
-    - result.systemout ShouldContainSubstring "Running release post hook"
+    - result.systemerr ShouldContainSubstring "Running release pre hook"
+    - result.systemerr ShouldContainSubstring "Running release post hook"
   - script: |
       helm -n {{.namespace}} get all {{.release}}
     assertions:
