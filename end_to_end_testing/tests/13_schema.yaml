@@ -9,21 +9,21 @@ testcases:
       reckoner plot -a ../course_files/13_test_bad_schema_repository.yml
     assertions:
     - result.code ShouldEqual 1
-    - result.systemout ShouldContainSubstring 'Course file has schema validation errors'
+    - result.systemerr ShouldContainSubstring 'Course file has schema validation errors'
 - name: 13 - plot 13_test_required_schema.yml
   steps:
   - script: |
       reckoner plot -a ../course_files/13_test_required_schema.yml
     assertions:
     - result.code ShouldEqual 1
-    - result.systemout ShouldContainSubstring 'Course file has schema validation errors'
+    - result.systemerr ShouldContainSubstring 'Course file has schema validation errors'
 - name: 13 - lint 13_test_lint_bad_secret.yml
   steps:
   - script: |
       reckoner lint ../course_files/13_test_lint_bad_secret.yml
     assertions:
     - result.code ShouldEqual 1
-    - result.systemout ShouldContainSubstring 'Course file has schema validation errors'
+    - result.systemerr ShouldContainSubstring 'Course file has schema validation errors'
 
 - name: 13 - lint 13_test_lint_good_secret.yml
   steps:
@@ -31,4 +31,4 @@ testcases:
       reckoner lint ../course_files/13_test_lint_good_secret.yml
     assertions:
     - result.code ShouldEqual 0
-    - result.systemout ShouldContainSubstring 'No schema validation errors found'
+    - result.systemerr ShouldContainSubstring 'No schema validation errors found'

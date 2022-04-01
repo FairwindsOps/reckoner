@@ -25,8 +25,7 @@ var (
 )
 
 func init() {
-	rootCmd.AddCommand(versionCmd)
-	rootCmd.PersistentFlags().BoolVar(&shortVersion, "short", false, "Display only the version. Useful for automation")
+	versionCmd.PersistentFlags().BoolVar(&shortVersion, "short", false, "Display only the version. Useful for automation")
 }
 
 var versionCmd = &cobra.Command{

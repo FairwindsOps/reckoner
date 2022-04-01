@@ -103,8 +103,8 @@ func (c *Client) Init(fileName string, initKubeClient bool) error {
 		c.KubeClient = getKubeClient(courseFile.Context)
 	}
 
-	klog.V(5).Infof("successfully initialized client:")
-	if klog.V(5).Enabled() {
+	klog.V(10).Infof("successfully initialized client:")
+	if klog.V(10).Enabled() {
 		spew.Dump(c)
 	}
 
