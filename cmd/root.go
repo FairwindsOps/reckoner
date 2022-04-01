@@ -87,6 +87,7 @@ func init() {
 		getManifestsCmd,
 		updateCmd,
 		importCmd,
+		updateReckonerCmd,
 	)
 
 	klog.InitFlags(nil)
