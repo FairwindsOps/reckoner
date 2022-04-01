@@ -67,8 +67,11 @@ func (c *Client) Plot() error {
 		}
 
 		if err := c.cloneGitRepo(release); err != nil {
-			color.Red(err.Error())
-			continue
+			if c.Continue() {
+				color.Red(err.Error())
+				continue
+			}
+			return err
 		}
 
 		if !c.DryRun {
@@ -234,23 +237,16 @@ func makeTempValuesFile(values map[string]interface{}) (*os.File, error) {
 }
 
 func (c *Client) cloneGitRepo(release *course.Release) error {
-	for _, release := range c.CourseFile.Releases {
+	if release.GitClonePath != nil {
+		if err := c.cloneGitRepository(release); err != nil {
+			color.Red("error with release %s: %s, continuing.", release.Name, err.Error())
+			return err
+		}
 
-		if release.GitClonePath != nil {
-			if err := c.cloneGitRepository(release); err != nil {
-				if c.Continue() {
-					color.Red("error with release %s: %s, continuing.", release.Name, err.Error())
-					continue
-				}
-				return err
-			}
-			if err := c.Helm.UpdateDependencies(fmt.Sprintf("%s/%s", *release.GitClonePath, *release.GitChartSubPath)); err != nil {
-				if c.Continue() {
-					color.Red("error with release %s: %s, continuing.", release.Name, err.Error())
-					continue
-				}
-				return err
-			}
+		if err := c.Helm.UpdateDependencies(fmt.Sprintf("%s/%s", *release.GitClonePath, *release.GitChartSubPath)); err != nil {
+
+			color.Red("error with release %s: %s, continuing.", release.Name, err.Error())
+			return err
 		}
 	}
 	return nil
