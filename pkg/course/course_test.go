@@ -223,38 +223,6 @@ func TestFileV2_populateDefaultRepository(t *testing.T) {
 	}
 }
 
-func Test_envMapper(t *testing.T) {
-	tests := []struct {
-		name   string
-		key    string
-		envMap map[string]string
-		want   string
-	}{
-		{
-			name: "basic test",
-			key:  "TEST_KEY",
-			want: "_ENV_NOT_SET_",
-		},
-		{
-			name: "test with env var",
-			key:  "TEST_KEY",
-			envMap: map[string]string{
-				"TEST_KEY": "test-value",
-			},
-			want: "test-value",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			for k, v := range tt.envMap {
-				os.Setenv(k, v)
-			}
-			got := envMapper(tt.key)
-			assert.EqualValues(t, tt.want, got)
-		})
-	}
-}
-
 func Test_parseEnv(t *testing.T) {
 
 	tests := []struct {

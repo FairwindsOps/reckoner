@@ -625,22 +625,20 @@ func parseSecrets(courseData []byte) error {
 }
 
 func parseEnv(data string) (string, error) {
-	dataWithEnv := os.Expand(data, envMapper)
+	dataWithEnv := os.Expand(data, func(key string) string {
+		if key == "$" {
+			return "$$"
+		}
+		if value, ok := os.LookupEnv(key); ok {
+			return value
+		}
+		color.Red("ERROR: environment variable %s is not set", key)
+		return "_ENV_NOT_SET_"
+	})
 	if strings.Contains(dataWithEnv, "_ENV_NOT_SET_") {
 		return data, fmt.Errorf("course has env variables that are not properly set")
 	}
 	return dataWithEnv, nil
-}
-
-func envMapper(key string) string {
-	if key == "$" {
-		return "$$"
-	}
-	if value, ok := os.LookupEnv(key); ok {
-		return value
-	}
-	color.Red("ERROR: environment variable %s is not set", key)
-	return "_ENV_NOT_SET_"
 }
 
 func boolPtr(b bool) *bool {
