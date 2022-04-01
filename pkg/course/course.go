@@ -633,6 +633,9 @@ func parseEnv(data string) (string, error) {
 }
 
 func envMapper(key string) string {
+	if key == "$" {
+		return "$$"
+	}
 	if value, ok := os.LookupEnv(key); ok {
 		return value
 	}

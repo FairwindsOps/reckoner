@@ -15,6 +15,7 @@
 package course
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -220,4 +221,91 @@ func TestFileV2_populateDefaultRepository(t *testing.T) {
 			assert.EqualValues(t, tt.want, f.Releases)
 		})
 	}
+}
+
+func Test_envMapper(t *testing.T) {
+	tests := []struct {
+		name   string
+		key    string
+		envMap map[string]string
+		want   string
+	}{
+		{
+			name: "basic test",
+			key:  "TEST_KEY",
+			want: "_ENV_NOT_SET_",
+		},
+		{
+			name: "test with env var",
+			key:  "TEST_KEY",
+			envMap: map[string]string{
+				"TEST_KEY": "test-value",
+			},
+			want: "test-value",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			for k, v := range tt.envMap {
+				os.Setenv(k, v)
+			}
+			got := envMapper(tt.key)
+			assert.EqualValues(t, tt.want, got)
+		})
+	}
+}
+
+func Test_parseEnv(t *testing.T) {
+
+	tests := []struct {
+		name    string
+		data    string
+		want    string
+		envMap  map[string]string
+		wantErr bool
+	}{
+		{
+			name:    "basic error check",
+			data:    "$this-is-certainly-not-a-valid-env-var",
+			wantErr: true,
+		},
+		{
+			name: "basic test",
+			data: "$TEST_ENV_KEY",
+			want: "test-env-value",
+			envMap: map[string]string{
+				"TEST_ENV_KEY": "test-env-value",
+			},
+			wantErr: false,
+		},
+		{
+			name: "escaping test",
+			data: "$$TEST_ENV_KEY",
+			want: "$$TEST_ENV_KEY",
+			envMap: map[string]string{
+				"TEST_ENV_KEY": "test-env-value",
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			for k, v := range tt.envMap {
+				os.Setenv(k, v)
+			}
+
+			got, err := parseEnv(tt.data)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.EqualValues(t, tt.want, got)
+			}
+		})
+	}
+}
+
+func Test_boolPtr(t *testing.T) {
+	testBool := true
+	assert.EqualValues(t, &testBool, boolPtr(testBool))
 }
