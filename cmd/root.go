@@ -88,6 +88,7 @@ func init() {
 		updateCmd,
 		importCmd,
 		updateReckonerCmd,
+		versionCmd,
 	)
 
 	klog.InitFlags(nil)
