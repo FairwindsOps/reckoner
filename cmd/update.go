@@ -10,12 +10,8 @@ import (
 	"k8s.io/klog/v2"
 )
 
-func init() {
-	rootCmd.AddCommand(updateCmd)
-}
-
 var updateReckonerCmd = &cobra.Command{
-	Use:   "update",
+	Use:   "update-cli",
 	Short: "Update reckoner.",
 	Long:  "Updates the reckoner binary to the latest tagged release.",
 	Run: func(cmd *cobra.Command, args []string) {
