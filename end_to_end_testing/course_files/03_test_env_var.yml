@@ -15,3 +15,9 @@ charts:
       comment-problem-detector:
         # This is a comment "${this_var_should_not_be_parsed}"
         - test-value
+  escape-values:
+    repository: fairwinds-incubator
+    chart: basic-demo
+    namespace: 03-infra
+    values:
+      non-used: "A string that needs a $$ in it"

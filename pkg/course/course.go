@@ -306,6 +306,7 @@ func OpenCourseFile(fileName string, schema []byte) (*FileV2, error) {
 		if errConvert != nil {
 			return nil, fmt.Errorf("could not unmarshal file from v1 or v2 schema:\n\t%s", errConvert.Error())
 		}
+
 		color.Yellow("WARNING: this course file was automatically converted from v1 to v2 at runtime - to convert the file permanently, run \"reckoner convert -i %s\"", fileName)
 		courseFile = fileV2
 	}
@@ -625,19 +626,20 @@ func parseSecrets(courseData []byte) error {
 }
 
 func parseEnv(data string) (string, error) {
-	dataWithEnv := os.Expand(data, envMapper)
+	dataWithEnv := os.Expand(data, func(key string) string {
+		if key == "$" {
+			return "$$"
+		}
+		if value, ok := os.LookupEnv(key); ok {
+			return value
+		}
+		color.Red("ERROR: environment variable %s is not set", key)
+		return "_ENV_NOT_SET_"
+	})
 	if strings.Contains(dataWithEnv, "_ENV_NOT_SET_") {
 		return data, fmt.Errorf("course has env variables that are not properly set")
 	}
 	return dataWithEnv, nil
-}
-
-func envMapper(key string) string {
-	if value, ok := os.LookupEnv(key); ok {
-		return value
-	}
-	color.Red("ERROR: environment variable %s is not set", key)
-	return "_ENV_NOT_SET_"
 }
 
 func boolPtr(b bool) *bool {

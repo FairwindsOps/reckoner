@@ -66,23 +66,15 @@ func (c *Client) Plot() error {
 			defer os.Remove(tmpFile.Name())
 		}
 
-		if !c.DryRun {
-			if release.GitClonePath != nil {
-				if err := c.cloneGitRepository(release); err != nil {
-					if c.Continue() {
-						color.Red("error with release %s: %s, continuing.", release.Name, err.Error())
-						continue
-					}
-					return err
-				}
-				if err := c.Helm.UpdateDependencies(fmt.Sprintf("%s/%s", *release.GitClonePath, *release.GitChartSubPath)); err != nil {
-					if c.Continue() {
-						color.Red("error with release %s: %s, continuing.", release.Name, err.Error())
-						continue
-					}
-					return err
-				}
+		if err := c.cloneGitRepo(release); err != nil {
+			if c.Continue() {
+				color.Red(err.Error())
+				continue
 			}
+			return err
+		}
+
+		if !c.DryRun {
 			out, stdErr, err := c.Helm.Exec(args...)
 			if err != nil {
 				if c.Continue() {
@@ -126,6 +118,11 @@ func (c Client) TemplateAll() (string, error) {
 
 	var fullOutput string
 	for _, release := range c.CourseFile.Releases {
+
+		if err := c.cloneGitRepo(release); err != nil {
+			color.Red(err.Error())
+		}
+
 		out, err := c.TemplateRelease(release.Name)
 		if err != nil {
 			color.Red(err.Error())
@@ -237,4 +234,20 @@ func makeTempValuesFile(values map[string]interface{}) (*os.File, error) {
 	}
 
 	return tmpFile, nil
+}
+
+func (c *Client) cloneGitRepo(release *course.Release) error {
+	if release.GitClonePath != nil {
+		if err := c.cloneGitRepository(release); err != nil {
+			color.Red("error with release %s: %s, continuing.", release.Name, err.Error())
+			return err
+		}
+
+		if err := c.Helm.UpdateDependencies(fmt.Sprintf("%s/%s", *release.GitClonePath, *release.GitChartSubPath)); err != nil {
+
+			color.Red("error with release %s: %s, continuing.", release.Name, err.Error())
+			return err
+		}
+	}
+	return nil
 }

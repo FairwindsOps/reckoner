@@ -109,6 +109,7 @@ func (h Client) UpdateDependencies(path string) error {
 	if stdErr != "" {
 		return fmt.Errorf("error running helm dependency update: %s", stdErr)
 	}
+
 	return nil
 }
 
