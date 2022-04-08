@@ -628,7 +628,7 @@ func parseSecrets(courseData []byte) error {
 func parseEnv(data string) (string, error) {
 	dataWithEnv := os.Expand(data, func(key string) string {
 		if key == "$" {
-			return "$$"
+			return "$"
 		}
 		if value, ok := os.LookupEnv(key); ok {
 			return value

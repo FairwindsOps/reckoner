@@ -249,7 +249,7 @@ func Test_parseEnv(t *testing.T) {
 		{
 			name: "escaping test",
 			data: "$$TEST_ENV_KEY",
-			want: "$$TEST_ENV_KEY",
+			want: "$TEST_ENV_KEY",
 			envMap: map[string]string{
 				"TEST_ENV_KEY": "test-env-value",
 			},
