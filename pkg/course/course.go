@@ -107,7 +107,7 @@ type NSMetadata struct {
 }
 
 type NSSettings struct {
-        // Overwrite specifies if these annotations and labels should be overwritten in the event that they already exist.
+	// Overwrite specifies if these annotations and labels should be overwritten in the event that they already exist.
 	Overwrite *bool `yaml:"overwrite,omitempty" json:"overwrite,omitempty"`
 }
 
