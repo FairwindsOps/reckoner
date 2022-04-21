@@ -71,7 +71,6 @@ type FileV2 struct {
 
 type NamespaceMgmt struct {
 	// Default is the default namespace config for this course
-
 	Default *NamespaceConfig `yaml:"default" json:"default"`
 }
 
