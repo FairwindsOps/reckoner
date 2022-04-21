@@ -441,6 +441,15 @@ func decodeYamlWithEnv(value *yaml.Node) error {
 		if v.Kind == yaml.SequenceNode {
 			for i := range v.Content {
 				var err error
+
+				if v.Content[i].Kind != yaml.ScalarNode {
+					err := decodeYamlWithEnv(v.Content[i])
+					if err != nil {
+						return err
+					}
+					continue
+				}
+
 				v.Content[i].Value, err = parseEnv(v.Content[i].Value)
 				if err != nil {
 					return err
