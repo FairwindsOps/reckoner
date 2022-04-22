@@ -255,6 +255,16 @@ func Test_parseEnv(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "multiple env vars",
+			data: `$TEST_ENV_KEY some other text $TEST_ENV_KEY2`,
+			want: "value1 some other text value2",
+			envMap: map[string]string{
+				"TEST_ENV_KEY":  "value1",
+				"TEST_ENV_KEY2": "value2",
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -276,4 +286,66 @@ func Test_parseEnv(t *testing.T) {
 func Test_boolPtr(t *testing.T) {
 	testBool := true
 	assert.EqualValues(t, &testBool, boolPtr(testBool))
+}
+
+func TestOpenCourseV2(t *testing.T) {
+	tests := []struct {
+		name     string
+		fileName string
+		envMap   map[string]string
+		want     *FileV2
+		wantErr  bool
+	}{
+		{
+			name:     "file not exist",
+			fileName: "thisfileshouldneverexist",
+			wantErr:  true,
+		},
+		{
+			name:     "test env var with v2 course",
+			fileName: "testdata/v2_env.yaml",
+			envMap: map[string]string{
+				"EXAMPLE_ENV_VAR": "example-env-value",
+				"EXAMPLE_ENV_NS":  "example-env-ns",
+				"HELM_REPO_URL":   "https://example.com/stable",
+			},
+			want: &FileV2{
+				SchemaVersion:     "v2",
+				DefaultRepository: "helm-repo",
+				DefaultNamespace:  "example-env-ns",
+				Context:           "farglebargle",
+				Repositories: map[string]Repository{
+					"helm-repo": {
+						URL: "https://example.com/stable",
+					},
+				},
+				Releases: []*Release{
+					{
+						Name:       "basic",
+						Namespace:  "namespace",
+						Chart:      "somechart",
+						Repository: "helm-repo",
+						Version:    "2.0.0",
+						Values: map[string]interface{}{
+							"envVar": "example-env-value",
+						},
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			for k, v := range tt.envMap {
+				os.Setenv(k, v)
+			}
+			got, err := OpenCourseV2(tt.fileName)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.EqualValues(t, tt.want, got)
+			}
+		})
+	}
 }
