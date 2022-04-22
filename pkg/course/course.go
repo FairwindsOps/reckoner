@@ -34,6 +34,7 @@ import (
 
 var (
 	SchemaValidationError error = errors.New("Course file has schema validation errors")
+	ParseEnv              bool  = true
 )
 
 // FileV2 is the heart of reckoner, it contains the definitions of the releases to be installed
@@ -641,6 +642,9 @@ func parseSecrets(courseData []byte) error {
 }
 
 func parseEnv(data string) (string, error) {
+	if !ParseEnv {
+		return data, nil
+	}
 	dataWithEnv := os.Expand(data, func(key string) string {
 		if key == "$" {
 			return "$"
