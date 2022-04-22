@@ -62,8 +62,8 @@ type FileV2 struct {
 	// Hooks is a set of scripts to be run before or after the release is installed.
 	Hooks Hooks `yaml:"hooks,omitempty" json:"hooks,omitempty"`
 	// NamespaceMgmt contains the default namespace config for all namespaces managed by this course.
-	NamespaceMgmt NamespaceMgmt `yaml:"namespace_management,omitempty" json:"namespace_management,omitempty"`
-	Secrets       SecretsList   `yaml:"secrets,omitempty" json:"secrets,omitempty"`
+	NamespaceMgmt *NamespaceMgmt `yaml:"namespace_management,omitempty" json:"namespace_management,omitempty"`
+	Secrets       SecretsList    `yaml:"secrets,omitempty" json:"secrets,omitempty"`
 	// Releases is the list of releases that should be maintained by this course file.
 	Releases []*Release `yaml:"releases,omitempty" json:"releases,omitempty"`
 	// HelmArgs is a list of arguments to pass to helm commands
@@ -192,11 +192,8 @@ type FileV1 struct {
 	// Hooks is a set of scripts to be run before or after the release is installed.
 	Hooks Hooks `yaml:"hooks" json:"hooks"`
 	// NamespaceMgmt contains the default namespace config for all namespaces managed by this course.
-	NamespaceMgmt struct {
-		// Default is the default namespace config for this course
-		Default *NamespaceConfig `yaml:"default" json:"default"`
-	} `yaml:"namespace_management" json:"namespace_management"`
-	Secrets SecretsList `yaml:"secrets,omitempty" json:"secrets,omitempty"`
+	NamespaceMgmt *NamespaceMgmt `yaml:"namespace_management" json:"namespace_management"`
+	Secrets       SecretsList    `yaml:"secrets,omitempty" json:"secrets,omitempty"`
 	// Charts is the list of releases. In the actual file this will be a map, but we must convert to a list to preserve order.
 	// This conversion is done in the ChartsListV1 UnmarshalYAML function.
 	Charts ChartsListV1 `yaml:"charts" json:"charts"`
@@ -547,41 +544,6 @@ func (f *FileV2) populateEmptyChartNames() {
 			f.Releases[releaseIndex] = release
 		}
 	}
-}
-
-// populateNamespaceManagement populates each release with the default namespace management settings if they are not set
-func (f *FileV2) populateNamespaceManagement() {
-	var emptyNamespaceMgmt NamespaceConfig
-	if f.NamespaceMgmt.Default == nil {
-		f.NamespaceMgmt.Default = &emptyNamespaceMgmt
-		f.NamespaceMgmt.Default.Settings.Overwrite = boolPtr(false)
-	} else if f.NamespaceMgmt.Default.Settings.Overwrite == nil {
-		f.NamespaceMgmt.Default.Settings.Overwrite = boolPtr(false)
-	}
-	for releaseIndex, release := range f.Releases {
-		if release.NamespaceMgmt == nil {
-			klog.V(5).Infof("using default namespace management for release: %s", release.Name)
-			release.NamespaceMgmt = f.NamespaceMgmt.Default
-			f.Releases[releaseIndex] = release
-		} else {
-			release.NamespaceMgmt = mergeNamespaceManagement(f.NamespaceMgmt.Default, release.NamespaceMgmt)
-		}
-	}
-}
-
-func mergeNamespaceManagement(defaults *NamespaceConfig, mergeInto *NamespaceConfig) *NamespaceConfig {
-	d := defaults
-	for k, v := range mergeInto.Metadata.Annotations {
-		d.Metadata.Annotations[k] = v
-	}
-	for k, v := range mergeInto.Metadata.Labels {
-		d.Metadata.Labels[k] = v
-	}
-	if mergeInto.Settings.Overwrite != nil {
-		d.Settings.Overwrite = mergeInto.Settings.Overwrite
-	}
-	mergeInto = d
-	return mergeInto
 }
 
 func (f *FileV2) validateJsonSchema(schemaData []byte) error {

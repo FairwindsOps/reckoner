@@ -1,0 +1,39 @@
+schema: v2
+namespace: infra
+repository: fairwinds-incubator
+context: kind-kind
+repositories:
+  bitnami:
+    url: https://charts.bitnami.com/bitnami
+  fairwinds-incubator:
+    url: https://charts.fairwinds.com/incubator
+namespace_management:
+  default:
+    metadata:
+      annotations:
+        ManagedBy: Reckoner
+      labels:
+        ManagedBy: Fairwinds
+    settings:
+      overwrite: true
+releases:
+  - name: metrics-server
+    namespace: metrics-server
+    chart: metrics-server
+    version: 5.11.7
+    repository: bitnami
+    values:
+      apiService:
+        create: true
+      extraArgs:
+        kubelet-insecure-tls: true
+        kubelet-preferred-address-types: InternalIP
+  - name: basic-demo
+    namespace: basic-demo
+    namespace_management:
+      metadata:
+        labels:
+          goldilocks.fairwinds.com/enabled: "true"
+      settings:
+        overwrite: true
+    chart: basic-demo
