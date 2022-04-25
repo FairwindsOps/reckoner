@@ -16,20 +16,14 @@ This utility adds to the functionality of [Helm](https://github.com/kubernetes/h
 * Creates a declarative syntax to manage multiple releases in one place
 * Allows installation of charts from a git commit/branch/release
 
-**Want to learn more?** Reach out on [the Slack channel](https://fairwindscommunity.slack.com/messages/reckoner) ([request invite](https://join.slack.com/t/fairwindscommunity/shared_invite/zt-e3c6vj4l-3lIH6dvKqzWII5fSSFDi1g)), send an email to `opensource@fairwinds.com`, or join us for [office hours on Zoom](https://fairwindscommunity.slack.com/messages/office-hours)
-
+# Documentation
+Check out the [documentation at docs.fairwinds.com](https://reckoner.docs.fairwinds.com/)
 
 ## Requirements
 
-* python 3
 * helm (>= 3.0.0), installed and initialized
 
-*Note:* Python2 is no longer supported by Reckoner.
-*Note2:* Helm2 support will not be tested from v4.3.0. The maintainers have [deprecated helm2](https://helm.sh/blog/helm-v2-deprecation-timeline/).
-
-### Installation
-
-* `pip install reckoner`
+> Helm2 is untested as of v4.3.0. The maintainers of helm have [deprecated helm2](https://helm.sh/blog/helm-v2-deprecation-timeline/).
 
 ## Quickstart
 
@@ -59,10 +53,34 @@ reckoner plot course.yml --run-all
 
 Grafana and Polaris should now be installed on your cluster!
 
-## Adopting Reckoner
+## Importing Existing Releases
 
-Warning: Experimental
+> Importing existing releases is experimental and the result should be reviewed.
 
 If you're already using Helm but want to start using `reckoner`, you can use `reckoner import` to facilitate your migration.
 
 We recommend carefully examining the output of a `reckoner diff` before relying on any imported course.yml definitions.
+
+<!-- Begin boilerplate -->
+## Join the Fairwinds Open Source Community
+
+The goal of the Fairwinds Community is to exchange ideas, influence the open source roadmap,
+and network with fellow Kubernetes users.
+[Chat with us on Slack](https://join.slack.com/t/fairwindscommunity/shared_invite/zt-e3c6vj4l-3lIH6dvKqzWII5fSSFDi1g)
+or
+[join the user group](https://www.fairwinds.com/open-source-software-user-group) to get involved!
+
+<a href="https://www.fairwinds.com/t-shirt-offer?utm_source=reckoner&utm_medium=reckoner&utm_campaign=reckoner-tshirt">
+  <img src="https://www.fairwinds.com/hubfs/Doc_Banners/Fairwinds_OSS_User_Group_740x125_v6.png" alt="Love Fairwinds Open Source? Share your business email and job title and we'll send you a free Fairwinds t-shirt!" />
+</a>
+
+## Other Projects from Fairwinds
+
+Enjoying Reckoner? Check out some of our other projects:
+* [Polaris](https://github.com/FairwindsOps/Polaris) - Audit, enforce, and build policies for Kubernetes resources, including over 20 built-in checks for best practices
+* [Goldilocks](https://github.com/FairwindsOps/Goldilocks) - Right-size your Kubernetes Deployments by compare your memory and CPU settings against actual usage
+* [Pluto](https://github.com/FairwindsOps/Pluto) - Detect Kubernetes resources that have been deprecated or removed in future versions
+* [Nova](https://github.com/FairwindsOps/Nova) - Check to see if any of your Helm charts have updates available
+* [rbac-manager](https://github.com/FairwindsOps/rbac-manager) - Simplify the management of RBAC in your Kubernetes clusters
+
+Or [check out the full list](https://www.fairwinds.com/open-source-software?utm_source=reckoner&utm_medium=reckoner&utm_campaign=reckoner)

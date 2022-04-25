@@ -1,4 +1,4 @@
-# DEPRECATED - See the releases page for the changelog
+# **DEPRECATED - See the releases page for the changelog**
 
 
 # Changelog
