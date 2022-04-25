@@ -276,6 +276,7 @@ var convertCmd = &cobra.Command{
 		return validateCobraArgs(cmd, args)
 	},
 	Run: func(cmd *cobra.Command, args []string) {
+		course.ParseEnv = false
 		newCourse, err := course.OpenCourseFile(courseFile, courseSchema)
 		if err != nil {
 			color.Red(err.Error())

@@ -34,6 +34,7 @@ import (
 
 var (
 	SchemaValidationError error = errors.New("Course file has schema validation errors")
+	ParseEnv              bool  = true
 )
 
 // FileV2 is the heart of reckoner, it contains the definitions of the releases to be installed
@@ -61,15 +62,17 @@ type FileV2 struct {
 	// Hooks is a set of scripts to be run before or after the release is installed.
 	Hooks Hooks `yaml:"hooks,omitempty" json:"hooks,omitempty"`
 	// NamespaceMgmt contains the default namespace config for all namespaces managed by this course.
-	NamespaceMgmt struct {
-		// Default is the default namespace config for this course
-		Default *NamespaceConfig `yaml:"default" json:"default"`
-	} `yaml:"namespace_management,omitempty" json:"namespace_management,omitempty"`
-	Secrets SecretsList `yaml:"secrets,omitempty" json:"secrets,omitempty"`
+	NamespaceMgmt NamespaceMgmt `yaml:"namespace_management,omitempty" json:"namespace_management,omitempty"`
+	Secrets       SecretsList   `yaml:"secrets,omitempty" json:"secrets,omitempty"`
 	// Releases is the list of releases that should be maintained by this course file.
 	Releases []*Release `yaml:"releases,omitempty" json:"releases,omitempty"`
 	// HelmArgs is a list of arguments to pass to helm commands
 	HelmArgs []string `yaml:"helm_args,omitempty" json:"helm_args,omitempty"`
+}
+
+type NamespaceMgmt struct {
+	// Default is the default namespace config for this course
+	Default *NamespaceConfig `yaml:"default" json:"default"`
 }
 
 // FileV2Unmarshal is a helper type that allows us to have a custom unmarshal function for the FileV2 struct
@@ -95,14 +98,18 @@ type Hooks struct {
 
 // NamespaceConfig allows setting namespace annotations and labels
 type NamespaceConfig struct {
-	Metadata struct {
-		Annotations map[string]string `yaml:"annotations,omitempty" json:"annotations,omitempty"`
-		Labels      map[string]string `yaml:"labels,omitempty" json:"labels,omitempty"`
-	} `yaml:"metadata,omitempty" json:"metadata,omitempty"`
-	Settings struct {
-		// Overwrite specifies if these annotations and labels should be overwritten in the event that they already exist.
-		Overwrite *bool `yaml:"overwrite,omitempty" json:"overwrite,omitempty"`
-	} `yaml:"settings" json:"settings"`
+	Metadata NSMetadata `yaml:"metadata,omitempty" json:"metadata,omitempty"`
+	Settings NSSettings `yaml:"settings" json:"settings"`
+}
+
+type NSMetadata struct {
+	Annotations map[string]string `yaml:"annotations,omitempty" json:"annotations,omitempty"`
+	Labels      map[string]string `yaml:"labels,omitempty" json:"labels,omitempty"`
+}
+
+type NSSettings struct {
+	// Overwrite specifies if these annotations and labels should be overwritten in the event that they already exist.
+	Overwrite *bool `yaml:"overwrite,omitempty" json:"overwrite,omitempty"`
 }
 
 // Release represents a helm release and all of its configuration
@@ -435,6 +442,15 @@ func decodeYamlWithEnv(value *yaml.Node) error {
 		if v.Kind == yaml.SequenceNode {
 			for i := range v.Content {
 				var err error
+
+				if v.Content[i].Kind != yaml.ScalarNode {
+					err := decodeYamlWithEnv(v.Content[i])
+					if err != nil {
+						return err
+					}
+					continue
+				}
+
 				v.Content[i].Value, err = parseEnv(v.Content[i].Value)
 				if err != nil {
 					return err
@@ -626,6 +642,9 @@ func parseSecrets(courseData []byte) error {
 }
 
 func parseEnv(data string) (string, error) {
+	if !ParseEnv {
+		return data, nil
+	}
 	dataWithEnv := os.Expand(data, func(key string) string {
 		if key == "$" {
 			return "$"
