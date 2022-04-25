@@ -270,7 +270,7 @@ var lintCmd = &cobra.Command{
 var convertCmd = &cobra.Command{
 	Use:   "convert",
 	Short: "convert <course file>",
-	Long:  "Converts a course file from the v1 python schema to v2 go schema",
+	Long:  "Converts a course file from the v1 schema to v2 schema (reckoner v6.0.0+)",
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		runAll = true
 		return validateCobraArgs(cmd, args)
