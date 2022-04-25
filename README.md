@@ -21,15 +21,9 @@ Check out the [documentation at docs.fairwinds.com](https://reckoner.docs.fairwi
 
 ## Requirements
 
-* python 3
 * helm (>= 3.0.0), installed and initialized
 
-*Note:* Python2 is no longer supported by Reckoner.
-*Note2:* Helm2 support will not be tested from v4.3.0. The maintainers have [deprecated helm2](https://helm.sh/blog/helm-v2-deprecation-timeline/).
-
-### Installation
-
-* `pip install reckoner`
+> Helm2 is untested as of v4.3.0. The maintainers of helm have [deprecated helm2](https://helm.sh/blog/helm-v2-deprecation-timeline/).
 
 ## Quickstart
 
@@ -61,7 +55,7 @@ Grafana and Polaris should now be installed on your cluster!
 
 ## Importing Existing Releases
 
-Warning: Experimental
+> Importing existing releases is experimental and the result should be reviewed.
 
 If you're already using Helm but want to start using `reckoner`, you can use `reckoner import` to facilitate your migration.
 

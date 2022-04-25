@@ -8,20 +8,14 @@ meta:
 
 ## Installation for Local Development
 
-Requirements
-* Python 3
-* pip
+Requirements:
+* [Go](https://go.dev)
 
-```shell
-%> python -V                   # Check your version of python
-%> python -m venv venv        # setup a virtual env in your cloned repo
-%> source ./venv/bin/activate  # use the virtual env
-(venv) %> pip install -e .     # Installs reckoner as locally linked folders
-(venv) %> reckoner --version   # Check the version you're running in the virtualenv
+```sh
+$ go --version    # Check your version of golang
+$ go mod tidy     # get dependencies
+$ go run . --help # compile & run the project
 ```
-Note that some of the above commands may need `python3` instead of just `python` to work depending on your environment.
-
-*Note:* Python2 is no longer supported by this tool
 
 ## Requirements for Pull Requests
 * Update the changelog
@@ -29,13 +23,6 @@ Note that some of the above commands may need `python3` instead of just `python`
 * Suggest version bump type
 
 ## How to run tests and test coverage
-```bash
->> pip install -r development-requirements.txt
->> pytest
-```
-
-With Coverage Reports
-```bash
->> pytest --cov reckoner/ --cov-report=html #shows an html line coverage report in ./htmlcov/
->> pytest --cov reckoner/ --cov-report=term #shows terminal coverage report of % coverage
+```sh
+$ go test ./...
 ```
