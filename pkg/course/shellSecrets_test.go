@@ -15,6 +15,7 @@
 package course
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -117,8 +118,9 @@ func Test_newShellExecutor(t *testing.T) {
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
-				assert.NoError(t, err)
-				assert.EqualValues(t, tt.want, got)
+				assert.NoError(t, err)                                                   // check for errors generally
+				assert.Regexp(t, regexp.MustCompile("^.+bin/echo$"), got.Executable, "") // handle any *bin/echo, such as /usr/bin/echo
+				assert.EqualValues(t, tt.want.Args, got.Args)                            // also verify args
 			}
 		})
 	}
