@@ -110,16 +110,15 @@ func (c *Client) Plot() error {
 }
 
 // TemplateAll runs the same as plot but runs template instead
-func (c Client) TemplateAll() (string, error) {
-	err := c.UpdateHelmRepos()
+func (c Client) TemplateAll(templateOutputDir string) (fullOutput string, err error) {
+	err = c.UpdateHelmRepos()
 	if err != nil {
-		return "", nil
+		return fullOutput, err
 	}
 
-	var fullOutput string
 	for _, release := range c.CourseFile.Releases {
-
-		if err := c.cloneGitRepo(release); err != nil {
+		err = c.cloneGitRepo(release)
+		if err != nil {
 			color.Red(err.Error())
 		}
 
@@ -128,6 +127,15 @@ func (c Client) TemplateAll() (string, error) {
 			color.Red(err.Error())
 			continue
 		}
+
+		if len(templateOutputDir) > 0 {
+			err = c.WriteSplitYaml([]byte(out), templateOutputDir, release.Name)
+			if err != nil {
+				color.Red(err.Error())
+				os.Exit(1)
+			}
+		}
+
 		fullOutput = fullOutput + out
 	}
 	return fullOutput, nil

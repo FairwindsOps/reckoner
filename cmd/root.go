@@ -59,6 +59,8 @@ var (
 	importRepository string
 	// additionalHelmArgs is a list of arguments to add to all helm commands
 	additionalHelmArgs []string
+	// templateOutputDir
+	templateOutputDir string
 )
 
 func init() {
@@ -69,15 +71,18 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&noColor, "no-color", false, "If true, don't colorize output.")
 	rootCmd.PersistentFlags().StringSliceVar(&additionalHelmArgs, "helm-args", nil, "Additional arguments to pass to helm commands. Can be passed multiple times. used more than once. WARNING: Setting this will completely override any helm_args in the course.")
 
-	plotCmd.PersistentFlags().BoolVar(&continueOnError, "continue-on-error", false, "If true, continue plotting releases even if one or more has errors.")
-	updateCmd.PersistentFlags().BoolVar(&continueOnError, "continue-on-error", false, "If true, continue plotting releases even if one or more has errors.")
-	diffCmd.PersistentFlags().BoolVar(&continueOnError, "continue-on-error", false, "If true, continue plotting releases even if one or more has errors.")
+	plotCmd.PersistentFlags().BoolVar(&continueOnError, "continue-on-error", false, "If true, continue to plot releases even if one or more has errors.")
+	updateCmd.PersistentFlags().BoolVar(&continueOnError, "continue-on-error", false, "If true, continue to update releases even if one or more has errors.")
+	diffCmd.PersistentFlags().BoolVar(&continueOnError, "continue-on-error", false, "If true, continue to diff releases even if one or more has errors.")
 
 	convertCmd.Flags().BoolVarP(&inPlaceConvert, "in-place", "i", false, "If specified, will update the file in place, otherwise outputs to stdout.")
 
 	importCmd.Flags().StringVar(&importNamespace, "namespace", "", "Namespace that contains the release to be imported.")
 	importCmd.Flags().StringVar(&importRelease, "release_name", "", "The name of the release to import.")
 	importCmd.Flags().StringVar(&importRepository, "repository", "", "The helm repository for the imported release.")
+
+	templateCmd.Flags().StringVar(&templateOutputDir, "output-dir", "", "path to the base output directory (eg, ~/myproject/manifests)")
+	// templateCmd.PersistentFlags().BoolVar(&continueOnError, "continue-on-error", false, "If true, continue to template releases even if one or more has errors.")
 
 	rootCmd.AddCommand(
 		plotCmd,
@@ -164,12 +169,15 @@ var templateCmd = &cobra.Command{
 			color.Red(err.Error())
 			os.Exit(1)
 		}
-		tmpl, err := client.TemplateAll()
+		tmpl, err := client.TemplateAll(templateOutputDir)
 		if err != nil {
 			color.Red(err.Error())
 			os.Exit(1)
 		}
-		fmt.Println(tmpl)
+
+		if len(templateOutputDir) < 1 {
+			fmt.Println(tmpl)
+		}
 	},
 }
 
