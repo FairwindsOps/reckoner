@@ -397,32 +397,6 @@ Global Flags:
                             multiple times.
   -a, --run-all             Install every release in the course file
   -v, --v Level             number for the log level verbosity
-
-
-
-# reckoner template --help
-Usage: reckoner template [OPTIONS] COURSE_FILE
-
-  Output the template of the chart or charts as they would be installed or
-  upgraded
-
-Options:
-  -a, --run-all                  Run all charts in the course. Mutually
-                                 exclusive with 'only'.
-
-  -o, --only, --heading <chart>  Only run a specific chart by name. Mutually
-                                 exclusive with 'run_all'.
-
-  --helm-args TEXT               Passes the following arg on to helm, can be
-                                 used more than once. WARNING: Setting this
-                                 will completely override any helm_args in the
-                                 course. Also cannot be used for configuring
-                                 how helm connects to tiller.
-
-  --log-level TEXT               Log Level. [INFO | DEBUG | WARN | ERROR].
-                                 (default=INFO)
-
-  --help                         Show this message and exit.
 ```
 
 Or
