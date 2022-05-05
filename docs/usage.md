@@ -266,6 +266,7 @@ secrets:
 ## CLI Usage
 
 ```text
+$ reckoner --help
 Usage: reckoner [OPTIONS] COMMAND [ARGS]...
 
 Options:
@@ -285,8 +286,9 @@ Commands:
 ```
 
 You can add `--help` to any `Command` and get output like the one below:
+
 ```text
-$> reckoner plot --help
+$ reckoner plot --help
 Usage: reckoner plot [OPTIONS] COURSE_FILE
 
   Install charts with given arguments as listed in yaml file argument
@@ -327,8 +329,9 @@ Options:
 ```
 
 Or
+
 ```
-# reckoner update --help
+$ reckoner update --help
 Usage: reckoner update [OPTIONS] COURSE_FILE
 
   Checks to see if anything will be changed, if so, update the release,
@@ -370,7 +373,33 @@ Options:
 ```
 
 Or
+
 ```text
+$ reckoner template --help
+Templates a helm chart for a release or several releases. Automatically sets --create-namespaces=false --dry-run=true
+
+Usage:
+  reckoner template [flags]
+
+Flags:
+  -h, --help                help for template
+      --output-dir string   path to the base output directory (eg, ~/myproject/manifests)
+
+Global Flags:
+      --create-namespaces   If true, allow reckoner to create namespaces. (default true)
+      --dry-run             Implies helm --dry-run --debug and skips any hooks
+      --helm-args strings   Additional arguments to pass to helm commands. Can
+                            be passed multiple times. used more than once.
+                            WARNING: Setting this will completely override
+                            any helm_args in the course.
+      --no-color            If true, don't colorize output.
+  -o, --only strings        Only install this list of releases. Can be passed
+                            multiple times.
+  -a, --run-all             Install every release in the course file
+  -v, --v Level             number for the log level verbosity
+
+
+
 # reckoner template --help
 Usage: reckoner template [OPTIONS] COURSE_FILE
 
@@ -395,9 +424,11 @@ Options:
 
   --help                         Show this message and exit.
 ```
+
 Or
+
 ```text
-# reckoner import --help
+$ reckoner import --help
 Usage: reckoner import [OPTIONS]
 
   Outputs a chart block that can be used to import the specified release
