@@ -108,6 +108,10 @@ func (c *Client) WriteSplitYaml(in []byte, basePath string, releaseName string) 
 			return err
 		}
 
+		if len(meta.Kind) < 1 || len(meta.Metadata.Name) < 1 { // skip empty objects; these are the required fields in k8sMetaBasic{}
+			continue
+		}
+
 		filename := releasePath + "/" + meta.Kind + "_" + meta.Metadata.Name + ".yml"
 
 		err = writeYAML(object, filename) // write out
