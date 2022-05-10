@@ -19,6 +19,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -110,7 +111,20 @@ func (c *Client) WriteSplitYaml(in []byte, basePath string, releaseName string) 
 			continue
 		}
 
-		filename := releasePath + "/" + meta.Kind + "_" + meta.Metadata.Name + ".yml"
+		// This section will build out the name of the file based on what was found inside of the object.
+		// For example, an object with:
+		//   kind: Deployment
+		//   metadata:
+		//     name: cool-app-api
+		//     namespace: cool-app
+		// will have the filename of: --output-dir/release_name/cool-app_deployment_cool-app-api.yaml
+		// We also replace colons with underscores for windows compatibility since RBAC names may have colons
+		filename := releasePath + "/"         // path for the release
+		if len(meta.Metadata.Namespace) > 0 { // only add the namespace to the filename when it's found in the object
+			filename = filename + strings.ToLower(meta.Metadata.Namespace) + "_" // lowercased for simplicity
+		} // continue building the rest of the filename
+		filename = filename + strings.ToLower(meta.Kind) + "_" + strings.ToLower(meta.Metadata.Name) + ".yaml" // lowercased for simplicity
+		filename = strings.ReplaceAll(filename, ":", "_")                                                      // replace colons with underscores for windows compatibility; RBAC names may have colons
 
 		err = writeYAML(object, filename) // write out
 		if err != nil {
