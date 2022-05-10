@@ -10,4 +10,4 @@ charts:
     repository: fairwinds-incubator
     chart: basic-demo
     files:
-      - subfolder/yaml_values.yml
+      - subfolder/yaml_values.yaml
