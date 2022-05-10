@@ -1,7 +1,7 @@
 version: "2"
 name: Chart Namespace as Environment Variable
 vars:
-  course: ../course_files/23_test_environment_variable_namespace_on_chart.yml
+  course: ../course_files/23_test_environment_variable_namespace_on_chart.yaml
   namespace: 23-test-environment-namespace
   release: env-var-name-space
 testcases:

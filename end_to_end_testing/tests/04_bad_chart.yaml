@@ -1,7 +1,7 @@
 version: "2"
 name: Bad Chart
 vars:
-  course: ../course_files/04_test_failed_chart.yml
+  course: ../course_files/04_test_failed_chart.yaml
   namespace: 04-test
   release: bad-chart
 testcases:

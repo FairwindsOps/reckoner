@@ -54,7 +54,7 @@ func TestValidateArgs(t *testing.T) {
 				runAll:  false,
 				onlyRun: []string{"rbac-manager"},
 			},
-			want:    "testdata/course.yml",
+			want:    "testdata/course.yaml",
 			wantErr: false,
 		},
 		{
@@ -63,13 +63,13 @@ func TestValidateArgs(t *testing.T) {
 				args:   []string{},
 				runAll: true,
 			},
-			want:    "testdata/course.yml",
+			want:    "testdata/course.yaml",
 			wantErr: false,
 		},
 		{
 			name: "length of args = 2",
 			args: args{
-				args:    []string{"testdata/course.yml", "course.yml"},
+				args:    []string{"testdata/course.yaml", "course.yaml"},
 				runAll:  false,
 				onlyRun: []string{"rbac-manager"},
 			},
@@ -107,22 +107,22 @@ func TestValidateCourseFilePath(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "course.yml does not exist",
+			name: "course.yaml does not exist",
 			args: args{
-				args:   []string{"course.yml"},
+				args:   []string{"course.yaml"},
 				runAll: true,
 			},
 			want:    "",
 			wantErr: true,
 		},
 		{
-			name: "course.yml exists, pass onlyrun with success",
+			name: "course.yaml exists, pass onlyrun with success",
 			args: args{
-				args:    []string{"testdata/course.yml"},
+				args:    []string{"testdata/course.yaml"},
 				runAll:  false,
 				onlyRun: []string{"rbac-manager"},
 			},
-			want:    "testdata/course.yml",
+			want:    "testdata/course.yaml",
 			wantErr: false,
 		},
 	}

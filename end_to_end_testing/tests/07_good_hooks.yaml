@@ -1,7 +1,7 @@
 version: "2"
 name: Successful Hooks
 vars:
-  course: ../course_files/07_test_good_hooks.yml
+  course: ../course_files/07_test_good_hooks.yaml
   namespace: 07-redis-test-namespace
   release: should-install
 testcases:

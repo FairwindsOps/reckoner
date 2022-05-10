@@ -185,10 +185,10 @@ Given the file structure:
 │       │   └── tests
 │       │       └── test-connection.yaml
 │       └── values.yaml
-└── course.yml
+└── course.yaml
 ```
 
-This section of the course.yml will deploy that local chart.
+This section of the course.yaml will deploy that local chart.
 ```
 charts:
   my-release-name:
@@ -217,7 +217,7 @@ When you wish to manage annotations or labels for the namespaces you are install
 
 `namespace_management` blocks can be defined at the top level or at the chart level. By default, the top level `default` metadata will be used for all namespaces and any `metadata.annotations` or `metadata.labels` set in the charts will be additive. However, if `settings.overwrite` is `True` then the `metadata` block from the chart will replace any matching labels or annotation values.
 
-Keep in mind, chart level `metadata` properties _cannot_ remove or delete any course level properties, only overwrite the value. For this reason, it's best if you don't set course level namespace metadata unless you truly want it applied to _all_ namespaces defined in this course.yml.
+Keep in mind, chart level `metadata` properties _cannot_ remove or delete any course level properties, only overwrite the value. For this reason, it's best if you don't set course level namespace metadata unless you truly want it applied to _all_ namespaces defined in this course.yaml.
 
 Example:
 ```yaml

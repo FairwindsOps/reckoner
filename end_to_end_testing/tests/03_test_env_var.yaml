@@ -1,7 +1,7 @@
 version: "2"
 name: Environment Variable Interpolation
 vars:
-  course: ../course_files/03_test_env_var.yml
+  course: ../course_files/03_test_env_var.yaml
   namespace: 03-infra
 testcases:
 - name: 03 - plot without var

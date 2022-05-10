@@ -1,7 +1,7 @@
 version: "2"
 name: Strong Typing
 vars:
-  course: ../course_files/18_strong_typing.yml
+  course: ../course_files/18_strong_typing.yaml
   namespace: 18-testing
 testcases:
 - name: 18 - plot course

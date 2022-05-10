@@ -1,7 +1,7 @@
 version: "2"
 name: Namespace Management Overwrite
 vars:
-  course: ../course_files/16_test_overwrite_namespace_annotation_and_labels.yml
+  course: ../course_files/16_test_overwrite_namespace_annotation_and_labels.yaml
   namespace: 16-annotatednamespace
   release: namespace-test
 testcases:

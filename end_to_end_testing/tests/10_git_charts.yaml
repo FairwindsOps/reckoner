@@ -1,7 +1,7 @@
 version: "2"
 name: Charts from Git Repos
 vars:
-  course: ../course_files/10_test_git_chart.yml
+  course: ../course_files/10_test_git_chart.yaml
 testcases:
 - name: 10 - plot course
   steps:

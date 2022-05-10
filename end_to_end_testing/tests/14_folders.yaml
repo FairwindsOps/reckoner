@@ -1,7 +1,7 @@
 version: "2"
 name: Files in Folders
 vars:
-  course: ../course_files/testing_in_folder/test_files_in_folders.yml
+  course: ../course_files/testing_in_folder/test_files_in_folders.yaml
   namespace: 14-infra
   release: chart-one
 testcases:

@@ -1,7 +1,7 @@
 version: "2"
 name: Exit on Failed Post Install
 vars:
-  course: ../course_files/05_test_exit_on_post_install_hook.yml
+  course: ../course_files/05_test_exit_on_post_install_hook.yaml
   namespace: 05-infra
   release: basic-demo
 testcases:

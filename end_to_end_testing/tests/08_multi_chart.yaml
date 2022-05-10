@@ -1,7 +1,7 @@
 version: "2"
 name: Multiple Charts in Multiple Namespaces
 vars:
-  course: ../course_files/08_test_multi_chart.yml
+  course: ../course_files/08_test_multi_chart.yaml
 testcases:
 - name: 08 - plot course
   steps:

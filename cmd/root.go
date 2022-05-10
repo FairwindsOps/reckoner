@@ -39,7 +39,7 @@ var (
 	runAll bool
 	// dryRun contains the boolean flag to run as dry run
 	dryRun bool
-	// courseFile is the name and path of the course.yml file
+	// courseFile is the name and path of the course.yaml file
 	courseFile string
 	// onlyRun contains the list of releases to install
 	onlyRun []string
@@ -380,9 +380,9 @@ func getCourseFilePath(args []string) string {
 	courseFile = os.Getenv("RECKONER_COURSE_FILE") // environment variable override
 
 	// if the environment variable was unset or zero-length,
-	// try default value of 'course.yml'
+	// try default value of 'course.yaml'
 	if len(courseFile) == 0 {
-		courseFile = "course.yml" // default course file
+		courseFile = "course.yaml" // default course file
 	}
 
 	// allow cli argument to override everything else

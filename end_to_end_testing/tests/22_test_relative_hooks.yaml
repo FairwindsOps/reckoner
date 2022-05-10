@@ -1,7 +1,7 @@
 version: "2"
 name: Relative Hook Location
 vars:
-  course: ../course_files/testing_in_folder/testing_in_subfolder/22_testing_relative_hook_location.yml
+  course: ../course_files/testing_in_folder/testing_in_subfolder/22_testing_relative_hook_location.yaml
   namespace: 22-infra
 testcases:
 - name: 22 - plot course

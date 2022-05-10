@@ -1,7 +1,7 @@
 version: "2"
 name: Basic Functionality
 vars:
-  course: ../course_files/01_test_basic.yml
+  course: ../course_files/01_test_basic.yaml
   namespace: 01-infra
   release: first-chart
 testcases:
