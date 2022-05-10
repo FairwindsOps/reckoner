@@ -42,6 +42,7 @@ func splitYAML(in []byte) (out [][]byte, err error) {
 
 	for { // keep going until we run out of bytes to process (end-of-file/EOF)
 		var value interface{} // something we can use to decode and marshal
+		var b bytes.Buffer    // used for encoding & return
 
 		err = decoder.Decode(&value) // attempt to decode a page in the document
 		if err == io.EOF {           // we ran out of pages/objects/bytes
@@ -52,13 +53,15 @@ func splitYAML(in []byte) (out [][]byte, err error) {
 			return nil, err // bubble up
 		}
 
-		valueBytes, err := yaml.Marshal(value) // marshal the slice of bytes into proper a YAML object
-		if err != nil {                        // check for errors
+		yamlEncoder := yaml.NewEncoder(&b) // create an encoder to handle custom configuration
+		yamlEncoder.SetIndent(2)           // people expect two-space indents instead of the default four
+		err = yamlEncoder.Encode(&value)   // encode proper YAML into slice of bytes
+		if err != nil {                    // check for errors
 			return nil, err // bubble up
 		}
 
 		// we believe we have a valid YAML object
-		out = append(out, valueBytes) // so append it to the list to be returned later
+		out = append(out, b.Bytes()) // so append it to the list to be returned later
 	}
 
 	return out, nil // list of YAML objects, each a []byte
@@ -66,11 +69,6 @@ func splitYAML(in []byte) (out [][]byte, err error) {
 
 func writeYAML(in []byte, filename string) (err error) {
 	file, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-
-	_, err = file.Write([]byte("---\n")) //  pagination, just in case a multi-document file is being written
 	if err != nil {
 		return err
 	}
