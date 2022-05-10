@@ -1,7 +1,7 @@
 version: "2"
 name: One of Multiple Charts
 vars:
-  course: ../course_files/09_test_multi_chart.yml
+  course: ../course_files/09_test_multi_chart.yaml
 testcases:
 - name: 09 - plot course -o first-chart-09
   steps:

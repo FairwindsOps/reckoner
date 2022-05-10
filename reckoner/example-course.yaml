@@ -41,7 +41,7 @@ charts: # list of charts
   heapster:
     version: "0.2.1"
     files:
-      - /path/to/values/file.yml
+      - /path/to/values/file.yaml
   datadog:
     version: "0.8.2"
     repository: stable

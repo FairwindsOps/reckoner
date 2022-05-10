@@ -11,4 +11,4 @@ charts:
     chart: basic-demo
     hooks:
       pre_install:
-      - kubectl apply -f ../subfolder/relative_hook_namespace.yml
+      - kubectl apply -f ../subfolder/relative_hook_namespace.yaml

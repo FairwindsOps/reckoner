@@ -1,7 +1,7 @@
 version: "2"
 name: Shell Executor Secret
 vars:
-  course: ../course_files/25_test_import.yml
+  course: ../course_files/25_test_import.yaml
   namespace: 25-test-import
   release: import-test
 testcases:

@@ -1,7 +1,7 @@
 version: "2"
 name: Namespace Creation
 vars:
-  course: ../course_files/02_test_create_namespace.yml
+  course: ../course_files/02_test_create_namespace.yaml
   namespace: 02-farglebargle
   release: namespace-test
 testcases:

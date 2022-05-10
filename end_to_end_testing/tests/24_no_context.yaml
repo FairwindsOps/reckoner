@@ -1,7 +1,7 @@
 version: "2"
 name: No Context
 vars:
-  course: ../course_files/24_test_no_context.yml
+  course: ../course_files/24_test_no_context.yaml
   namespace: 24-test-no-context
 testcases:
 - name: 24 - get-manifests

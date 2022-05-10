@@ -29,17 +29,17 @@ func TestGetCourseFilePath(t *testing.T) {
 		{
 			name: "empty path, expect default",
 			path: []string{},
-			want: "course.yml",
+			want: "course.yaml",
 		},
 		{
-			name: "single course.yml specified, expect mirror",
-			path: []string{"testdata/course.yml"},
-			want: "testdata/course.yml",
+			name: "single course.yaml specified, expect mirror",
+			path: []string{"testdata/course.yaml"},
+			want: "testdata/course.yaml",
 		},
 		{
-			name: "multiple course.yml specified, expect first",
-			path: []string{"testdata/course.yml", "second_course.yml"},
-			want: "testdata/course.yml",
+			name: "multiple course.yaml specified, expect first",
+			path: []string{"testdata/course.yaml", "second_course.yaml"},
+			want: "testdata/course.yaml",
 		},
 	}
 	for _, tt := range tests {

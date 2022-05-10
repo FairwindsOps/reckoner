@@ -1,7 +1,7 @@
 version: "2"
 name: Diff
 vars:
-  course: ../course_files/21_test_diff.yml
+  course: ../course_files/21_test_diff.yaml
   namespace: 21-test
 testcases:
 - name: 21 - plot course

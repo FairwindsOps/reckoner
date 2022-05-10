@@ -3,32 +3,32 @@ name: Bad Chart
 vars:
   namespace: 13-test
 testcases:
-- name: 13 - plot 13_test_bad_schema_repository.yml
+- name: 13 - plot 13_test_bad_schema_repository.yaml
   steps:
   - script: |
-      reckoner plot -a ../course_files/13_test_bad_schema_repository.yml
+      reckoner plot -a ../course_files/13_test_bad_schema_repository.yaml
     assertions:
     - result.code ShouldEqual 1
     - result.systemerr ShouldContainSubstring 'Course file has schema validation errors'
-- name: 13 - plot 13_test_required_schema.yml
+- name: 13 - plot 13_test_required_schema.yaml
   steps:
   - script: |
-      reckoner plot -a ../course_files/13_test_required_schema.yml
+      reckoner plot -a ../course_files/13_test_required_schema.yaml
     assertions:
     - result.code ShouldEqual 1
     - result.systemerr ShouldContainSubstring 'Course file has schema validation errors'
-- name: 13 - lint 13_test_lint_bad_secret.yml
+- name: 13 - lint 13_test_lint_bad_secret.yaml
   steps:
   - script: |
-      reckoner lint ../course_files/13_test_lint_bad_secret.yml
+      reckoner lint ../course_files/13_test_lint_bad_secret.yaml
     assertions:
     - result.code ShouldEqual 1
     - result.systemerr ShouldContainSubstring 'Course file has schema validation errors'
 
-- name: 13 - lint 13_test_lint_good_secret.yml
+- name: 13 - lint 13_test_lint_good_secret.yaml
   steps:
   - script: |
-      reckoner lint ../course_files/13_test_lint_good_secret.yml
+      reckoner lint ../course_files/13_test_lint_good_secret.yaml
     assertions:
     - result.code ShouldEqual 0
     - result.systemerr ShouldContainSubstring 'No schema validation errors found'

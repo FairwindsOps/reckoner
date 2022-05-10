@@ -27,7 +27,7 @@ Check out the [documentation at docs.fairwinds.com](https://reckoner.docs.fairwi
 
 ## Quickstart
 
-In course.yml, write:
+In course.yaml, write:
 
 ```yaml
 namespace: default
@@ -48,7 +48,7 @@ charts:
 Then run:
 
 ```shell
-reckoner plot course.yml --run-all
+reckoner plot course.yaml --run-all
 ```
 
 Grafana and Polaris should now be installed on your cluster!
@@ -59,7 +59,7 @@ Grafana and Polaris should now be installed on your cluster!
 
 If you're already using Helm but want to start using `reckoner`, you can use `reckoner import` to facilitate your migration.
 
-We recommend carefully examining the output of a `reckoner diff` before relying on any imported course.yml definitions.
+We recommend carefully examining the output of a `reckoner diff` before relying on any imported course.yaml definitions.
 
 <!-- Begin boilerplate -->
 ## Join the Fairwinds Open Source Community

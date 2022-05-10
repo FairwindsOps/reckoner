@@ -185,10 +185,10 @@ Given the file structure:
 │       │   └── tests
 │       │       └── test-connection.yaml
 │       └── values.yaml
-└── course.yml
+└── course.yaml
 ```
 
-This section of the course.yml will deploy that local chart.
+This section of the course.yaml will deploy that local chart.
 ```
 charts:
   my-release-name:
@@ -217,7 +217,7 @@ When you wish to manage annotations or labels for the namespaces you are install
 
 `namespace_management` blocks can be defined at the top level or at the chart level. By default, the top level `default` metadata will be used for all namespaces and any `metadata.annotations` or `metadata.labels` set in the charts will be additive. However, if `settings.overwrite` is `True` then the `metadata` block from the chart will replace any matching labels or annotation values.
 
-Keep in mind, chart level `metadata` properties _cannot_ remove or delete any course level properties, only overwrite the value. For this reason, it's best if you don't set course level namespace metadata unless you truly want it applied to _all_ namespaces defined in this course.yml.
+Keep in mind, chart level `metadata` properties _cannot_ remove or delete any course level properties, only overwrite the value. For this reason, it's best if you don't set course level namespace metadata unless you truly want it applied to _all_ namespaces defined in this course.yaml.
 
 Example:
 ```yaml
@@ -266,6 +266,7 @@ secrets:
 ## CLI Usage
 
 ```text
+$ reckoner --help
 Usage: reckoner [OPTIONS] COMMAND [ARGS]...
 
 Options:
@@ -285,8 +286,9 @@ Commands:
 ```
 
 You can add `--help` to any `Command` and get output like the one below:
+
 ```text
-$> reckoner plot --help
+$ reckoner plot --help
 Usage: reckoner plot [OPTIONS] COURSE_FILE
 
   Install charts with given arguments as listed in yaml file argument
@@ -327,8 +329,9 @@ Options:
 ```
 
 Or
+
 ```
-# reckoner update --help
+$ reckoner update --help
 Usage: reckoner update [OPTIONS] COURSE_FILE
 
   Checks to see if anything will be changed, if so, update the release,
@@ -370,34 +373,36 @@ Options:
 ```
 
 Or
+
 ```text
-# reckoner template --help
-Usage: reckoner template [OPTIONS] COURSE_FILE
+$ reckoner template --help
+Templates a helm chart for a release or several releases. Automatically sets --create-namespaces=false --dry-run=true
 
-  Output the template of the chart or charts as they would be installed or
-  upgraded
+Usage:
+  reckoner template [flags]
 
-Options:
-  -a, --run-all                  Run all charts in the course. Mutually
-                                 exclusive with 'only'.
+Flags:
+  -h, --help                help for template
+      --output-dir string   path to the base output directory (eg, ~/myproject/manifests)
 
-  -o, --only, --heading <chart>  Only run a specific chart by name. Mutually
-                                 exclusive with 'run_all'.
-
-  --helm-args TEXT               Passes the following arg on to helm, can be
-                                 used more than once. WARNING: Setting this
-                                 will completely override any helm_args in the
-                                 course. Also cannot be used for configuring
-                                 how helm connects to tiller.
-
-  --log-level TEXT               Log Level. [INFO | DEBUG | WARN | ERROR].
-                                 (default=INFO)
-
-  --help                         Show this message and exit.
+Global Flags:
+      --create-namespaces   If true, allow reckoner to create namespaces. (default true)
+      --dry-run             Implies helm --dry-run --debug and skips any hooks
+      --helm-args strings   Additional arguments to pass to helm commands. Can
+                            be passed multiple times. used more than once.
+                            WARNING: Setting this will completely override
+                            any helm_args in the course.
+      --no-color            If true, don't colorize output.
+  -o, --only strings        Only install this list of releases. Can be passed
+                            multiple times.
+  -a, --run-all             Install every release in the course file
+  -v, --v Level             number for the log level verbosity
 ```
+
 Or
+
 ```text
-# reckoner import --help
+$ reckoner import --help
 Usage: reckoner import [OPTIONS]
 
   Outputs a chart block that can be used to import the specified release

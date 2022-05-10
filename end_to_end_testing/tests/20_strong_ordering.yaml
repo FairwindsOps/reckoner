@@ -1,7 +1,7 @@
 version: "2"
 name: Strong Ordering
 vars:
-  course: ../course_files/20_test_strong_ordering.yml
+  course: ../course_files/20_test_strong_ordering.yaml
   namespace: 20-test
 testcases:
 - name: 20 - plot course
