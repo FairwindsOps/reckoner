@@ -3,38 +3,12 @@ package reckoner
 import (
 	"bytes"
 	"errors"
-	"io/ioutil"
 	"os"
 
 	"github.com/fairwindsops/reckoner/pkg/course"
 	"github.com/fatih/color"
 	"gopkg.in/yaml.v3"
 )
-
-// import (
-// 	argoAppv1alpha1 "github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
-// 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-// )
-
-func writeArgoApplication(appsOutputDir string, app course.ArgoApplication) (err error) {
-	appOutputFile := appsOutputDir + "/" + app.Metadata.Name + ".yaml"
-
-	// write stuff
-	var b bytes.Buffer                 // used for encoding & return
-	yamlEncoder := yaml.NewEncoder(&b) // create an encoder to handle custom configuration
-	yamlEncoder.SetIndent(2)           // people expect two-space indents instead of the default four
-	err = yamlEncoder.Encode(&app)     // encode proper YAML into slice of bytes
-	if err != nil {                    // check for errors
-		return err // bubble up
-	}
-
-	err = ioutil.WriteFile(appOutputFile, b.Bytes(), os.ModePerm)
-	if err != nil { // check for errors
-		return err // bubble up
-	}
-
-	return err
-}
 
 func generateArgoApplication(release course.Release, courseFile course.FileV2) (app course.ArgoApplication, err error) {
 	// TODO: Add support for overriding global config on a per-release basis
@@ -109,10 +83,19 @@ func (c *Client) WriteArgoApplications(outputDir string) (err error) {
 			return err
 		}
 
-		// write argocd application YAML resource to file
-		err = writeArgoApplication(appsOutputDir, app)
-		if err != nil {
-			return err
+		appOutputFile := appsOutputDir + "/" + app.Metadata.Name + ".yaml"
+		// write stuff
+		var b bytes.Buffer                 // used for encoding & return
+		yamlEncoder := yaml.NewEncoder(&b) // create an encoder to handle custom configuration
+		yamlEncoder.SetIndent(2)           // people expect two-space indents instead of the default four
+		err = yamlEncoder.Encode(&app)     // encode proper YAML into slice of bytes
+		if err != nil {                    // check for errors
+			return err // bubble up
+		}
+
+		err = writeYAML(b.Bytes(), appOutputFile)
+		if err != nil { // check for errors
+			return err // bubble up
 		}
 	}
 
