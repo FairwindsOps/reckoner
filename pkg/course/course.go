@@ -68,6 +68,15 @@ type FileV2 struct {
 	Releases []*Release `yaml:"releases,omitempty" json:"releases,omitempty"`
 	// HelmArgs is a list of arguments to pass to helm commands
 	HelmArgs []string `yaml:"helm_args,omitempty" json:"helm_args,omitempty"`
+	GitOps   GitOps   `yaml:"gitops,omitempty" json:"gitops,omitempty"`
+}
+
+// GitOps is a field on the root of the course.yaml file which instructs reckoner to
+// generate CustomResources appropriate to the configured flavor of gitops agent.
+// For instance, if gitops.argocd is present and complete, ArgoCD Application resources
+// will be generated for each release in the course file with the corresponding values.
+type GitOps struct {
+	ArgoCD ArgoApplication `yaml:"argocd" json:"argocd"`
 }
 
 type NamespaceMgmt struct {

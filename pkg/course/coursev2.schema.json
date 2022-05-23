@@ -37,9 +37,12 @@
                     "type": "array"
                 },
                 "pre_install": {
-                "type": "array"
+                    "type": "array"
                 }
             }
+        },
+        "gitops": {
+            "type": "object"
         },
         "release": {
             "type": "array",
@@ -159,6 +162,9 @@
         "hooks": {
             "$ref": "#/definitions/hooks"
         },
+        "gitops": {
+            "$ref": "#/definitions/gitops"
+        },
         "minimum_versions": {
             "type": "object",
             "additionalProperties": false,
@@ -195,7 +201,7 @@
                 "type": "object",
                 "additionalProperties": true,
                 "properties": {
-                    "backend":{
+                    "backend": {
                         "type": "string"
                     },
                     "name": {
@@ -203,11 +209,10 @@
                     }
                 },
                 "required": [
-                   "backend",
-                   "name"
+                    "backend",
+                    "name"
                 ]
             }
-
         }
     },
     "required": [
