@@ -110,7 +110,7 @@ func (c *Client) WriteArgoApplications(outputDir string) (err error) {
 		}
 
 		// write argocd application YAML resource to file
-		err = writeArgoApplication(outputDir, app)
+		err = writeArgoApplication(appsOutputDir, app)
 		if err != nil {
 			return err
 		}
