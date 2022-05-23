@@ -7,12 +7,19 @@ import (
 
 	"github.com/fairwindsops/reckoner/pkg/course"
 	"github.com/fatih/color"
+	"github.com/imdario/mergo"
 	"gopkg.in/yaml.v3"
 )
 
 func generateArgoApplication(release course.Release, courseFile course.FileV2) (app course.ArgoApplication, err error) {
 	// TODO: Add support for overriding global config on a per-release basis
 	app = courseFile.GitOps.ArgoCD // use global config at root of course file
+
+	// if release.GitOps.ArgoCD.<whatever> exists, override the app.<whatever> with that one, recursively.
+	err = mergo.Merge(&app, release.GitOps.ArgoCD, mergo.WithOverride)
+	if err != nil {
+		return app, err
+	}
 
 	// default to a kind of Application if it was omitted in the course file
 	if app.Kind == "" {
@@ -83,8 +90,10 @@ func (c *Client) WriteArgoApplications(outputDir string) (err error) {
 			return err
 		}
 
+		// generate name of app file
 		appOutputFile := appsOutputDir + "/" + app.Metadata.Name + ".yaml"
-		// write stuff
+
+		// prepare to write stuff (pretty)
 		var b bytes.Buffer                 // used for encoding & return
 		yamlEncoder := yaml.NewEncoder(&b) // create an encoder to handle custom configuration
 		yamlEncoder.SetIndent(2)           // people expect two-space indents instead of the default four
@@ -93,6 +102,7 @@ func (c *Client) WriteArgoApplications(outputDir string) (err error) {
 			return err // bubble up
 		}
 
+		// write stuff
 		err = writeYAML(b.Bytes(), appOutputFile)
 		if err != nil { // check for errors
 			return err // bubble up
