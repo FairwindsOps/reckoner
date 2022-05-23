@@ -154,6 +154,7 @@ type Release struct {
 	// Values contains any values that you wish to pass to the release. Everything
 	// underneath this key will placed in a temporary yaml file and passed to helm as a values file.
 	Values map[string]interface{} `yaml:"values,omitempty" json:"values,omitempty"`
+	GitOps GitOps                 `yaml:"gitops,omitempty" json:"gitops,omitempty"`
 }
 
 // ReleaseV1 represents a helm release and all of its configuration from v1 schema
