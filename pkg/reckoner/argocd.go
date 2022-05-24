@@ -12,7 +12,6 @@ import (
 )
 
 func generateArgoApplication(release course.Release, courseFile course.FileV2) (app course.ArgoApplication, err error) {
-	// TODO: Add support for overriding global config on a per-release basis
 	app = courseFile.GitOps.ArgoCD // use global config at root of course file
 
 	// if release.GitOps.ArgoCD.<whatever> exists, override the app.<whatever> with that one, recursively.
@@ -37,7 +36,7 @@ func generateArgoApplication(release course.Release, courseFile course.FileV2) (
 		app.Metadata.Name = release.Name
 	}
 
-	// FIXME: might want to put this behind a higher verbosity level
+	// FIXME: might want to put these warnings behind a higher verbosity level
 	// Application.Metadata.Namespace is where the ArgoCD Application resource will go (not the helm release)
 	if app.Metadata.Namespace == "" {
 		color.Yellow("No namespace declared in course file. Your ArgoCD Application manifests will likely get applied to the agent's default context.")
