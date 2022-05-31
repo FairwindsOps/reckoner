@@ -44,13 +44,13 @@ func generateArgoApplication(release course.Release, courseFile course.FileV2) (
 
 	// default source path to release name
 	if app.Spec.Source.Path == "" {
-		color.Yellow("No ArgoCD source path declared in course file for " + release.Name + ". The path has been set to its name.")
+		color.Yellow("No .gitops.argocd.spec.source.path declared in course file for " + release.Name + ". The path has been set to its name.")
 		app.Spec.Source.Path = release.Name
 	}
 
 	// don't support ArgoCD Application spec.destination.namespace at all
 	if len(app.Spec.Destination.Namespace) > 0 {
-		color.Yellow("Refusing to respect the ArgoCD destination namespace value declared in course file for " + release.Name + ". Using the release namespace instead, if it exists. If none is specified, the default at the root of the course YAML file will be used. Remove the namespace from the ArgoCD destination to stop seeing this warning.")
+		color.Yellow("Refusing to respect the .gitops.argocd.spec.destination.namespace value declared in course file for " + release.Name + ". Using the release namespace instead, if it exists. If none is specified, the default at the root of the course YAML file will be used. Remove the namespace from the ArgoCD destination to stop seeing this warning.")
 	}
 
 	// Application.Spec.Destination.Namespace is where the helm releases will be applied
@@ -61,12 +61,12 @@ func generateArgoApplication(release course.Release, courseFile course.FileV2) (
 	}
 
 	if app.Spec.Destination.Server == "" {
-		color.Yellow("No ArgoCD destination server declared in course file for " + release.Name + ". Assuming you want the kubernetes service in the default namespace.")
+		color.Yellow("No .gitops.argocd.spec.destination.server declared in course file for " + release.Name + ". Assuming you want the kubernetes service in the default namespace. Specify to make this warning go away.")
 		app.Spec.Destination.Server = "https://kubernetes.default.svc"
 	}
 
 	if app.Spec.Project == "" {
-		color.Yellow("No ArgoCD project declared in course file for " + release.Name + ". We'll set it to a sensible default value of 'default'.")
+		color.Yellow("No .gitops.argocd.spec.project declared in course file for " + release.Name + ". We'll set it to a sensible default value of 'default'. Specify to make this warning go away.")
 		app.Spec.Project = "default"
 	}
 
