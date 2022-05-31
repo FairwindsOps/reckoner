@@ -36,6 +36,10 @@ We'll be breaking this documentation down into sections to make reference easier
 - `secrets` _(list of objects)_
     A list of objects that define where and how to get secrets from your secret backend
     Required keys are `name` and `backend`.
+- `gitops` _(object)_
+    A key of `argocd` is supported, which should contain an ArgoCD Application custom resource. When used at this top level,
+    all releases will have an Application custom resource generated with inherited values. If you wish to override something
+    in a particular release, repeat this same structure within the release item.
 
 Example:
 ```yaml
@@ -95,6 +99,8 @@ The `charts` block in your course define all the charts you'd like to install an
     Translates into a direct YAML values file for use with `-f <tmpfile>` for the helm install command line arguments
 - `plugins` _(string)_
     Prepend your helm commands with this `plugins` string (see [PR 99](https://github.com/FairwindsOps/reckoner/pull/99))
+- `gitops` _(object)_
+    Same as top level `gitops` field, but overrides the top-level, if it exists, on a per-release basis.
 
 ```yaml
 ...
@@ -262,6 +268,52 @@ secrets:
       - echo
       - "changemeagain"
 ```
+
+## Gitops
+
+Specifying the appropriate values within the `gitops` field will cause `reckoner` to generate the corresponding custom resources for popular GitOps agents. As of the writing, only ArgoCD is supported, although we may include support for other GitOps agents in the future.
+
+Assuming you have the following YAML in the top level of your course file, you should see some basic ArgoCD Application custom resources being generated:
+```yaml
+gitops:
+  argocd:
+    spec:
+      source:
+        repoURL: https://gitlab.company.tld/organization/repository.git
+```
+
+> Best if used with `reckoner template --output-dir <some_dir>`
+
+For each release, the gitops.argocd.spec.destination namespace value will be read from the course file top-level namespace field, or from the release namespace field, if defined. See Namespace Management section for further details.
+
+Another example which uses far more features of the ArgoCD agent is shown below. If you find a particular feature is missing, please open an issue with the project so we may discuss it.
+
+Example:
+```yaml
+gitops:
+  argocd:
+    kind: Application
+    apiVersion: argoproj.io/v1alpha1
+    metadata:
+      namespace: argocd
+      annotations: {}
+    spec:
+      destination:
+        server: https://kubernetes.default.svc
+      project: default
+      source:
+        repoURL: https://github.com/someuser/clustername.git
+        directory:
+          recurse: true
+      syncPolicy:
+        automated:
+          prune: true
+        syncOptions:
+          - CreateNamespace=true
+          - PruneLast=true
+```
+
+> Best if used with `reckoner template --output-dir <some_dir>`
 
 ## CLI Usage
 
