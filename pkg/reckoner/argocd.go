@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"os"
+	"strings"
 
 	"github.com/fairwindsops/reckoner/pkg/course"
 	"github.com/fatih/color"
@@ -90,7 +91,7 @@ func (c *Client) WriteArgoApplications(outputDir string) (err error) {
 		}
 
 		// generate name of app file
-		appOutputFile := appsOutputDir + "/" + app.Metadata.Name + ".yaml"
+		appOutputFile := appsOutputDir + "/" + strings.ToLower(app.Metadata.Name) + ".yaml"
 
 		// prepare to write stuff (pretty)
 		var b bytes.Buffer                 // used for encoding & return
