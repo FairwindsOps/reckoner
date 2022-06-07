@@ -1,5 +1,10 @@
 package course
 
+// We may use these imports to track ArgoCD Applications exactly. However,
+// this also pulls in kubernetes api packages, which makes reckoner rely
+// on particular versions of kubernetes. At the time of writing, no such
+// relationship exists. Once we've firmly chosen a path, this comment
+// should be removed, and potentially this entire file.
 // import (
 // 	argoAppv1alpha1 "github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 // 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
