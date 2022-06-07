@@ -75,7 +75,7 @@ func (c *Client) diffRelease(releaseName, releaseNamespace string) (string, erro
 	} else if err != nil {
 		return "", fmt.Errorf("error getting manifests for release %s in namespace %s: %s", releaseName, releaseNamespace, err)
 	}
-	templateOut, err := c.TemplateRelease(releaseName)
+	templateOut, err := c.TemplateRelease(releaseName, "") // no --output-dir for diff
 	if err != nil {
 		return "", fmt.Errorf("error getting template for release %s in namespace %s: %s", releaseName, releaseNamespace, err)
 	}

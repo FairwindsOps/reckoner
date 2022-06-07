@@ -122,40 +122,32 @@ func (c Client) TemplateAll(templateOutputDir string) (fullOutput string, err er
 			color.Red(err.Error())
 		}
 
-		out, err := c.TemplateRelease(release.Name)
+		out, err := c.TemplateRelease(release.Name, templateOutputDir)
 		if err != nil {
 			color.Red(err.Error())
 			continue
 		}
 
-		if len(templateOutputDir) > 0 {
-			err = c.WriteSplitYaml([]byte(out), templateOutputDir, release.Name)
-			if err != nil {
-				color.Red(err.Error())
-				os.Exit(1)
-			}
-		}
-
 		fullOutput = fullOutput + out
 	}
 
-	// if the user has specified a RepoURL, they probably also
-	// specified other things. Most required things receive a default
-	// and a warning when not found in the config file. This
-	// maybe could use some improvement
-	if len(c.CourseFile.GitOps.ArgoCD.Spec.Source.RepoURL) > 0 {
-		err = c.WriteArgoApplications(templateOutputDir)
-		if err != nil {
-			color.Red(err.Error())
-			os.Exit(1)
-		}
-	}
+	// // if the user has specified a RepoURL, they probably also
+	// // specified other things. Most required things receive a default
+	// // and a warning when not found in the config file. This
+	// // maybe could use some improvement
+	// if len(c.CourseFile.GitOps.ArgoCD.Spec.Source.RepoURL) > 0 {
+	// 	err = c.WriteArgoApplications(templateOutputDir)
+	// 	if err != nil {
+	// 		color.Red(err.Error())
+	// 		os.Exit(1)
+	// 	}
+	// }
 
 	return fullOutput, nil
 }
 
 // TemplateRelease does the same thing as TemplateAll but only for one release
-func (c Client) TemplateRelease(releaseName string) (string, error) {
+func (c Client) TemplateRelease(releaseName string, templateOutputDir string) (string, error) {
 	releaseIndex := funk.IndexOf(c.CourseFile.Releases, func(release *course.Release) bool {
 		return release.Name == releaseName
 	})
@@ -170,6 +162,27 @@ func (c Client) TemplateRelease(releaseName string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("error templating release %s: %s", releaseName, stdErr)
 	}
+
+	if len(templateOutputDir) > 0 {
+		err = c.WriteSplitYaml([]byte(out), templateOutputDir, releaseName)
+		if err != nil {
+			color.Red(err.Error())
+			os.Exit(1)
+		}
+	}
+
+	// if the user has specified a RepoURL, they probably also
+	// specified other things. Most required things receive a default
+	// and a warning when not found in the config file. This
+	// maybe could use some improvement
+	if len(c.CourseFile.GitOps.ArgoCD.Spec.Source.RepoURL) > 0 {
+		err = c.WriteArgoApplications(templateOutputDir)
+		if err != nil {
+			color.Red(err.Error())
+			os.Exit(1)
+		}
+	}
+
 	return out, nil
 }
 
