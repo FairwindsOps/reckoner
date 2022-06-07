@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/fairwindsops/reckoner/pkg/course"
+	"github.com/fatih/color"
 	"github.com/imdario/mergo"
 	"gopkg.in/yaml.v3"
 	"k8s.io/klog/v2"
@@ -88,6 +89,11 @@ func (c *Client) WriteArgoApplications(outputDir string) (err error) {
 		app, err := generateArgoApplication(*release, c.CourseFile)
 		if err != nil {
 			return err
+		}
+
+		if app.Metadata.Name == "" {
+			color.Yellow("No metadata found for release " + release.Name + ". Skipping ArgoCD Applicationgeneration...")
+			continue
 		}
 
 		// generate name of app file
