@@ -175,7 +175,7 @@ func (c Client) TemplateRelease(releaseName string, templateOutputDir string) (s
 	// specified other things. Most required things receive a default
 	// and a warning when not found in the config file. This
 	// maybe could use some improvement
-	if len(c.CourseFile.GitOps.ArgoCD.Spec.Source.RepoURL) > 0 {
+	if c.CourseFile.GitOps.ArgoCD.Spec.Source.RepoURL != "" && templateOutputDir != "" {
 		err = c.WriteArgoApplications(templateOutputDir)
 		if err != nil {
 			color.Red(err.Error())
