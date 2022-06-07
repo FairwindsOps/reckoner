@@ -282,7 +282,7 @@ gitops:
         repoURL: https://gitlab.company.tld/organization/repository.git
 ```
 
-> Best if used with `reckoner template --output-dir <some_dir>`
+> Must be used with `reckoner template --output-dir <some_dir>` to produce any files.
 
 For each release, the gitops.argocd.spec.destination namespace value will be read from the course file top-level namespace field, or from the release namespace field, if defined. See Namespace Management section for further details.
 
@@ -313,7 +313,7 @@ gitops:
           - PruneLast=true
 ```
 
-> Best if used with `reckoner template --output-dir <some_dir>`
+> Must be used with `reckoner template --output-dir <some_dir>` to produce any files.
 
 ## CLI Usage
 
