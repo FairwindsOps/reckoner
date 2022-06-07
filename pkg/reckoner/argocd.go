@@ -38,7 +38,6 @@ func generateArgoApplication(release course.Release, courseFile course.FileV2) (
 		app.Metadata.Name = release.Name
 	}
 
-	// FIXME: might want to put these warnings behind a higher verbosity level
 	// Application.Metadata.Namespace is where the ArgoCD Application resource will go (not the helm release)
 	if app.Metadata.Namespace == "" {
 		klog.V(3).Infoln("No namespace declared in course file. Your ArgoCD Application manifests will likely get applied to the agent's default context.")
