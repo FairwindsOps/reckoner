@@ -77,10 +77,12 @@ func generateArgoApplication(release course.Release, courseFile course.FileV2) (
 
 func (c *Client) WriteArgoApplications(outputDir string) (err error) {
 	appsOutputDir := outputDir + "/argocd-apps"
-	if _, err := os.Stat(appsOutputDir); errors.Is(err, os.ErrNotExist) {
-		err := os.Mkdir(appsOutputDir, os.ModePerm)
-		if err != nil {
-			return err
+	for _, dir := range []string{outputDir, appsOutputDir} {
+		if _, err := os.Stat(dir); errors.Is(err, os.ErrNotExist) {
+			err := os.Mkdir(dir, os.ModePerm)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
