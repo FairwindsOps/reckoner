@@ -63,6 +63,8 @@ type Client struct {
 	HelmArgs []string
 	// Schema is a byte slice representation of the coursev2 json schema
 	Schema []byte
+	// OutputDirectory is the directory which will contain each YAML manifest in a separate file
+	OutputDirectory string
 }
 
 var once sync.Once

@@ -162,6 +162,7 @@ var templateCmd = &cobra.Command{
 			CreateNamespaces: false,
 			ContinueOnError:  continueOnError,
 			Releases:         onlyRun,
+			OutputDirectory:  templateOutputDir,
 		}
 
 		err := client.Init(courseFile, false)
@@ -169,7 +170,7 @@ var templateCmd = &cobra.Command{
 			color.Red(err.Error())
 			os.Exit(1)
 		}
-		tmpl, err := client.TemplateAll(templateOutputDir)
+		tmpl, err := client.TemplateAll()
 		if err != nil {
 			color.Red(err.Error())
 			os.Exit(1)

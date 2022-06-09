@@ -110,7 +110,7 @@ func (c *Client) Plot() error {
 }
 
 // TemplateAll runs the same as plot but runs template instead
-func (c Client) TemplateAll(templateOutputDir string) (fullOutput string, err error) {
+func (c Client) TemplateAll() (fullOutput string, err error) {
 	err = c.UpdateHelmRepos()
 	if err != nil {
 		return fullOutput, err
@@ -122,7 +122,7 @@ func (c Client) TemplateAll(templateOutputDir string) (fullOutput string, err er
 			color.Red(err.Error())
 		}
 
-		out, err := c.TemplateRelease(release.Name, templateOutputDir)
+		out, err := c.TemplateRelease(release.Name)
 		if err != nil {
 			color.Red(err.Error())
 			continue
@@ -135,7 +135,7 @@ func (c Client) TemplateAll(templateOutputDir string) (fullOutput string, err er
 }
 
 // TemplateRelease does the same thing as TemplateAll but only for one release
-func (c Client) TemplateRelease(releaseName string, templateOutputDir string) (string, error) {
+func (c Client) TemplateRelease(releaseName string) (string, error) {
 	releaseIndex := funk.IndexOf(c.CourseFile.Releases, func(release *course.Release) bool {
 		return release.Name == releaseName
 	})
@@ -151,8 +151,8 @@ func (c Client) TemplateRelease(releaseName string, templateOutputDir string) (s
 		return "", fmt.Errorf("error templating release %s: %s", releaseName, stdErr)
 	}
 
-	if len(templateOutputDir) > 0 {
-		err = c.WriteSplitYaml([]byte(out), templateOutputDir, releaseName)
+	if len(c.OutputDirectory) > 0 {
+		err = c.WriteSplitYaml([]byte(out), c.OutputDirectory, releaseName)
 		if err != nil {
 			color.Red(err.Error())
 			os.Exit(1)
@@ -163,8 +163,8 @@ func (c Client) TemplateRelease(releaseName string, templateOutputDir string) (s
 	// specified other things. Most required things receive a default
 	// and a warning when not found in the config file. This
 	// maybe could use some improvement
-	if c.CourseFile.GitOps.ArgoCD.Spec.Source.RepoURL != "" && templateOutputDir != "" {
-		err = c.WriteArgoApplications(templateOutputDir)
+	if c.CourseFile.GitOps.ArgoCD.Spec.Source.RepoURL != "" && c.OutputDirectory != "" {
+		err = c.WriteArgoApplications(c.OutputDirectory)
 		if err != nil {
 			color.Red(err.Error())
 			os.Exit(1)
