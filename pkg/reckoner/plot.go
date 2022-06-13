@@ -110,7 +110,7 @@ func (c *Client) Plot() error {
 }
 
 // TemplateAll runs the same as plot but runs template instead
-func (c Client) TemplateAll(templateOutputDir string) (fullOutput string, err error) {
+func (c Client) TemplateAll() (fullOutput string, err error) {
 	err = c.UpdateHelmRepos()
 	if err != nil {
 		return fullOutput, err
@@ -128,16 +128,9 @@ func (c Client) TemplateAll(templateOutputDir string) (fullOutput string, err er
 			continue
 		}
 
-		if len(templateOutputDir) > 0 {
-			err = c.WriteSplitYaml([]byte(out), templateOutputDir, release.Name)
-			if err != nil {
-				color.Red(err.Error())
-				os.Exit(1)
-			}
-		}
-
 		fullOutput = fullOutput + out
 	}
+
 	return fullOutput, nil
 }
 
@@ -157,6 +150,27 @@ func (c Client) TemplateRelease(releaseName string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("error templating release %s: %s", releaseName, stdErr)
 	}
+
+	if len(c.OutputDirectory) > 0 {
+		err = c.WriteSplitYaml([]byte(out), c.OutputDirectory, releaseName)
+		if err != nil {
+			color.Red(err.Error())
+			os.Exit(1)
+		}
+	}
+
+	// if the user has specified a RepoURL, they probably also
+	// specified other things. Most required things receive a default
+	// and a warning when not found in the config file. This
+	// maybe could use some improvement
+	if c.CourseFile.GitOps.ArgoCD.Spec.Source.RepoURL != "" && c.OutputDirectory != "" {
+		err = c.WriteArgoApplications(c.OutputDirectory)
+		if err != nil {
+			color.Red(err.Error())
+			os.Exit(1)
+		}
+	}
+
 	return out, nil
 }
 
