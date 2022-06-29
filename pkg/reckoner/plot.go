@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"gopkg.in/yaml.v3"
+	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 
 	"github.com/fairwindsops/reckoner/pkg/course"
 	"github.com/fatih/color"
@@ -113,8 +114,11 @@ func (c *Client) Plot() error {
 func (c Client) TemplateAll(templateOutputDir string) (fullOutput string, err error) {
 	err = c.UpdateHelmRepos()
 	if err != nil {
-		return fullOutput, err
+		return fullOutput,
+			err
 	}
+
+	//apiVersionList := c.fetchApis()
 
 	for _, release := range c.CourseFile.Releases {
 		err = c.cloneGitRepo(release)
@@ -257,5 +261,57 @@ func (c *Client) cloneGitRepo(release *course.Release) error {
 			return err
 		}
 	}
+	return nil
+}
+
+/*
+type FakeCachedDiscoveryClient struct {
+	discovery.DiscoveryInterface
+	Groups             []*metav1.APIGroup
+	Resources          []*metav1.APIResourceList
+	PreferredResources []*metav1.APIResourceList
+	Invalidations      int
+}
+
+func NewFakeCachedDiscoveryClient() *FakeCachedDiscoveryClient {
+	return &FakeCachedDiscoveryClient{
+		Groups:             []*metav1.APIGroup{},
+		Resources:          []*metav1.APIResourceList{},
+		PreferredResources: []*metav1.APIResourceList{},
+		Invalidations:      0,
+	}
+}
+*/
+
+//This method needs to use the KubeClient to fetch all of the API endpoints that are currently used in the cluster.
+
+// (c Client) may be the wrong receiver
+func (c Client) FetchApis(f cmdutil.Factory) error {
+
+	/*w := printers.GetNewTabWriter(o.Out)
+	defer w.Flush()
+	*/
+
+	discoveryclient, err := f.ToDiscoveryClient()
+	if err != nil {
+		return err
+	}
+
+	/*
+		if !o.Cached {
+			// Always request fresh data from the server
+			discoveryclient.Invalidate()
+		}
+	*/
+
+	errs := []error{}
+
+	lists, err := discoveryclient.ServerPreferredResources()
+	if err != nil {
+		errs = append(errs, err)
+	}
+
+	fmt.Println(lists)
+
 	return nil
 }

@@ -169,6 +169,16 @@ var templateCmd = &cobra.Command{
 			color.Red(err.Error())
 			os.Exit(1)
 		}
+
+		/* 	We need to call the FetchApis function and pass it a cmdutil.Factory object.
+			It might not need to be a method for the reckoner client, because the reckoner client doesn't
+			seem to implement the cmdutil.Factory
+		   	Can we create an interface that connects the two?
+		*/
+
+		//client.FetchApis()
+		fmt.Println("Test")
+
 		tmpl, err := client.TemplateAll(templateOutputDir)
 		if err != nil {
 			color.Red(err.Error())
