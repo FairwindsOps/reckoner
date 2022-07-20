@@ -62,7 +62,7 @@ func splitYAML(in []byte) (out [][]byte, err error) {
 		}
 
 		// we believe we have a valid YAML object
-		out = append(out, b.Bytes()) // so append it to the list to be returned later
+		out = append(out, bytes.TrimSpace(b.Bytes())) // so append it to the list to be returned later
 	}
 
 	return out, nil // list of YAML objects, each a []byte
