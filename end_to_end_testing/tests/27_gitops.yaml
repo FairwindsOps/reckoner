@@ -1,0 +1,13 @@
+version: "2"
+name: Shell Executor Secret
+vars:
+  course: ../course_files/27_gitops.yaml
+  namespace: 27-gitops
+  release: shell-executor-chart
+testcases:
+- name: 27 - template course
+  steps:
+  - script: |
+      reckoner template -a {{.course}} --output-dir 27_gitops_output
+    assertions:
+      - result.code ShouldEqual 0
