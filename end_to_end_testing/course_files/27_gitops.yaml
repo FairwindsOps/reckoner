@@ -1,0 +1,66 @@
+---
+schema: v2
+namespace: myns
+repository: stable
+context: mycontext
+repositories:
+  fairwinds-stable:
+    url: https://charts.fairwinds.com/stable
+minimum_versions:
+  helm: 3.4.1
+  reckoner: 4.3.1
+gitops:
+  argocd:
+    kind: Application
+    apiVersion: argoproj.io/v1alpha1
+    metadata:
+      namespace: argocd
+      annotations:
+        one_key: one_value
+    spec:
+      destination:
+        namespace: some_value
+        server: https://kubernetes.default.svc
+      project: default
+      source:
+        # path: manifests
+        repoURL: https://github.com/someuser/clustername.git
+        directory:
+          recurse: true
+        # plugin:
+        #   name: argocd-vault-plugin
+      syncPolicy:
+        automated:
+          prune: true
+        syncOptions:
+          - CreateNamespace=true
+          - PruneLast=true
+namespace_management:
+  default:
+    metadata:
+      annotations:
+        insights.fairwinds.com/adminOnly: "true"
+      labels:
+        ManagedBy: Fairwinds
+    settings:
+      overwrite: true
+releases:
+  - name: rbac-manager
+    namespace: rbac-manager
+    namespace_management:
+      settings:
+        overwrite: true
+    chart: rbac-manager
+    version: 1.11.1
+    repository: fairwinds-stable
+
+    gitops:
+      argocd:
+        metadata:
+          annotations:
+            notifications.argoproj.io/subscribe.on-sync-succeeded.slack: some_channel
+        spec:
+          project: different_project
+          source:
+            path: some_totally_different_path
+            repoURL: https://github.com/another_user/another_repo.git
