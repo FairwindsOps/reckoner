@@ -58,7 +58,7 @@ jobs:
   test:
     working_directory: /go/src/github.com/fairwindsops/reckoner
     docker:
-      - image: circleci/golang:1.18
+      - image: cimg/go:1.18
     steps:
       - checkout
       - run: make test
