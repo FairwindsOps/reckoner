@@ -56,7 +56,7 @@ references:
         mv vault /usr/bin/vault
 jobs:
   test:
-    working_directory: /go/src/github.com/fairwindsops/reckoner
+    working_directory: /home/circleci/go/src/github.com/fairwindsops/reckoner
     docker:
       - image: cimg/go:1.18
     steps:
