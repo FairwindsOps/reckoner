@@ -12,7 +12,7 @@ require (
 	github.com/imdario/mergo v0.3.13
 	github.com/mattn/go-colorable v0.1.13
 	github.com/rhysd/go-github-selfupdate v1.2.3
-	github.com/sergi/go-diff v1.2.0
+	github.com/sergi/go-diff v1.1.0
 	github.com/spf13/cobra v1.5.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.0
