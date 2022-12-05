@@ -16,7 +16,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -348,7 +347,7 @@ func OpenCourseFile(fileName string, schema []byte) (*FileV2, error) {
 // OpenCourseV2 opens a v2 schema course file
 func OpenCourseV2(fileName string) (*FileV2, error) {
 	courseFile := &FileV2{}
-	data, err := ioutil.ReadFile(fileName)
+	data, err := os.ReadFile(fileName)
 	if err != nil {
 		return nil, err
 	}
@@ -367,7 +366,7 @@ func OpenCourseV2(fileName string) (*FileV2, error) {
 // OpenCourseV1 opens a v1 schema course file
 func OpenCourseV1(fileName string) (*FileV1, error) {
 	courseFile := &FileV1{}
-	data, err := ioutil.ReadFile(fileName)
+	data, err := os.ReadFile(fileName)
 	if err != nil {
 		return nil, err
 	}

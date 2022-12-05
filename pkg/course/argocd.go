@@ -47,10 +47,11 @@ type ArgoApplicationSpecDestination struct {
 }
 
 type ArgoApplicationSpec struct {
-	Source      ArgoApplicationSpecSource      `yaml:"source"`
-	Destination ArgoApplicationSpecDestination `yaml:"destination"`
-	Project     string                         `yaml:"project"`
-	SyncPolicy  ArgoApplicationSpecSyncPolicy  `yaml:"syncPolicy,omitempty"`
+	Source            ArgoApplicationSpecSource       `yaml:"source"`
+	Destination       ArgoApplicationSpecDestination  `yaml:"destination"`
+	Project           string                          `yaml:"project"`
+	SyncPolicy        ArgoApplicationSpecSyncPolicy   `yaml:"syncPolicy,omitempty"`
+	IgnoreDifferences []ArgoResourceIgnoreDifferences `yaml:"ignoreDifferences,omitempty"`
 }
 
 // ArgoApplicationMetadata contains the k8s metadata for the gitops agent CustomResource.
@@ -67,4 +68,17 @@ type ArgoApplication struct {
 	APIVersion string                  `yaml:"apiVersion"`
 	Metadata   ArgoApplicationMetadata `yaml:"metadata"`
 	Spec       ArgoApplicationSpec     `yaml:"spec"`
+}
+
+// ResourceIgnoreDifferences contains resource filter and list of json paths which should be ignored during comparison with live state.
+type ArgoResourceIgnoreDifferences struct {
+	Group             string   `yaml:"group,omitempty"`
+	Kind              string   `yaml:"kind"`
+	Name              string   `yaml:"name,omitempty"`
+	Namespace         string   `yaml:"namespace,omitempty"`
+	JSONPointers      []string `yaml:"jsonPointers,omitempty"`
+	JQPathExpressions []string `yaml:"jqPathExpressions,omitempty"`
+	// ManagedFieldsManagers is a list of trusted managers. Fields mutated by those managers will take precedence over the
+	// desired state defined in the SCM and won't be displayed in diffs
+	ManagedFieldsManagers []string `yaml:"managedFieldsManagers,omitempty"`
 }

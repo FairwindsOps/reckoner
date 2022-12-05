@@ -14,7 +14,6 @@ package reckoner
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -235,7 +234,7 @@ func filesArgs(files []string, baseDir string) []string {
 
 // makeTempValuesFile puts the values section into a temporary values file
 func makeTempValuesFile(values map[string]interface{}) (*os.File, error) {
-	tmpFile, err := ioutil.TempFile(os.TempDir(), "reckoner-")
+	tmpFile, err := os.CreateTemp(os.TempDir(), "reckoner-")
 	if err != nil {
 		return nil, fmt.Errorf("cannot create temporary file: %s", err)
 	}
