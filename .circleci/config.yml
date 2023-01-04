@@ -87,8 +87,7 @@ jobs:
       - image: goreleaser/goreleaser:v1.10.3
     steps:
       - checkout
-      - setup_remote_docker:
-          version: 20.10.6
+      - setup_remote_docker
       - *enable_experimental_docker_features
       - *install_vault_alpine
       - rok8s/get_vault_env:
