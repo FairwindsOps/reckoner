@@ -338,7 +338,7 @@ func OpenCourseFile(fileName string, schema []byte) (*FileV2, error) {
 
 	if err := courseFile.validateJsonSchema(schema); err != nil {
 		klog.V(3).Infof("failed to validate jsonSchema in course file: %s", fileName)
-		return nil, SchemaValidationError
+		return nil, err
 	}
 
 	return courseFile, nil
@@ -562,12 +562,12 @@ func (f *FileV2) validateJsonSchema(schemaData []byte) error {
 
 	jsonData, err := json.Marshal(f)
 	if err != nil {
-		return SchemaValidationError
+		return err
 	}
 
 	result, err := schema.Validate(gojsonschema.NewBytesLoader(jsonData))
 	if err != nil {
-		return SchemaValidationError
+		return err
 	}
 	if len(result.Errors()) > 0 {
 		for _, err := range result.Errors() {
