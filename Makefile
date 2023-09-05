@@ -3,7 +3,7 @@ GOCMD=GO111MODULE=on go
 GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
-BINARY_NAME=reckoner-go
+BINARY_NAME=reckoner
 COMMIT := $(shell git rev-parse HEAD)
 VERSION := "0.0.0"
 

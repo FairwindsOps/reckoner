@@ -9,4 +9,4 @@ govet-report.out
 /bin
 /build
 /dist
-/reckoner-go
+/reckoner
