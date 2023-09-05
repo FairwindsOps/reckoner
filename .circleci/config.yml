@@ -15,7 +15,7 @@
 version: 2.1
 
 orbs:
-  rok8s: fairwinds/rok8s-scripts@11
+  rok8s: fairwinds/rok8s-scripts@12
   oss-docs: fairwinds/oss-docs@0
 
 references:
@@ -24,9 +24,9 @@ references:
     workspace-location: /
     pre_script: end_to_end_testing/pre_go.sh
     script: end_to_end_testing/run_go.sh
-    command_runner_image: quay.io/reactiveops/ci-images:v11-buster
+    command_runner_image: quay.io/reactiveops/ci-images:v12-buster
     enable_docker_layer_caching: false
-    store-test-results: /tmp/test-results
+    store-test-results: /tmp/test-results/
     requires:
       - test
       - snapshot
@@ -41,21 +41,21 @@ references:
       command: |
         apk --update add curl yq
         cd /tmp
-        curl -LO https://releases.hashicorp.com/vault/1.9.4/vault_1.9.4_linux_amd64.zip
-        unzip vault_1.9.4_linux_amd64.zip
+        curl -LO https://releases.hashicorp.com/vault/1.14.2/vault_1.14.2_linux_amd64.zip
+        unzip vault_1.14.2_linux_amd64.zip
         mv vault /usr/bin/vault
 jobs:
   test:
     working_directory: /home/circleci/go/src/github.com/fairwindsops/reckoner
     docker:
-      - image: cimg/go:1.18
+      - image: cimg/go:1.20
     steps:
       - checkout
       - run: make test
   snapshot:
     working_directory: /go/src/github.com/fairwindsops/reckoner
     docker:
-      - image: goreleaser/goreleaser:v1.10.3
+      - image: goreleaser/goreleaser:v1.20.0
     steps:
       - checkout
       - setup_remote_docker
@@ -74,7 +74,7 @@ jobs:
     resource_class: large
     shell: /bin/bash
     docker:
-      - image: goreleaser/goreleaser:v1.10.3
+      - image: goreleaser/goreleaser:v1.20.0
     steps:
       - checkout
       - setup_remote_docker
@@ -108,16 +108,16 @@ workflows:
             branches:
               only: /.*/
       - rok8s/kubernetes_e2e_tests:
-          name: "End-To-End Kubernetes 1.20.2"
-          kind_node_image: "kindest/node:v1.20.2@sha256:15d3b5c4f521a84896ed1ead1b14e4774d02202d5c65ab68f30eeaf310a3b1a7"
+          name: "End-To-End Kubernetes 1.25"
+          kind_node_image: "kindest/node:v1.25.3@sha256:f52781bc0d7a19fb6c405c2af83abfeb311f130707a0e219175677e366cc45d1"
           <<: *e2e_configuration
       - rok8s/kubernetes_e2e_tests:
-          name: "End-To-End Kubernetes 1.21.1"
-          kind_node_image: "kindest/node:v1.21.2@sha256:9d07ff05e4afefbba983fac311807b3c17a5f36e7061f6cb7e2ba756255b2be4"
+          name: "End-To-End Kubernetes 1.26"
+          kind_node_image: "kindest/node:v1.26.6@sha256:6e2d8b28a5b601defe327b98bd1c2d1930b49e5d8c512e1895099e4504007adb"
           <<: *e2e_configuration
       - rok8s/kubernetes_e2e_tests:
-          name: "End-To-End Kubernetes 1.22.0"
-          kind_node_image: "kindest/node:v1.22.0@sha256:b8bda84bb3a190e6e028b1760d277454a72267a5454b57db34437c34a588d047"
+          name: "End-To-End Kubernetes 1.27"
+          kind_node_image: "kindest/node:v1.27.3@sha256:3966ac761ae0136263ffdb6cfd4db23ef8a83cba8a463690e98317add2c9ba72"
           <<: *e2e_configuration
   release:
     jobs:

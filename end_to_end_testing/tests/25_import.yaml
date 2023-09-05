@@ -18,7 +18,7 @@ testcases:
         assertions:
           - "result.code ShouldEqual 0"
           - 'result.systemout ShouldContainSubstring "namespace: {{.namespace}}"'
-          - 'result.systemout ShouldContainSubstring "version: 0.4.3"'
+          - 'result.systemout ShouldContainSubstring "version: 1.0.0"'
           - 'result.systemout ShouldContainSubstring "chart: basic-demo"'
           - 'result.systemout ShouldContainSubstring "name: {{.release}}"'
           - 'result.systemout ShouldContainSubstring "expect-value: 1.05"'
