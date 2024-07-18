@@ -10,3 +10,4 @@ govet-report.out
 /build
 /dist
 /reckoner
+docs/README.md
