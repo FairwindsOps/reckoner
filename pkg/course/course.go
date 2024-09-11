@@ -589,7 +589,7 @@ func parseSecrets(courseData []byte) error {
 		var backend *secrets.Backend
 		switch secret.Backend {
 		case "ShellExecutor":
-			if secret.Script == nil || len(secret.Script) == 0 {
+			if len(secret.Script) == 0 {
 				return fmt.Errorf("ShellExecutor secret %s has no script, or is not in an array format in the course file", secret.Name)
 			}
 			executor, err := newShellExecutor(secret.Script)
