@@ -87,8 +87,8 @@ func (h Client) AddRepository(repoName, url string) error {
 
 // Cache returns the local helm cache if defined
 func (h Client) Cache() (string, error) {
-	stdOut, stdErr, _ := h.Exec("env")
-	if stdErr != "" {
+	stdOut, stdErr, err := h.Exec("env")
+	if err != nil {
 		return "", fmt.Errorf("error running helm env: %s", stdErr)
 	}
 	for _, line := range strings.Split(stdOut, "\n") {
