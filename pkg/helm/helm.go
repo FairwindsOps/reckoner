@@ -103,8 +103,8 @@ func (h Client) Cache() (string, error) {
 // BuildDependencies will update dependencies for a given release if it is stored locally (i.e. pulled from git)
 func (h Client) BuildDependencies(path string) error {
 	klog.V(5).Infof("building chart dependencies for %s", path)
-	_, stdErr, _ := h.Exec("dependency", "build", path)
-	if stdErr != "" {
+	_, stdErr, err := h.Exec("dependency", "build", path)
+	if err != nil {
 		return fmt.Errorf("error running helm dependency build: %s", stdErr)
 	}
 
