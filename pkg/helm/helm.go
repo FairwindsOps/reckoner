@@ -100,10 +100,10 @@ func (h Client) Cache() (string, error) {
 	return "", fmt.Errorf("could not find HELM_REPOSITORY_CACHE in helm env output")
 }
 
-// UpdateDependencies will update dependencies for a given release if it is stored locally (i.e. pulled from git)
-func (h Client) UpdateDependencies(path string) error {
-	klog.V(5).Infof("updating chart dependencies for %s", path)
-	_, stdErr, _ := h.Exec("dependency", "update", path)
+// BuildDependencies will update dependencies for a given release if it is stored locally (i.e. pulled from git)
+func (h Client) BuildDependencies(path string) error {
+	klog.V(5).Infof("building chart dependencies for %s", path)
+	_, stdErr, _ := h.Exec("dependency", "build", path)
 	if stdErr != "" {
 		return fmt.Errorf("error running helm dependency update: %s", stdErr)
 	}

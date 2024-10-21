@@ -262,7 +262,7 @@ func (c *Client) cloneGitRepo(release *course.Release) error {
 			return err
 		}
 
-		if err := c.Helm.UpdateDependencies(fmt.Sprintf("%s/%s", *release.GitClonePath, *release.GitChartSubPath)); err != nil {
+		if err := c.Helm.InstallDependencies(fmt.Sprintf("%s/%s", *release.GitClonePath, *release.GitChartSubPath)); err != nil {
 
 			color.Red("error with release %s: %s, continuing.", release.Name, err.Error())
 			return err
