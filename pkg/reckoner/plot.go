@@ -143,7 +143,7 @@ func (c Client) TemplateRelease(releaseName string) (string, error) {
 	if tmpFile != nil {
 		defer os.Remove(tmpFile.Name())
 	}
-	out, stdErr, _ := c.Helm.Exec(args...)
+	out, stdErr, err := c.Helm.Exec(args...)
 	if err != nil {
 		return "", fmt.Errorf("error templating release %s: %s", releaseName, stdErr)
 	}
@@ -262,7 +262,7 @@ func (c *Client) cloneGitRepo(release *course.Release) error {
 			return err
 		}
 
-		if err := c.Helm.InstallDependencies(fmt.Sprintf("%s/%s", *release.GitClonePath, *release.GitChartSubPath)); err != nil {
+		if err := c.Helm.BuildDependencies(fmt.Sprintf("%s/%s", *release.GitClonePath, *release.GitChartSubPath)); err != nil {
 
 			color.Red("error with release %s: %s, continuing.", release.Name, err.Error())
 			return err
