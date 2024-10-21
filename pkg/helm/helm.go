@@ -105,7 +105,7 @@ func (h Client) BuildDependencies(path string) error {
 	klog.V(5).Infof("building chart dependencies for %s", path)
 	_, stdErr, _ := h.Exec("dependency", "build", path)
 	if stdErr != "" {
-		return fmt.Errorf("error running helm dependency update: %s", stdErr)
+		return fmt.Errorf("error running helm dependency build: %s", stdErr)
 	}
 
 	return nil
