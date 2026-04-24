@@ -61,23 +61,9 @@ If you're already using Helm but want to start using `reckoner`, you can use `re
 
 We recommend carefully examining the output of a `reckoner diff` before relying on any imported course.yml definitions.
 
-## Notice: Registry Migration and Immutable Images (v6.2.0 → v6.3.0)
+## Notice: Immutable and signed images (v6.3.0+)
 
 Starting with **v6.3.0**:
-
-- Images moved to `us-docker.pkg.dev/fairwinds-ops/oss/reckoner`
-- `quay.io/fairwinds/reckoner` is deprecated
-
-### Required action
-
-```diff
-- quay.io/fairwinds/reckoner:<tag>
-+ us-docker.pkg.dev/fairwinds-ops/oss/reckoner:<tag>
-```
-
----
-
-## Immutable and signed images
 
 * Images are now **signed**
 * Tags are **immutable**
