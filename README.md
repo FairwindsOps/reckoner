@@ -61,6 +61,30 @@ If you're already using Helm but want to start using `reckoner`, you can use `re
 
 We recommend carefully examining the output of a `reckoner diff` before relying on any imported course.yml definitions.
 
+## Notice: Immutable and signed images (v6.3.0+)
+
+Starting with **v6.3.0**:
+
+* Images are now **signed**
+* Tags are **immutable**
+* No more floating tags:
+
+  * `v6`
+  * `v6.2`
+  * `latest`
+
+Use full version tags:
+
+```
+us-docker.pkg.dev/fairwinds-ops/oss/reckoner:v<major>.<minor>.<patch>
+```
+
+Or pin by digest:
+
+```
+us-docker.pkg.dev/fairwinds-ops/oss/reckoner@sha256:<digest>
+```
+
 <!-- Begin boilerplate -->
 ## Join the Fairwinds Open Source Community
 
