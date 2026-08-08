@@ -9,7 +9,7 @@ require (
 	github.com/fatih/color v1.14.1
 	github.com/go-git/go-git/v5 v5.6.0
 	github.com/gookit/color v1.5.2
-	github.com/imdario/mergo v0.3.13
+	github.com/imdario/mergo v1.0.2
 	github.com/mattn/go-colorable v0.1.13
 	github.com/rhysd/go-github-selfupdate v1.2.3
 	github.com/sergi/go-diff v1.3.1
