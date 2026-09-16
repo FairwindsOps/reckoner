@@ -31,11 +31,8 @@ references:
     command_runner_image: quay.io/reactiveops/ci-images:v17.0-cimg-24.04
     enable_docker_layer_caching: true
     store-test-results: /tmp/test-results
-    attach-workspace: true
-    workspace-location: /
     requires:
       - test
-      - snapshot
     filters:
       branches:
         only: /.*/
@@ -78,10 +75,6 @@ jobs:
               -e CIRCLE_BRANCH \
               -e CIRCLE_TAG \
               goreleaser/goreleaser:v2.18.1 release --snapshot --skip=sign
-      - persist_to_workspace:
-          root: .
-          paths:
-            - dist
       - store_artifacts:
           path: dist
           destination: snapshot
