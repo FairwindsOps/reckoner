@@ -1,32 +1,38 @@
-#Copyright 2017 FairwindsOps Inc.
-#
-#Licensed under the Apache License, Version 2.0 (the “License”);
-#you may not use this file except in compliance with the License.
-#You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-#Unless required by applicable law or agreed to in writing, software
-#distributed under the License is distributed on an “AS IS” BASIS,
-#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#See the License for the specific language governing permissions and
-#limitations under the License.
-
+## DO NOT EDIT - Managed by Terraform
 version: 2.1
 
 orbs:
-  rok8s: fairwinds/rok8s-scripts@12
+  rok8s: fairwinds/rok8s-scripts@17.0.0
   oss-docs: fairwinds/oss-docs@0
 
 references:
+  install_vault_machine: &install_vault_machine
+    run:
+      name: install hashicorp vault
+      command: |
+        sudo apt-get update -y && sudo apt-get install -y curl unzip
+        cd /tmp
+        curl -LO https://releases.hashicorp.com/vault/1.21.4/vault_1.21.4_linux_amd64.zip
+        echo '889b681990fe221b884b7932fa9c9dd0ee9811b9349554f1aa287ab63c9f3dae  vault_1.21.4_linux_amd64.zip' | sha256sum -c
+        unzip -o vault_1.21.4_linux_amd64.zip
+        sudo mv vault /usr/bin/vault
+  setup_qemu_binfmt: &setup_qemu_binfmt
+    run:
+      name: Setup QEMU for multi-arch Docker builds
+      command: |
+        sudo apt-get update -y
+        sudo apt-get install -y qemu-user-static binfmt-support
+        docker buildx create --use || true
+        docker buildx inspect --bootstrap
   e2e_configuration: &e2e_configuration
-    attach-workspace: true
-    workspace-location: /
+    executor: golang-exec
     pre_script: end_to_end_testing/pre_go.sh
     script: end_to_end_testing/run_go.sh
-    command_runner_image: quay.io/reactiveops/ci-images:v12-buster
-    enable_docker_layer_caching: false
-    store-test-results: /tmp/test-results/
+    command_runner_image: quay.io/reactiveops/ci-images:v17.0-cimg-24.04
+    enable_docker_layer_caching: true
+    store-test-results: /tmp/test-results
+    attach-workspace: true
+    workspace-location: /
     requires:
       - test
       - snapshot
@@ -35,102 +41,135 @@ references:
         only: /.*/
       tags:
         ignore: /.*/
-  install_vault_alpine: &install_vault_alpine
-    run:
-      name: install hashicorp vault
-      command: |
-        apk --update add curl yq
-        cd /tmp
-        curl -LO https://releases.hashicorp.com/vault/1.14.2/vault_1.14.2_linux_amd64.zip
-        unzip vault_1.14.2_linux_amd64.zip
-        mv vault /usr/bin/vault
+
+executors:
+  golang-exec:
+    docker:
+      - image: cimg/go:1.27.1
+
 jobs:
   test:
-    working_directory: /home/circleci/go/src/github.com/fairwindsops/reckoner
     docker:
-      - image: cimg/go:1.20
+      - image: cimg/go:1.27.1
     steps:
       - checkout
-      - run: make test
-  snapshot:
-    working_directory: /go/src/github.com/fairwindsops/reckoner
-    docker:
-      - image: goreleaser/goreleaser:v2.15.4
-    steps:
-      - checkout
-      - setup_remote_docker
       - run:
-          name: Goreleaser Snapshot
-          command: goreleaser --snapshot --skip=sign -p 1
+          name: Go Mod Download
+          command: go mod download && go mod verify
+      - run:
+          name: test
+          command: |
+            go test -v -coverprofile=coverage.txt -covermode=atomic ./...
+            go vet ./...
+  snapshot:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large
+    steps:
+      - checkout
+      - *setup_qemu_binfmt
+      - run:
+          name: Run GoReleaser snapshot
+          command: |
+            docker run --rm \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              -v "$(pwd):/workspace" -w /workspace \
+              -e CIRCLE_SHA1 \
+              -e CIRCLE_BRANCH \
+              -e CIRCLE_TAG \
+              goreleaser/goreleaser:v2.18.1 release --snapshot --skip=sign
+      - persist_to_workspace:
+          root: .
+          paths:
+            - dist
       - store_artifacts:
           path: dist
           destination: snapshot
-      - persist_to_workspace:
-          root: /go/src/github.com/fairwindsops/reckoner
-          paths:
-          - dist
   release:
-    working_directory: /home/circleci/go/src/github.com/fairwindsops/reckoner
+    machine:
+      image: ubuntu-2204:current
     resource_class: large
     shell: /bin/bash
-    docker:
-      - image: goreleaser/goreleaser:v2.15.4
     steps:
       - checkout
-      - setup_remote_docker
-      - *install_vault_alpine
+      - *install_vault_machine
       - rok8s/get_vault_env:
           vault_path: repo/global/env
       - rok8s/get_vault_env:
           vault_path: repo/reckoner/env
       - run:
-          name: docker login
+          name: docker login Google Artifact Registry
           command: |
-            docker login -u _json_key -p "$(echo $GCP_ARTIFACTREADWRITE_JSON_KEY | base64 -d)" us-docker.pkg.dev
-      - run: echo 'export GORELEASER_CURRENT_TAG="${CIRCLE_TAG}"' >> $BASH_ENV
-      - run: goreleaser -p 1
+            echo "$GCP_ARTIFACTREADWRITE_JSON_KEY" | base64 -d | docker login -u _json_key --password-stdin us-docker.pkg.dev
+      - *setup_qemu_binfmt
+      - run:
+          name: Run GoReleaser release
+          command: |
+            export GORELEASER_CURRENT_TAG="${CIRCLE_TAG}"
+            docker run --rm \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              -v "$(pwd):/workspace" -w /workspace \
+              -v "${HOME}/.docker:/root/.docker" \
+              -e GORELEASER_CURRENT_TAG \
+              -e CIRCLE_TAG \
+              -e CIRCLE_SHA1 \
+              -e GO111MODULE=on \
+              -e GITHUB_TOKEN \
+              -e VAULT_ADDR \
+              -e VAULT_TOKEN \
+              goreleaser/goreleaser:v2.18.1 release
+
 workflows:
   version: 2
-  build_and_test:
+  test_and_build:
     jobs:
       - test:
           filters:
             tags:
               ignore: /.*/
-            branches:
-              only: /.*/
       - snapshot:
           requires:
             - test
           filters:
-            tags:
-              ignore: /.*/
             branches:
               only: /.*/
+            tags:
+              ignore: /.*/
       - rok8s/kubernetes_e2e_tests:
-          name: "End-To-End Kubernetes 1.25"
-          kind_node_image: "kindest/node:v1.25.3@sha256:f52781bc0d7a19fb6c405c2af83abfeb311f130707a0e219175677e366cc45d1"
+          name: "End-To-End Kubernetes 1.35"
+          kind_node_image: "kindest/node:v1.35.8@sha256:07b2536e30b803ed61d1677a79df6115f798ce64c80f9e22f6ed45afd09323c0"
           <<: *e2e_configuration
       - rok8s/kubernetes_e2e_tests:
-          name: "End-To-End Kubernetes 1.26"
-          kind_node_image: "kindest/node:v1.26.6@sha256:6e2d8b28a5b601defe327b98bd1c2d1930b49e5d8c512e1895099e4504007adb"
+          name: "End-To-End Kubernetes 1.36"
+          kind_node_image: "kindest/node:v1.36.4@sha256:099e049362a1526b2db71494e1947aae99bd16290d7c895f2b7ea312e3cbfaed"
           <<: *e2e_configuration
       - rok8s/kubernetes_e2e_tests:
-          name: "End-To-End Kubernetes 1.27"
-          kind_node_image: "kindest/node:v1.27.3@sha256:3966ac761ae0136263ffdb6cfd4db23ef8a83cba8a463690e98317add2c9ba72"
+          name: "End-To-End Kubernetes 1.37"
+          kind_node_image: "kindest/node:v1.37.0@sha256:a1ed56cfb0e7b93589bdf97c8cd566405a265939e3620fc4f5de89adff580ae5"
           <<: *e2e_configuration
   release:
     jobs:
+      - test:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /v.*/
+      - release:
+          requires:
+            - test
+          context: org-global
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /v.*/
       - oss-docs/publish-docs:
+          requires:
+            - release
           repository: reckoner
           filters:
             branches:
               ignore: /.*/
             tags:
-              only: /^v[0-9]+\.[0-9]+\.[0-9]+$/
-      - release:
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$/
+              only: /v.*/
