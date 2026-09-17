@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-cp /reckoner/reckoner /usr/local/bin/reckoner
+mv /reckoner/reckoner /usr/local/bin/reckoner
 chmod +x /usr/local/bin/reckoner
 reckoner version
 
