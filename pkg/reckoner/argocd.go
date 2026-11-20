@@ -20,7 +20,7 @@ import (
 
 	"github.com/fairwindsops/reckoner/pkg/course"
 	"github.com/fatih/color"
-	"github.com/imdario/mergo"
+	"dario.cat/mergo"
 	"gopkg.in/yaml.v3"
 	"k8s.io/klog/v2"
 )
