@@ -3,13 +3,13 @@ module github.com/fairwindsops/reckoner
 go 1.26.0
 
 require (
+	dario.cat/mergo v1.0.2
 	github.com/Masterminds/semver/v3 v3.5.0
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/fatih/color v1.19.0
 	github.com/go-git/go-git/v5 v5.19.3
 	github.com/gookit/color v1.6.3
-	github.com/imdario/mergo v0.3.16
 	github.com/mattn/go-colorable v0.1.16
 	github.com/rhysd/go-github-selfupdate v1.2.3
 	github.com/sergi/go-diff v1.4.5
@@ -27,7 +27,6 @@ require (
 )
 
 require (
-	dario.cat/mergo v1.0.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/ProtonMail/go-crypto v1.1.6 // indirect
 	github.com/cloudflare/circl v1.6.3 // indirect
